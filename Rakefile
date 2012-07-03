@@ -27,6 +27,8 @@ task :install => [:submodules] do
     puts "target:  #{target}"
 
     run %{ ln -s "#{source}" "#{target}" }
+  end
+  puts "Installed."
 end
 
 desc "Init and update submodules."
