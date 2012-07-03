@@ -9,18 +9,18 @@
 "
 "                           07/02/2012
 
-set autoindent 
+set autoindent
 set expandtab
 set hidden
-set hlsearch 
+set hlsearch
 set incsearch
 set nocompatible
 set novisualbell
 set number
-set ruler 
+set ruler
 set shiftwidth=2
 set showmatch
-set smartindent 
+set smartindent
 set tabstop=2
 set title
 set virtualedit=all
@@ -41,6 +41,7 @@ filetype plugin on
 
 nmap <silent> <C-M> :silent noh<CR> :echo "Highlights Cleared! bjoli"<CR>
 
+let mapleader = ','
 " http://stevelosh.com/blog/2010/09/coming-home-to-vim/
 " ,W = strip all trailing whitespace in the current file
 nnoremap <leader>W :%s/\s\+$//<cr>:let @/=''<CR>
@@ -52,3 +53,11 @@ if has('gui_running')
 else
   set background=dark
 endif
+
+"Kill all the trailing whitespace
+highlight ExtraWhitespace ctermbg=red guibg=red
+match ExtraWhitespace /\s\+$/
+autocmd BufWinEnter * match ExtraWhitespace /\s\+$/
+autocmd InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$/
+autocmd InsertLeave * match ExtraWhitespace /\s\+$/
+autocmd BufWinLeave * call clearmatches()
