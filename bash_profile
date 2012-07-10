@@ -26,7 +26,10 @@ if which fortune &>/dev/null; then
 fi
 
 # Weird workaround for git commit+certain vim plugins and exit code
-export EDITOR="mvim -f"
+if [ $(uname) == "Darwin" ];
+then
+  export EDITOR="mvim -f"
+fi
 
 alias gc='git commit -a -s -m'
 
