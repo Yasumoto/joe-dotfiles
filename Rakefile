@@ -16,6 +16,7 @@ task :install => [:submodules] do
   linkables += Dir.glob('vim')
   linkables += Dir.glob('vimrc')
   linkables += Dir.glob('gemrc')
+  linkables += Dir.glob('screenrc')
 
   linkables.each do |linkable|
     file = linkable.split('/').last
