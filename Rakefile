@@ -7,6 +7,8 @@ task :install => [:submodules] do
   puts "Thanks to all the dotfiles on github, and the installer at"
   puts "https://github.com/skwp/dotfiles/blob/master/Rakefile"
   puts "we're about to install vim + bash configs."
+  puts "Notes - This (theoretically) won't overwrite"
+  puts "any files you already have."
   puts "============================================================="
   puts
 
@@ -17,6 +19,7 @@ task :install => [:submodules] do
   linkables += Dir.glob('vimrc')
   linkables += Dir.glob('gemrc')
   linkables += Dir.glob('screenrc')
+  linkables += Dir.glob('gitconfig')
 
   linkables.each do |linkable|
     file = linkable.split('/').last
