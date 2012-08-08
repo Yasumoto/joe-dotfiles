@@ -10,3 +10,6 @@
 [submodule "vim/bundle/vim-rake"]
 	path = vim/bundle/vim-rake
 	url = git://github.com/tpope/vim-rake.git
+[submodule "vim/bundle/thrift-vim"]
+	path = vim/bundle/thrift-vim
+	url = git://github.com/sprsquish/thrift.vim.git
