@@ -1,2 +1,11 @@
+---
 install: --no-rdoc --no-ri
+:bulk_threshold: 1000
+:benchmark: false
+:sources:
+- http://rubygems.org/
+- http://gems.local.twitter.com
+:update_sources: true
 update: --no-rdoc --no-ri
+:backtrace: false
+:verbose: true

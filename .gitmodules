@@ -13,3 +13,6 @@
 [submodule "vim/bundle/scss-syntax"]
 	path = vim/bundle/scss-syntax
 	url = git://github.com/cakebaker/scss-syntax.vim.git
+[submodule "vim/bundle/thrift-vim"]
+	path = vim/bundle/thrift-vim
+	url = git://github.com/sprsquish/thrift.vim.git
