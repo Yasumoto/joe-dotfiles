@@ -1,3 +1,9 @@
+[github]
+  user = Yasumoto
+
+[user]
+  name = Joe Smith
+
 [alias]
   # View the SHA, description, and history graph of the latest 20 commits
   l = log --pretty=oneline -n 20 --graph
@@ -28,6 +34,20 @@
   added = yellow
   changed = green
   untracked = cyan
+
+[core]
+	# Also needed for whitespace
+	whitespace=fix,-indent-with-non-tab,trailing-space,cr-at-eol
+
+[branch]
+	#tells git-branch and git-checkout to setup new branches so that git-pull(1)
+	#will appropriately merge from that remote branch.  Recommended.  Without this,
+	#you will have to add --track to your branch command or manually merge remote
+	#tracking branches with "fetch" and then "merge".
+	autosetupmerge = true
+
+[credential]
+	helper = osxkeychain
 
 # Always use origin as the default remote for master.
 [branch "master"]
