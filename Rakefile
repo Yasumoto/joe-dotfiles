@@ -1,4 +1,6 @@
 require 'rake'
+require 'erb'
+require 'socket'
 
 desc "Hook our dotfiles into system-standard positions."
 task :install => [:submodules] do
@@ -19,17 +21,29 @@ task :install => [:submodules] do
   linkables += Dir.glob('vimrc')
   linkables += Dir.glob('gemrc')
   linkables += Dir.glob('screenrc')
-  linkables += Dir.glob('gitconfig')
+  linkables += Dir.glob('gitconfig.erb')
 
   linkables.each do |linkable|
-    file = linkable.split('/').last
+    filename = linkable.split('/').last
+
+    if linkable[-4..-1] == ".erb"
+      new_filename = filename[0..-5]
+      customize_scripts(new_filename)
+      File.open(new_filename, 'w') do | new_file|
+        new_file.write ERB.new(File.read(filename)).result(binding)
+      end
+      filename = new_filename
+    end
+
+    linkable = filename.sub('.erb', '')
+
     source = "#{ENV["PWD"]}/#{linkable}"
-    target = "#{ENV["HOME"]}/.#{file}"
+    target = "#{ENV["HOME"]}/.#{filename}"
 
     puts "---------"
-    puts "file:    #{file}"
-    puts "source:  #{source}"
-    puts "target:  #{target}"
+    puts "filename:    #{filename}"
+    puts "source:      #{source}"
+    puts "target:      #{target}"
 
     run %{ ln -s "#{source}" "#{target}" }
   end
@@ -49,4 +63,16 @@ def run(cmd)
   puts
   puts "[Installing] #{cmd}"
   `#{cmd}` unless ENV['DEBUG']
+end
+
+def customize_scripts(filename)
+  if filename == "gitconfig"
+    if Socket.gethostname == "tw-mbp13-jsmith.local"
+      puts "On the work laptop, setting work email."
+      ENV["GIT_EMAIL"] = "jsmith@twitter.com"
+    else
+      puts "On a personal box, using gmail account."
+      ENV["GIT_EMAIL"] = "yasumoto7@gmail.com"
+    end
+  end
 end
