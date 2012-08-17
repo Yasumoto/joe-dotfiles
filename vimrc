@@ -53,6 +53,7 @@ if has('gui_running')
 else
   set background=dark
 endif
+autocmd BufNewFile,BufRead *.json set ft=javascript
 
 "Kill all the trailing whitespace
 highlight ExtraWhitespace ctermbg=red guibg=red
