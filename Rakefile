@@ -45,7 +45,7 @@ task :install => [:submodules] do
     puts "source:      #{source}"
     puts "target:      #{target}"
 
-    run %{ ln -s "#{source}" "#{target}" }
+    run %{ /bin/ln -s "#{source}" "#{target}" }
   end
   puts "Installed."
 end
