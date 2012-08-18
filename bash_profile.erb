@@ -17,7 +17,7 @@ PS1="\[\033[G\]$PS1"
 
 alias ls='ls -G'
 
-export PATH=/usr/local/bin:/usr/local/Cellar/ruby/1.9.3-p194/bin:$PATH
+export PATH=<%= ENV['PATH'] %>
 
 # brew/apt-get install fortune
 if which fortune &>/dev/null; then

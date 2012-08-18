@@ -16,7 +16,7 @@ task :install => [:submodules] do
 
   linkables = []
   linkables += Dir.glob('bashrc')
-  linkables += Dir.glob('bash_profile')
+  linkables += Dir.glob('bash_profile.erb')
   linkables += Dir.glob('vim')
   linkables += Dir.glob('vimrc')
   linkables += Dir.glob('gemrc')
@@ -74,6 +74,16 @@ def customize_scripts(filename)
     else
       puts "On a personal box, using gmail account."
       ENV["GIT_EMAIL"] = "yasumoto7@gmail.com"
+    end
+  end
+
+  if filename == "bash_profile"
+    if Socket.gethostname == "imac.local"
+      puts "On imac with weird ruby things you've done."
+      ENV["PATH"] = "/usr/local/bin:/usr/local/Cellar/ruby/1.9.3-p194/bin:$PATH"
+    else
+      puts "On normal boxen without weird ruby path."
+      ENV["PATH"] = "/usr/local/bin:$PATH"
     end
   end
 end
