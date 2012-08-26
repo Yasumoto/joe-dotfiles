@@ -19,7 +19,7 @@ task :install => [:submodules] do
   linkables += Dir.glob('bash_profile.erb')
   linkables += Dir.glob('vim')
   linkables += Dir.glob('vimrc')
-  linkables += Dir.glob('gemrc')
+  linkables += Dir.glob('gemrc.erb')
   linkables += Dir.glob('screenrc')
   linkables += Dir.glob('gitconfig.erb')
 
@@ -84,6 +84,14 @@ def customize_scripts(filename)
     else
       puts "On normal boxen without weird ruby path."
       ENV["PATH"] = "/usr/local/bin:$PATH"
+    end
+  end
+
+  if filename == "gemrc"
+    ENV["GEM_SOURCES"] = "- http://rubygems.org/"
+    if Socket.gethostname == "tw-mbp13-jsmith.local"
+      puts "On work laptop, setting newfangled gem repo."
+      ENV["GEM_SOURCES"] += "\n- http://gems.local.twitter.com"
     end
   end
 end
