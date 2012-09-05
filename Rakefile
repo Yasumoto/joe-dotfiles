@@ -21,6 +21,7 @@ task :install => [:submodules] do
   linkables += Dir.glob('vimrc')
   linkables += Dir.glob('gemrc.erb')
   linkables += Dir.glob('screenrc')
+  linkables += Dir.glob('gitignore')
   linkables += Dir.glob('gitconfig.erb')
 
   linkables.each do |linkable|
