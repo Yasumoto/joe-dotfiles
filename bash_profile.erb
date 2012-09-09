@@ -28,6 +28,10 @@ if which fortune &>/dev/null; then
 	fortune -a
 fi
 
+if which npm &> /dev/null; then
+  . <(npm completion)
+fi
+
 # Weird workaround for git commit+certain vim plugins and exit code
 if [ $(uname) == "Darwin" ];
 then
