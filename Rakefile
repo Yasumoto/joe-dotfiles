@@ -68,8 +68,9 @@ def run(cmd)
 end
 
 def customize_scripts(filename)
+  hostname = Socket.gethostname
   if filename == "gitconfig"
-    if Socket.gethostname == "tw-mbp13-jsmith.local"
+    if hostname == "tw-mbp13-jsmith.local" or hostname.index('office.twttr.net')
       puts "On the work laptop, setting work email."
       ENV["GIT_EMAIL"] = "jsmith@twitter.com"
     else
@@ -79,9 +80,11 @@ def customize_scripts(filename)
   end
 
   if filename == "bash_profile"
-    if Socket.gethostname == "imac.local"
+    if hostname == "imac.local"
       puts "On imac with weird ruby things you've done."
       ENV["PATH"] = "/usr/local/bin:/usr/local/Cellar/ruby/1.9.3-p194/bin:$PATH"
+    elsif hostname == "tw-mbp13-jsmith.local" or hostname.index('office.twttr.net')
+      ENV["PATH"] = "/opt/twitter/share/npm/bin:$PATH"
     else
       puts "On normal boxen without weird ruby path."
       ENV["PATH"] = "/usr/local/bin:$PATH"
@@ -90,7 +93,7 @@ def customize_scripts(filename)
 
   if filename == "gemrc"
     ENV["GEM_SOURCES"] = "- http://rubygems.org/"
-    if Socket.gethostname == "tw-mbp13-jsmith.local"
+    if hostname == "tw-mbp13-jsmith.local" or hostname.index('office.twttr.net')
       puts "On work laptop, setting newfangled gem repo."
       ENV["GEM_SOURCES"] += "\n- http://gems.local.twitter.com"
     end
