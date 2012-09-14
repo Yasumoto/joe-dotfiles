@@ -37,4 +37,11 @@ Icon?
 ehthumbs.db
 Thumbs.db
 vim/.netrwhist
+.*swp
+.*swo
 
+
+# Node.JS #
+###########
+node_modules
+npm-debug.log
