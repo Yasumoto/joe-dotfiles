@@ -37,8 +37,8 @@ Icon?
 ehthumbs.db
 Thumbs.db
 vim/.netrwhist
-.*swp
-.*swo
+*.swp
+*.swo
 
 
 # Node.JS #

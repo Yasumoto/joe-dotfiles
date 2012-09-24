@@ -73,9 +73,11 @@ def customize_scripts(filename)
     if hostname == "tw-mbp13-jsmith.local" or hostname.index('office.twttr.net')
       puts "On the work laptop, setting work email."
       ENV["GIT_EMAIL"] = "jsmith@twitter.com"
+      ENV["GIT_USERNAME"] = "jsmith"
     else
       puts "On a personal box, using gmail account."
       ENV["GIT_EMAIL"] = "yasumoto7@gmail.com"
+      ENV["GIT_USERNAME"] = "joe"
     end
   end
 
