@@ -89,7 +89,7 @@ def customize_scripts(filename)
       ENV["PATH"] = "/opt/twitter/share/npm/bin:$PATH"
     else
       puts "On normal boxen without weird ruby path."
-      ENV["PATH"] = "/usr/local/bin:$PATH"
+      ENV["PATH"] = "/usr/local/share/npm/bin:/usr/local/bin:$PATH"
     end
   end
 
