@@ -29,7 +29,7 @@ if which fortune &>/dev/null; then
 fi
 
 if which npm &> /dev/null; then
-  . <(npm completion)
+  . <(npm completion | cat)
 fi
 
 # Weird workaround for git commit+certain vim plugins and exit code
