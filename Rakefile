@@ -84,7 +84,7 @@ def customize_scripts(filename)
   if filename == "bash_profile"
     if hostname == "imac.local"
       puts "On imac with weird ruby things you've done."
-      ENV["PATH"] = "/usr/local/bin:/usr/local/Cellar/ruby/1.9.3-p194/bin:$PATH"
+      ENV["PATH"] = "/usr/local/bin:/usr/local/Cellar/ruby/1.9.3-p286:$PATH"
     elsif hostname == "tw-mbp13-jsmith.local" or hostname.index('office.twttr.net')
       ENV["PATH"] = "/opt/twitter/share/npm/bin:$PATH"
     else
