@@ -34,3 +34,6 @@
 [submodule "vim/bundle/vim-puppet"]
 	path = vim/bundle/vim-puppet
 	url = git://github.com/rodjek/vim-puppet.git
+[submodule "vim/bundle/cql-vim"]
+	path = vim/bundle/cql-vim
+	url = git://github.com/elubow/cql-vim.git
