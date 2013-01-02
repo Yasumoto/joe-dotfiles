@@ -17,5 +17,5 @@ pickle-email-*.html
 gitconfig
 bash_profile
 gemrc
-netrwhist
+/vim/.netrwhist
 /vim/vim
