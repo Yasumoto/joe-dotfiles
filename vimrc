@@ -55,6 +55,7 @@ else
 endif
 autocmd BufNewFile,BufRead *.json set ft=javascript
 autocmd BufNewFile,BufRead *.thermos set syntax=python
+autocmd BufNewFile,BufRead BUILD set syntax=python
 
 "Kill all the trailing whitespace
 highlight ExtraWhitespace ctermbg=red guibg=red
