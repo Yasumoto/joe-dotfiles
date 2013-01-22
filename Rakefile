@@ -107,11 +107,11 @@ export HISTSIZE=100000
 shopt -s histappend
 
 source ${HOME}/.git-completion.bash
-source ${HOME}/.extras.bash"
+source ${HOME}/.extras.bash
 
 [[ -s "/opt/twitter/rvm/scripts/rvm" ]] && source "/opt/twitter/rvm/scripts/rvm"
 
-export PS1='[\h \[\\033[0;36m\]\W\[\\033[0m\]$(__git_ps1 " \[\\033[1;32m\](%s)\[\\033[0m\]")]\$ '
+export PS1='[\\h \\[\\033[0;36m\\]\\W\\[\\033[0m\\]$(__git_ps1 " \\[\\033[1;32m\\](%s)\\[\\033[0m\\]")]\$ '
 
 # Don't edit this file
 # Instead, put any customisations or personal bash preferences into the file ~/.local.bash
