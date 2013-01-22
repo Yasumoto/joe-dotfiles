@@ -85,8 +85,40 @@ def customize_scripts(filename)
     if hostname == "imac.local"
       puts "On imac with weird ruby things you've done."
       ENV["PATH"] = "/usr/local/bin:/usr/local/share/npm/bin:/usr/local/Cellar/ruby/1.9.3-p286:$PATH"
-    elsif hostname == "tw-mbp13-jsmith.local" or hostname.index('office.twttr.net')
-      ENV["PATH"] = "/opt/twitter/share/npm/bin:$PATH"
+    elsif hostname.index('tw-mbp13-jsmith') or hostname.index('office.twttr.net')
+      ENV["PATH"] = "/opt/twitter/share/npm/bin:/usr/local/bin:/opt/twitter/bin:${HOME}/bin:/opt/twitter/sbin:${HOME}/.twitools/src/twitter-utilities/sbt:$PATH"
+      ENV["EXTRA_BASH_SOURCES"] = "source ${HOME}/.git-completion.bash; source ${HOME}/.extras.bash"
+      ENV["TWITTER_JARGON"] = <<-eos
+export RAILS_ENV='development'
+export RUBY_HEAP_MIN_SLOTS=500000
+export RUBY_HEAP_SLOTS_INCREMENT=250000
+export RUBY_HEAP_SLOTS_GROWTH_FACTOR=1
+export RUBY_GC_MALLOC_LIMIT=50000000
+export RUBY_HEAP_FREE_MIN=4096
+
+export CC=/usr/bin/gcc-4.2
+export PATH=/opt/twitter/share/npm/bin:/usr/local/bin:/opt/twitter/bin:${HOME}/bin:${HOME}/.twitools/src/twitter-utilities/sbt:$PATH
+export LC_CTYPE=en_US.UTF-8
+export CLICOLOR=1
+#export LSCOLORS=gxGxFxdxbxDxDxBxBxExEx
+
+export HISTCONTROL=erasedups
+export HISTSIZE=100000
+shopt -s histappend
+
+source ${HOME}/.git-completion.bash
+source ${HOME}/.extras.bash"
+
+[[ -s "/opt/twitter/rvm/scripts/rvm" ]] && source "/opt/twitter/rvm/scripts/rvm"
+
+export PS1='[\h \[\\033[0;36m\]\W\[\\033[0m\]$(__git_ps1 " \[\\033[1;32m\](%s)\[\\033[0m\]")]\$ '
+
+# Don't edit this file
+# Instead, put any customisations or personal bash preferences into the file ~/.local.bash
+[[ -s ${HOME}/.local.bash ]] && source ${HOME}/.local.bash
+
+ulimit -n 1024
+        eos
     else
       puts "On normal boxen without weird ruby path."
       ENV["PATH"] = "/usr/local/share/npm/bin:/usr/local/bin:$PATH"
