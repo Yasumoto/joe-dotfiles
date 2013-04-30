@@ -7,7 +7,7 @@
 "       _/  /  | | | | | |  ___| |___      | |    | |  | |
 "      |___/   |_| |_| |_| |_________|     |_|    |_|  |_|
 "
-"                           12/12/2012
+"                           04/30/2013
 
 set autoindent
 set expandtab
@@ -57,6 +57,7 @@ autocmd BufNewFile,BufRead BUILD set syntax=python
 autocmd BufNewFile,BufRead *.json set ft=javascript
 autocmd BufNewFile,BufRead *.mesos set syntax=python
 autocmd BufNewFile,BufRead *.thermos set syntax=python
+autocmd BufNewFile,BufRead *.confluence set syntax=confluencewiki
 
 "Kill all the trailing whitespace
 highlight ExtraWhitespace ctermbg=red guibg=red
@@ -69,6 +70,7 @@ autocmd BufWinLeave * call clearmatches()
 " Plugin key-mappings.
 imap <C-k>     <Plug>(neosnippet_expand_or_jump)
 smap <C-k>     <Plug>(neosnippet_expand_or_jump)
+xmap <C-k>     <Plug>(neosnippet_expand_target)
 " SuperTab like snippets behavior.
 imap <expr><TAB> neosnippet#expandable() ? "\<Plug>(neosnippet_expand_or_jump)" : pumvisible() ? "\<C-n>" : "\<TAB>"
 smap <expr><TAB> neosnippet#expandable() ? "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"

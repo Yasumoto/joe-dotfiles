@@ -45,7 +45,10 @@
 	url = https://github.com/Shougo/neosnippet.git
 [submodule "vim/bundle/snipmate-snippets"]
 	path = vim/bundle/snipmate-snippets
-	url = https://github.com/honza/snipmate-snippets
+	url = https://github.com/honza/vim-snippets.git
 [submodule "vim/bundle/vim-gitgutter"]
 	path = vim/bundle/vim-gitgutter
 	url = git://github.com/airblade/vim-gitgutter.git
+[submodule "vim/bundle/confluencewiki"]
+	path = vim/bundle/confluencewiki
+	url = git://github.com/vim-scripts/confluencewiki.vim.git
