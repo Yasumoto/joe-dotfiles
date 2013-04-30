@@ -25,6 +25,8 @@ set tabstop=2
 set title
 set virtualedit=all
 set wildmode=list:longest
+set splitbelow
+set splitright
 runtime macros/matchit.vim
 
 call pathogen#infect()
