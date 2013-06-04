@@ -52,3 +52,6 @@
 [submodule "vim/bundle/confluencewiki"]
 	path = vim/bundle/confluencewiki
 	url = git://github.com/vim-scripts/confluencewiki.vim.git
+[submodule "vim/bundle/vim-indent-guides"]
+	path = vim/bundle/vim-indent-guides
+	url = git://github.com/nathanaelkane/vim-indent-guides.git
