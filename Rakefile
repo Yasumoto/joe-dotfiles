@@ -121,7 +121,7 @@ export PS1='[\\h \\[\\033[0;36m\\]\\W\\[\\033[0m\\]$(__git_ps1 " \\[\\033[1;32m\
 
 ulimit -n 1024
 
-source setup-dottools-path.sh
+source ~/.tools-cache/setup-dottools-path.sh
         eos
     else
       puts "On normal boxen without weird ruby path."
