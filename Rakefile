@@ -70,7 +70,7 @@ end
 def customize_scripts(filename)
   hostname = Socket.gethostname
   if filename == "gitconfig"
-    if hostname.index("tw-mbp13-jsmith") or hostname.index('office.twttr.net')
+    if hostname.index("tw-mbp13-jsmith") or hostname.index('office.twttr.net') or hostname.index('twttr.net')
       puts "On the work laptop, setting work email."
       ENV["GIT_EMAIL"] = "jsmith@twitter.com"
       ENV["GIT_USERNAME"] = "jsmith"
@@ -85,7 +85,9 @@ def customize_scripts(filename)
     if hostname == "imac.local"
       puts "On imac with weird ruby things you've done."
       ENV["PATH"] = "/usr/local/bin:/usr/local/share/npm/bin:/usr/local/Cellar/ruby/1.9.3-p286:$PATH"
-    elsif hostname.index('tw-mbp13-jsmith') or hostname.index('office.twttr.net')
+    elsif hostname.index('tw-mbp13-jsmith') or hostname.index('office.twttr.net') or hostname.index('twttr.net')
+      # might want to include the below for nest machines:
+      # export VIMRUNTIME=/home/jsmith/vim73/runtime
       ENV["PATH"] = "/opt/twitter/share/npm/bin:/usr/local/bin:/opt/twitter/bin:${HOME}/bin:/opt/twitter/sbin:${HOME}/.twitools/src/twitter-utilities/sbt:$PATH"
       ENV["EXTRA_BASH_SOURCES"] = "source ${HOME}/.git-completion.bash; source ${HOME}/.extras.bash"
       ENV["TWITTER_JARGON"] = <<-eos
@@ -118,6 +120,8 @@ export PS1='[\\h \\[\\033[0;36m\\]\\W\\[\\033[0m\\]$(__git_ps1 " \\[\\033[1;32m\
 [[ -s ${HOME}/.local.bash ]] && source ${HOME}/.local.bash
 
 ulimit -n 1024
+
+source setup-dottools-path.sh
         eos
     else
       puts "On normal boxen without weird ruby path."
@@ -127,7 +131,7 @@ ulimit -n 1024
 
   if filename == "gemrc"
     ENV["GEM_SOURCES"] = "- http://rubygems.org/"
-    if hostname == "tw-mbp13-jsmith.local" or hostname.index('office.twttr.net')
+    if hostname == "tw-mbp13-jsmith.local" or hostname.index('office.twttr.net') or hostname.index('twttr.net')
       puts "On work laptop, setting newfangled gem repo."
       ENV["GEM_SOURCES"] += "\n- http://gems.local.twitter.com"
     end
