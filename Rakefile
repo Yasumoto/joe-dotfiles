@@ -122,6 +122,7 @@ export PS1='[\\h \\[\\033[0;36m\\]\\W\\[\\033[0m\\]$(__git_ps1 " \\[\\033[1;32m\
 ulimit -n 1024
 
 source ~/.tools-cache/setup-dottools-path.sh
+PATH=/Users/jsmith/Python/CPython-2.6.8/bin:/Users/jsmith/Python/CPython-2.7.3/bin:/Users/jsmith/Python/CPython-3.2.3/bin:/Users/jsmith/Python/PyPy-1.9/bin:$PATH
         eos
     else
       puts "On normal boxen without weird ruby path."
