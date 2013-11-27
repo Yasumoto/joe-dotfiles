@@ -32,16 +32,18 @@ if which npm &> /dev/null; then
   . <(npm completion | cat)
 fi
 
+export DIFF_VIEWER="vimdiff"
+
 # Weird workaround for git commit+certain vim plugins and exit code
 if [ $(uname) == "Darwin" ];
 then
   export EDITOR="mvim -f"
+  export DIFF_VIEWER="ksdiff"
 fi
 
 alias gc='git commit -a -s -m'
 
 export NODE_PATH="/usr/local/lib/node_modules"
-export DIFF_VIEWER="vimdiff"
 
 alias grep='grep --color=auto'
 
