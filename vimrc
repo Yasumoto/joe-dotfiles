@@ -7,7 +7,7 @@
 "       _/  /  | | | | | |  ___| |___      | |    | |  | |
 "      |___/   |_| |_| |_| |_________|     |_|    |_|  |_|
 "
-"                           04/30/2013
+"                           12/03/2013
 
 set autoindent
 set expandtab
@@ -83,3 +83,6 @@ if has('conceal')
   set conceallevel=2 concealcursor=i
 endif
 let g:neosnippet#snippets_directory='~/.vim/bundle/snipmate-snippets/snippets'
+
+" For vim-airline to display
+set laststatus=2
