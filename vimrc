@@ -55,13 +55,15 @@ if has('gui_running')
 else
   set background=dark
 endif
-autocmd BufNewFile,BufRead BUILD set syntax=python
-autocmd BufNewFile,BufRead BUILD.twitter set syntax=python
-autocmd BufNewFile,BufRead *.json set ft=javascript
+
+autocmd BufNewFile,BufRead *.alert set syntax=sh
 autocmd BufNewFile,BufRead *.aurora set syntax=python
+autocmd BufNewFile,BufRead *.confluence set syntax=confluencewiki
+autocmd BufNewFile,BufRead *.json set ft=javascript
 autocmd BufNewFile,BufRead *.mesos set syntax=python
 autocmd BufNewFile,BufRead *.thermos set syntax=python
-autocmd BufNewFile,BufRead *.confluence set syntax=confluencewiki
+autocmd BufNewFile,BufRead BUILD set syntax=python
+autocmd BufNewFile,BufRead BUILD.twitter set syntax=python
 
 "Kill all the trailing whitespace
 highlight ExtraWhitespace ctermbg=red guibg=red
