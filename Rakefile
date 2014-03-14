@@ -90,7 +90,7 @@ def customize_scripts(filename)
       # might want to include the below for nest machines:
       # export VIMRUNTIME=/home/jsmith/vim73/runtime
       ENV["PATH"] = "/opt/twitter/share/npm/bin:/usr/local/bin:/opt/twitter/bin:${HOME}/bin:/opt/twitter/sbin:${HOME}/.twitools/src/twitter-utilities/sbt:$PATH"
-      ENV["EXTRA_BASH_SOURCES"] = "source ${HOME}/.git-completion.bash; source ${HOME}/.extras.bash"
+      ENV["EXTRA_BASH_SOURCES"] = "source ${HOME}/.git-completion.bash;"
       ENV["TWITTER_JARGON"] = <<-eos
 export RAILS_ENV='development'
 export RUBY_HEAP_MIN_SLOTS=500000
@@ -110,7 +110,6 @@ export HISTSIZE=100000
 shopt -s histappend
 
 source ${HOME}/.git-completion.bash
-source ${HOME}/.extras.bash
 
 [[ -s "/opt/twitter/rvm/scripts/rvm" ]] && source "/opt/twitter/rvm/scripts/rvm"
 
