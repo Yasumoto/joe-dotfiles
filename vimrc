@@ -7,14 +7,15 @@
 "       _/  /  | | | | | |  ___| |___      | |    | |  | |
 "      |___/   |_| |_| |_| |_________|     |_|    |_|  |_|
 "
-"                           12/03/2013
+"                           03/14/2014
+
+set nocompatible
 
 set autoindent
 set expandtab
 set hidden
 set hlsearch
 set incsearch
-set nocompatible
 set novisualbell
 set number
 set ruler
