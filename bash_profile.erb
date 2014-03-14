@@ -1,8 +1,5 @@
 [ -z "$PS1" ] && return
 
-#let's go for it.
-set -o vi
-
 # don't put duplicate lines in the history. See bash(1) for more options
 export HISTCONTROL=ignoredups
 # ... and ignore same sucessive entries.
@@ -28,10 +25,6 @@ if which fortune &>/dev/null; then
 	fortune -a
 fi
 
-if which npm &> /dev/null; then
-  . <(npm completion | cat)
-fi
-
 export DIFF_VIEWER="vimdiff"
 
 # Weird workaround for git commit+certain vim plugins and exit code
@@ -39,11 +32,10 @@ if [ $(uname) == "Darwin" ];
 then
   export EDITOR="mvim -f"
   export DIFF_VIEWER="ksdiff"
+  if [ -f $(brew --prefix)/etc/bash_completion ]; then
+    . $(brew --prefix)/etc/bash_completion
+  fi
 fi
-
-alias gc='git commit -a -s -m'
-
-export NODE_PATH="/usr/local/lib/node_modules"
 
 alias grep='grep --color=auto'
 
