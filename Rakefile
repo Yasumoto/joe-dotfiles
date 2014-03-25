@@ -89,18 +89,11 @@ def customize_scripts(filename)
     elsif hostname.index('tw-mbp13-jsmith') or hostname.index('office.twttr.net') or hostname.index('twttr.net')
       # might want to include the below for nest machines:
       # export VIMRUNTIME=/home/jsmith/vim73/runtime
-      ENV["PATH"] = "/opt/twitter/share/npm/bin:/usr/local/bin:/opt/twitter/bin:${HOME}/bin:/opt/twitter/sbin:${HOME}/.twitools/src/twitter-utilities/sbt:$PATH"
+      ENV["PATH"] = "/Users/jsmith/Python/CPython-2.6.9/bin:/Users/jsmith/Python/CPython-2.7.6/bin:/Users/jsmith/Python/CPython-3.3.3/bin:/Users/jsmith/Python/PyPy-2.2.1/bin:/usr/local/bin:/opt/twitter/bin:${HOME}/bin:/opt/twitter/sbin:${HOME}/.twitools/src/twitter-utilities/sbt:$PATH"
       ENV["EXTRA_BASH_SOURCES"] = "source ${HOME}/.git-completion.bash;"
       ENV["TWITTER_JARGON"] = <<-eos
-export RAILS_ENV='development'
-export RUBY_HEAP_MIN_SLOTS=500000
-export RUBY_HEAP_SLOTS_INCREMENT=250000
-export RUBY_HEAP_SLOTS_GROWTH_FACTOR=1
-export RUBY_GC_MALLOC_LIMIT=50000000
-export RUBY_HEAP_FREE_MIN=4096
 
-export CC=/usr/bin/gcc-4.2
-export PATH=/opt/twitter/share/npm/bin:/usr/local/bin:/opt/twitter/bin:${HOME}/bin:${HOME}/.twitools/src/twitter-utilities/sbt:$PATH
+#export CC=/usr/bin/gcc-4.2
 export LC_CTYPE=en_US.UTF-8
 export CLICOLOR=1
 #export LSCOLORS=gxGxFxdxbxDxDxBxBxExEx
@@ -122,7 +115,6 @@ export PS1='[\\h \\[\\033[0;36m\\]\\W\\[\\033[0m\\]$(__git_ps1 " \\[\\033[1;32m\
 ulimit -n 1024
 
 source ~/.tools-cache/setup-dottools-path.sh
-PATH=/Users/jsmith/Python/CPython-2.6.8/bin:/Users/jsmith/Python/CPython-2.7.3/bin:/Users/jsmith/Python/CPython-3.2.3/bin:/Users/jsmith/Python/PyPy-1.9/bin:$PATH
         eos
     else
       puts "On normal boxen without weird ruby path."
