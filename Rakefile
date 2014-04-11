@@ -85,7 +85,7 @@ def customize_scripts(filename)
   if filename == "bash_profile"
     if hostname == "imac.local"
       puts "On imac with weird ruby things you've done."
-      ENV["PATH"] = "/usr/local/bin:/usr/local/share/npm/bin:/usr/local/Cellar/ruby/1.9.3-p286:$PATH"
+      ENV["PATH"] = "/Users/joe/Python/CPython-2.6.9/bin:/Users/joe/Python/CPython-2.7.6/bin:/Users/joe/Python/CPython-3.3.3/bin:/Users/joe/Python/PyPy-2.2.1/bin:/usr/local/bin:/usr/local/Cellar/ruby/1.9.3-p286:$PATH"
     elsif hostname.index('tw-mbp13-jsmith') or hostname.index('office.twttr.net') or hostname.index('twttr.net')
       # might want to include the below for nest machines:
       # export VIMRUNTIME=/home/jsmith/vim73/runtime
