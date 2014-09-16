@@ -93,10 +93,8 @@ def customize_scripts(filename)
       ENV["EXTRA_BASH_SOURCES"] = "source ${HOME}/.git-completion.bash;"
       ENV["TWITTER_JARGON"] = <<-eos
 
-#export CC=/usr/bin/gcc-4.2
 export LC_CTYPE=en_US.UTF-8
 export CLICOLOR=1
-#export LSCOLORS=gxGxFxdxbxDxDxBxBxExEx
 
 export HISTCONTROL=erasedups
 export HISTSIZE=100000
@@ -104,13 +102,7 @@ shopt -s histappend
 
 source ${HOME}/.git-completion.bash
 
-[[ -s "/opt/twitter/rvm/scripts/rvm" ]] && source "/opt/twitter/rvm/scripts/rvm"
-
 export PS1='[\\h \\[\\033[0;36m\\]\\W\\[\\033[0m\\]$(__git_ps1 " \\[\\033[1;32m\\](%s)\\[\\033[0m\\]")]\$ '
-
-# Don't edit this file
-# Instead, put any customisations or personal bash preferences into the file ~/.local.bash
-[[ -s ${HOME}/.local.bash ]] && source ${HOME}/.local.bash
 
 ulimit -n 1024
 
