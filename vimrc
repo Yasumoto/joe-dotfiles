@@ -64,8 +64,7 @@ autocmd BufNewFile,BufRead *.json set ft=javascript
 autocmd BufNewFile,BufRead *.mesos set syntax=python
 autocmd BufNewFile,BufRead *.thermos set syntax=python
 autocmd BufNewFile,BufRead *.gradle set syntax=java
-autocmd BufNewFile,BufRead BUILD set syntax=python
-autocmd BufNewFile,BufRead BUILD.twitter set syntax=python
+autocmd BufNewFile,BufRead BUILD* set syntax=python
 
 "Kill all the trailing whitespace
 highlight ExtraWhitespace ctermbg=red guibg=red

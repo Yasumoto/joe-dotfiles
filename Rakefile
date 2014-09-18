@@ -89,7 +89,7 @@ def customize_scripts(filename)
     elsif hostname.index('tw-mbp13-jsmith') or hostname.index('office.twttr.net') or hostname.index('twttr.net')
       # might want to include the below for nest machines:
       # export VIMRUNTIME=/home/jsmith/vim73/runtime
-      ENV["PATH"] = "/Users/jsmith/Python/CPython-2.7.8/bin:/Users/jsmith/Python/CPython-2.6.9/bin:/Users/jsmith/Python/CPython-3.4.1/bin:/Users/jsmith/Python/PyPy-2.2.1/bin:$PATH:/usr/local/bin:/opt/twitter/bin:${HOME}/bin:/opt/twitter/sbin:${HOME}/.twitools/src/twitter-utilities/sbt:$PATH"
+      ENV["PATH"] = "/Users/jsmith/Python/CPython-2.7.8/bin:/Users/jsmith/Python/CPython-2.6.9/bin:/Users/jsmith/Python/CPython-3.4.1/bin:/Users/jsmith/Python/PyPy-2.2.1/bin:/opt/twitter/bin:$PATH:/usr/local/bin:${HOME}/bin:/opt/twitter/sbin:${HOME}/.twitools/src/twitter-utilities/sbt:$PATH"
       ENV["EXTRA_BASH_SOURCES"] = "source ${HOME}/.git-completion.bash;"
       ENV["TWITTER_JARGON"] = <<-eos
 
