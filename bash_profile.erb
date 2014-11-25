@@ -25,6 +25,7 @@ if which fortune &>/dev/null; then
 	fortune -a
 fi
 
+export JAVA_HOME=$(/usr/libexec/java_home -v 1.7)
 export DIFF_VIEWER="vimdiff"
 
 # Weird workaround for git commit+certain vim plugins and exit code
