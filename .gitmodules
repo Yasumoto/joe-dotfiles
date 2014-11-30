@@ -58,3 +58,6 @@
 [submodule "osx-terminal.app-colors-solarized"]
 	path = osx-terminal.app-colors-solarized
 	url = https://github.com/tomislav/osx-terminal.app-colors-solarized.git
+[submodule "bootstrap_python.sh"]
+	path = bootstrap_python.sh
+	url = https://gist.github.com/5550908.git
