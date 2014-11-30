@@ -55,3 +55,6 @@
 [submodule "vim/bundle/vim-protobuf"]
 	path = vim/bundle/vim-protobuf
 	url = git://github.com/uarun/vim-protobuf.git
+[submodule "osx-terminal.app-colors-solarized"]
+	path = osx-terminal.app-colors-solarized
+	url = https://github.com/tomislav/osx-terminal.app-colors-solarized.git
