@@ -76,3 +76,8 @@
 
 [http]
 	postBuffer = 524288000
+
+[filter "media"]
+	clean = git media clean %f
+	smudge = git media smudge %f
+	required = true
