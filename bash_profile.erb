@@ -17,6 +17,7 @@ PS1="\[\033[G\]$PS1"
 
 alias ls='ls -G'
 
+<%= ENV['TWITTER_JARGON'] %>
 export PATH=<%= ENV['PATH'] %>
 
 # brew/apt-get install fortune
@@ -25,7 +26,9 @@ if which fortune &>/dev/null; then
 	fortune -a
 fi
 
-export JAVA_HOME=$(/usr/libexec/java_home -v 1.7)
+export LC_CTYPE=en_US.UTF-8
+export CLICOLOR=1
+
 export DIFF_VIEWER="vimdiff"
 
 # Weird workaround for git commit+certain vim plugins and exit code
@@ -33,6 +36,7 @@ if [ $(uname) == "Darwin" ];
 then
   export EDITOR="mvim -f"
   export DIFF_VIEWER="ksdiff"
+  export JAVA_HOME=$(/usr/libexec/java_home -v 1.7)
   if [ -f $(brew --prefix)/etc/bash_completion ]; then
     . $(brew --prefix)/etc/bash_completion
   fi
@@ -43,8 +47,5 @@ alias grep='grep --color=auto'
 # Totally put this into a buddy's bashrc if they leave their screen unlocked
 #osascript -e 'say "linux" using "Zarvox"'
 
-mrs_doubtfire () { printf "\033"; printf "[8;24;80t"; }
-
 ulimit -n 1024
 
-<%= ENV['TWITTER_JARGON'] %>
