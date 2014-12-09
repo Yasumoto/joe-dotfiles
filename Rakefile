@@ -70,7 +70,7 @@ end
 def customize_scripts(filename)
   hostname = Socket.gethostname
   if filename == "gitconfig"
-    if hostname.index("tw-mbp13-jsmith") or hostname.index('office.twttr.net') or hostname.index('twttr.net')
+    if hostname.index("tw-mbp-jsmith") or hostname.index('office.twttr.net') or hostname.index('twttr.net')
       puts "On the work laptop, setting work email."
       ENV["GIT_EMAIL"] = "jsmith@twitter.com"
       ENV["GIT_USERNAME"] = "jsmith"
@@ -82,7 +82,7 @@ def customize_scripts(filename)
   end
 
   if filename == "bash_profile"
-    if hostname.index('tw-mbp13-jsmith') or hostname.index('office.twttr.net') or hostname.index('twttr.net')
+    if hostname.index('tw-mbp-jsmith') or hostname.index('office.twttr.net') or hostname.index('twttr.net')
       # might want to include the below for nest machines:
       # export VIMRUNTIME=/home/jsmith/vim73/runtime
       ENV["TWITTER_JARGON"] = <<-eos
