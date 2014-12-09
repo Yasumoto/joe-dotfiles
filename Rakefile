@@ -89,14 +89,15 @@ def customize_scripts(filename)
 source ${HOME}/.git-completion.bash
 
 export PS1='[\\h \\[\\033[0;36m\\]\\W\\[\\033[0m\\]$(__git_ps1 " \\[\\033[1;32m\\](%s)\\[\\033[0m\\]")]\$ '
-
-export PATH=''
 source ~/.tools-cache/setup-dottools-path.sh
-export PATH=/Users/jsmith/Python/CPython-2.7.8/bin:/Users/jsmith/Python/CPython-3.4.1/bin:/Users/jsmith/Python/PyPy-2.2.1/bin:$PATH:/opt/twitter/bin:${HOME}/bin:/opt/twitter/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
-        eos
+      eos
+
+      ENV["SET_PATH"] = <<-eos
+"/Users/jsmith/Python/CPython-2.7.8/bin:/Users/jsmith/Python/CPython-3.4.1/bin:/Users/jsmith/Python/PyPy-2.2.1/bin:$PATH:/opt/twitter/bin:/opt/twitter/sbin"
+      eos
     else
       puts "On normal boxen."
-      ENV["PATH"] = "/Users/joe/Python/CPython-2.7.8/bin:/Users/joe/Python/CPython-3.4.1/bin:/Users/joe/Python/PyPy-2.2.1/bin:/usr/local/bin:$PATH"
+      ENV["SET_PATH"] = "/Users/joe/Python/CPython-2.7.8/bin:/Users/joe/Python/CPython-3.4.1/bin:/Users/joe/Python/PyPy-2.2.1/bin:/usr/local/bin:$PATH"
     end
   end
 
