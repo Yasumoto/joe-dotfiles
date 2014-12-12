@@ -35,7 +35,6 @@ export DIFF_VIEWER="vimdiff"
 # Weird workaround for git commit+certain vim plugins and exit code
 if [ $(uname) == "Darwin" ];
 then
-  export EDITOR="mvim -f"
   export DIFF_VIEWER="ksdiff"
   export JAVA_HOME=$(/usr/libexec/java_home -v 1.7)
   if [ -f $(brew --prefix)/etc/bash_completion ]; then
