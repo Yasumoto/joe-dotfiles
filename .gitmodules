@@ -61,3 +61,6 @@
 [submodule "bootstrap_python.sh"]
 	path = bootstrap_python.sh
 	url = https://gist.github.com/5550908.git
+[submodule "vim/bundle/vim-emoji"]
+	path = vim/bundle/vim-emoji
+	url = https://github.com/junegunn/vim-emoji.git

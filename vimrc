@@ -7,7 +7,6 @@
 "       _/  /  | | | | | |  ___| |___      | |    | |  | |
 "      |___/   |_| |_| |_| |_________|     |_|    |_|  |_|
 "
-"                           03/14/2014
 
 set nocompatible
 
@@ -90,3 +89,10 @@ let g:neosnippet#snippets_directory='~/.vim/bundle/snipmate-snippets/snippets'
 
 " For vim-airline to display
 set laststatus=2
+
+silent! if emoji#available()
+  let g:gitgutter_sign_added = emoji#for('small_blue_diamond')
+  let g:gitgutter_sign_modified = emoji#for('small_orange_diamond')
+  let g:gitgutter_sign_removed = emoji#for('small_red_triangle')
+  let g:gitgutter_sign_modified_removed = emoji#for('collision')
+endif
