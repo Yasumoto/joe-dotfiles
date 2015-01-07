@@ -92,12 +92,10 @@ export PS1='[\\h \\[\\033[0;36m\\]\\W\\[\\033[0m\\]$(__git_ps1 " \\[\\033[1;32m\
 source ~/.tools-cache/setup-dottools-path.sh
       eos
 
-      ENV["SET_PATH"] = <<-eos
-"/Users/jsmith/Python/CPython-2.7.8/bin:/Users/jsmith/Python/CPython-3.4.1/bin:/Users/jsmith/Python/PyPy-2.2.1/bin:$PATH:/opt/twitter/bin:/opt/twitter/sbin"
-      eos
+      ENV["SET_PATH"] = "/Users/jsmith/Python/CPython-2.7.9/bin:/Users/jsmith/Python/CPython-3.4.2/bin:/Users/jsmith/Python/PyPy-2.4.0/bin:$PATH:/opt/twitter/bin:/opt/twitter/sbin"
     else
       puts "On normal boxen."
-      ENV["SET_PATH"] = "/Users/joe/Python/CPython-2.7.8/bin:/Users/joe/Python/CPython-3.4.1/bin:/Users/joe/Python/PyPy-2.2.1/bin:/usr/local/bin:$PATH"
+      ENV["SET_PATH"] = "/Users/joe/Python/CPython-2.7.9/bin:/Users/joe/Python/CPython-3.4.2/bin:/Users/joe/Python/PyPy-2.4.0/bin:/usr/local/bin:$PATH"
     end
   end
 
