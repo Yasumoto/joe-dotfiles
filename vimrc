@@ -58,13 +58,14 @@ endif
 
 autocmd BufNewFile,BufRead *.alert set syntax=sh
 autocmd BufNewFile,BufRead *.aurora set syntax=python
+autocmd BufNewFile,BufRead *.bbcode set syntax=bbcode
 autocmd BufNewFile,BufRead *.confluence set syntax=confluencewiki
+autocmd BufNewFile,BufRead *.gradle set syntax=java
 autocmd BufNewFile,BufRead *.json set ft=javascript
 autocmd BufNewFile,BufRead *.mesos set syntax=python
 autocmd BufNewFile,BufRead *.thermos set syntax=python
-autocmd BufNewFile,BufRead *.gradle set syntax=java
+autocmd BufNewFile,BufRead *.vert set syntax=python
 autocmd BufNewFile,BufRead BUILD* set syntax=python
-autocmd BufNewFile,BufRead *.bbcode set syntax=bbcode
 
 "Kill all the trailing whitespace
 highlight ExtraWhitespace ctermbg=red guibg=red
