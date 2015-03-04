@@ -20,6 +20,10 @@ alias ls='ls -G'
 <%= ENV['TWITTER_JARGON'] %>
 export PATH=<%= ENV['SET_PATH'] %>
 
+export PATH="$HOME/.pyenv/bin:$PATH"
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
+
 # brew/apt-get install fortune
 if which fortune &>/dev/null; then
 	echo -e '\n'

@@ -90,13 +90,8 @@ source ${HOME}/.git-completion.bash
 
 export PS1='[\\h \\[\\033[0;36m\\]\\W\\[\\033[0m\\]$(__git_ps1 " \\[\\033[1;32m\\](%s)\\[\\033[0m\\]")]\$ '
 source ~/.tools-cache/setup-dottools-path.sh
+export PATH=$PATH:/opt/twitter/bin:/opt/twitter/sbin"
       eos
-
-      ENV["SET_PATH"] = "/Users/jsmith/Python/CPython-2.7.9/bin:/Users/jsmith/Python/CPython-3.3.6/bin:/Users/jsmith/Python/CPython-3.4.2/bin:/Users/jsmith/Python/PyPy-2.5.0/bin:$PATH:/opt/twitter/bin:/opt/twitter/sbin"
-    else
-      puts "On normal boxen."
-      ENV["SET_PATH"] = "/Users/joe/Python/CPython-2.7.9/bin:/Users/joe/Python/CPython-3.4.2/bin:/Users/joe/Python/PyPy-2.4.0/bin:/usr/local/bin:$PATH"
     end
   end
-
 end
