@@ -90,7 +90,7 @@ source ${HOME}/.git-completion.bash
 
 export PS1='[\\h \\[\\033[0;36m\\]\\W\\[\\033[0m\\]$(__git_ps1 " \\[\\033[1;32m\\](%s)\\[\\033[0m\\]")]\$ '
 source ~/.tools-cache/setup-dottools-path.sh
-export PATH=$PATH:/opt/twitter/bin:/opt/twitter/sbin"
+export PATH=$PATH:/opt/twitter/bin:/opt/twitter/sbin
       eos
     end
   end
