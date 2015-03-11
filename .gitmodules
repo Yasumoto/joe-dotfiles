@@ -61,3 +61,6 @@
 [submodule "vim/bundle/vim-emoji"]
 	path = vim/bundle/vim-emoji
 	url = https://github.com/junegunn/vim-emoji.git
+[submodule "vim/bundle/swift.vim"]
+	path = vim/bundle/swift.vim
+	url = https://github.com/Keithbsmiley/swift.vim.git
