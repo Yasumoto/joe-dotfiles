@@ -89,7 +89,10 @@ def customize_scripts(filename)
 source ${HOME}/.git-completion.bash
 
 export PS1='[\\h \\[\\033[0;36m\\]\\W\\[\\033[0m\\]$(__git_ps1 " \\[\\033[1;32m\\](%s)\\[\\033[0m\\]")]\$ '
-source ~/.tools-cache/setup-dottools-path.sh
+if [ -r "$HOME/.tools-cache/setup-dottools-path.sh" ]; then
+  . "$HOME/.tools-cache/setup-dottools-path.sh"
+fi
+source /opt/twitter_mde/etc/bash_profile
 export PATH=$PATH:/opt/twitter/bin:/opt/twitter/sbin
       eos
     end
