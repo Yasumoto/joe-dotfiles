@@ -93,7 +93,6 @@ if [ -r "$HOME/.tools-cache/setup-dottools-path.sh" ]; then
   . "$HOME/.tools-cache/setup-dottools-path.sh"
 fi
 source /opt/twitter_mde/etc/bash_profile
-export PATH=$PATH:/opt/twitter/bin:/opt/twitter/sbin
       eos
     end
   end
