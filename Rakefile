@@ -70,30 +70,13 @@ end
 def customize_scripts(filename)
   hostname = Socket.gethostname
   if filename == "gitconfig"
-    if hostname.index("tw-mbp-jsmith") or hostname.index('office.twttr.net') or hostname.index('twttr.net')
+    if hostname.index("SF-M-JSMITH01")
       puts "On the work laptop, setting work email."
-      ENV["GIT_EMAIL"] = "jsmith@twitter.com"
-      ENV["GIT_USERNAME"] = "jsmith"
+      ENV["GIT_USERNAME"] = "jmsmith"
     else
       puts "On a personal box, using gmail account."
-      ENV["GIT_EMAIL"] = "yasumoto7@gmail.com"
       ENV["GIT_USERNAME"] = "joe"
     end
   end
 
-  if filename == "bash_profile"
-    if hostname.index('tw-mbp-jsmith') or hostname.index('office.twttr.net') or hostname.index('twttr.net')
-      # might want to include the below for nest machines:
-      # export VIMRUNTIME=/home/jsmith/vim73/runtime
-      ENV["TWITTER_JARGON"] = <<-eos
-source ${HOME}/.git-completion.bash
-
-export PS1='[\\h \\[\\033[0;36m\\]\\W\\[\\033[0m\\]$(__git_ps1 " \\[\\033[1;32m\\](%s)\\[\\033[0m\\]")]\$ '
-if [ -r "$HOME/.tools-cache/setup-dottools-path.sh" ]; then
-  . "$HOME/.tools-cache/setup-dottools-path.sh"
-fi
-source /opt/twitter_mde/etc/bash_profile
-      eos
-    end
-  end
 end
