@@ -8,16 +8,10 @@ export HISTCONTROL=ignoreboth
 export HISTSIZE=5000
 export HISTFILESIZE=5000
 
-# Allow multiple bash instances to all update the same history file
-# some tuxradar article about bash for power users.
-shopt -s histappend
-
 PS1='\[\e[34;1m\]\t \[\e[33;1m\]\W \[\e[35;1m\]\$ \[\e[0m\]'
 PS1="\[\033[G\]$PS1"
 
 alias ls='ls -G'
-
-<%= ENV['TWITTER_JARGON'] %>
 
 export PATH="${HOME}/.pyenv/bin:$PATH"
 eval "$(pyenv init -)"
@@ -39,26 +33,13 @@ export DIFF_VIEWER="vimdiff"
 if [ $(uname) == "Darwin" ];
 then
   export DIFF_VIEWER="ksdiff"
-  export JAVA_HOME=$(/usr/libexec/java_home -v 1.8)
+  export JAVA_HOME=$(/usr/libexec/java_home -v 1.7)
   if [ -f $(brew --prefix)/etc/bash_completion ]; then
     . $(brew --prefix)/etc/bash_completion
   fi
-
-  if [ -e "${HOME}/Documents/google-cloud-sdk" ]; then
-    # The next line updates PATH for the Google Cloud SDK.
-    source "${HOME}/Documents/google-cloud-sdk/path.bash.inc"
-
-    # The next line enables bash completion for gcloud.
-    source "${HOME}/Documents/google-cloud-sdk/completion.bash.inc"
-  fi
-
 fi
 
 alias grep='grep --color=auto'
 
 # Totally put this into a buddy's bashrc if they leave their screen unlocked
 #osascript -e 'say "linux" using "Zarvox"'
-
-ulimit -n 1024
-
-alias gall='git remote prune origin && git pull origin master && git fetch --tags && git remote prune origin && git gc --prune=now'
