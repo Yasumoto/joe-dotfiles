@@ -16,7 +16,7 @@ task :install => [:submodules] do
 
   linkables = []
   linkables += Dir.glob('bashrc')
-  linkables += Dir.glob('bash_profile.erb')
+  linkables += Dir.glob('bash_profile')
   linkables += Dir.glob('git-completion.bash')
   linkables += Dir.glob('vim')
   linkables += Dir.glob('vimrc')
