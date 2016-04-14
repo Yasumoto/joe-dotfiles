@@ -3,7 +3,7 @@
 
 [user]
   name = Joe Smith
-  email = yasumoto7@gmail.com
+  email = <%= ENV['GIT_EMAIL'] %>
 
 [alias]
   # View the SHA, description, and history graph of the latest 20 commits
@@ -74,13 +74,10 @@
   remote = origin
   merge = refs/heads/master
 
-[http]
-	postBuffer = 524288000
-
 [filter "media"]
 	clean = git media clean %f
 	smudge = git media smudge %f
 	required = true
 
 [push]
-  default = matching
+  default = current

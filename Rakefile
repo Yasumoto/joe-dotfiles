@@ -70,12 +70,14 @@ end
 def customize_scripts(filename)
   hostname = Socket.gethostname
   if filename == "gitconfig"
-    if hostname.index("SF-M-JSMITH01")
+    if hostname.index("SF-M-JSMITH01") or hostname.index("ops7")
       puts "On the work laptop, setting work email."
       ENV["GIT_USERNAME"] = "jmsmith"
+      ENV["GIT_EMAIL"] = "jmsmith@slack-corp.com"
     else
       puts "On a personal box, using gmail account."
       ENV["GIT_USERNAME"] = "joe"
+      ENV["GIT_EMAIL"] = "yasumoto7@gmail.com"
     end
   end
 
