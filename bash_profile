@@ -11,24 +11,11 @@ export HISTFILESIZE=5000
 export LC_CTYPE=en_US.UTF-8
 export CLICOLOR=1
 
-# Two below functions from https://github.com/jimeh/git-aware-prompt/blob/master/prompt.sh
-find_git_branch() {
-  # Based on: http://stackoverflow.com/a/13003854/170413
-  local branch
-  if branch=$(git rev-parse --abbrev-ref HEAD 2> /dev/null); then
-    if [[ "$branch" == "HEAD" ]]; then
-      branch='detached*'
-    fi
-    git_branch="($branch)"
-  else
-    git_branch=""
-  fi
-}
-PROMPT_COMMAND="find_git_branch; $PROMPT_COMMAND"
+source ~/.git-completion.bash
+export GIT_PS1_SHOWDIRTYSTATE='yep'
 
-#               timestamp       hostname      working_dir
-PS1="\[\e[34;1m\]\t \[\e[33;1m\][\h \[\e[37;1m\]\W\[\e[33;1m\]] \[\e[35;1m\]\$git_branch \[\e[31;1m\]\$ \[\e[0m\]"
-SUDO_PS1="\[\e[34;1m\]\t \[\e[33;1m\][\h \[\e[37;1m\]\W\[\e[33;1m\]] \[\e[35;1m\]\$git_branch \[\e[31;1m\]\$ \[\e[0m\]"
+PS1="\[\e[34;1m\]\t \[\e[33;1m\][\h \[\e[37;1m\]\W\[\e[33;1m\]] \[\e[35;1m\]$(__git_ps1 "(%s)") \[\e[31;1m\]\$ \[\e[0m\]"
+
 
 alias ls='ls -G'
 alias grep='grep --color=auto'
