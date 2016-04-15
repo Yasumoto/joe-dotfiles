@@ -21,7 +21,7 @@ PS1='\[\e[34;1m\]\t \[\e[33;1m\][\h \[\e[37;1m\]\W\[\e[33;1m\]] \[\e[35;1m\]$(__
 alias ls='ls -G'
 alias grep='grep --color=auto'
 
-if which pyenv >/dev/null; then
+if ! which pyenv >/dev/null; then
   export PATH="${HOME}/.pyenv/bin:$PATH"
   eval "$(pyenv init -)"
   eval "$(pyenv virtualenv-init -)"
