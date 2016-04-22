@@ -8,3 +8,5 @@ bind b eval "writebuf" "exec sh -c 'pbcopy < /tmp/screen-exchange'"
 #screen, with the time and date and with the current window highlighted
 hardstatus             alwayslastline
 hardstatus string '%{= kG}[ %{G}%H %{g}][%= %{= kw}%?%-Lw%?%{r}(%{W}%n*%f%t%?(%u)%?%{r})%{w}%?%+Lw%?%?%= %{g}][%{B} %d/%m %{W}%c %{g}]'
+
+shell -$SHELL
