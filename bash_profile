@@ -22,9 +22,14 @@ alias ls='ls -G'
 alias grep='grep --color=auto'
 
 if [ -d "${HOME}/.pyenv" ] >/dev/null; then
-  export PATH="${HOME}/.pyenv/bin:$PATH"
+  export PATH="${HOME}/.pyenv/bin:${PATH}"
   eval "$(pyenv init -)"
   eval "$(pyenv virtualenv-init -)"
+fi
+
+if [ -d "/usr/local/opt/go/" ]; then
+  export GOROOT="/usr/local/opt/go"
+  export PATH="${PATH}:${GOROOT}/bin"
 fi
 
 export EDITOR="vim"
