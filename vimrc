@@ -31,7 +31,6 @@ runtime macros/matchit.vim
 
 call pathogen#infect()
 
-let g:neocomplcache_enable_at_startup = 1
 " Enable omni completion.
 autocmd FileType css setlocal omnifunc=csscomplete#CompleteCSS
 autocmd FileType html,markdown setlocal omnifunc=htmlcomplete#CompleteTags
@@ -56,15 +55,10 @@ else
   set background=dark
 endif
 
-autocmd BufNewFile,BufRead *.alert set syntax=sh
 autocmd BufNewFile,BufRead *.aurora set syntax=python
 autocmd BufNewFile,BufRead *.bbcode set syntax=bbcode
-autocmd BufNewFile,BufRead *.confluence set syntax=confluencewiki
 autocmd BufNewFile,BufRead *.gradle set syntax=java
 autocmd BufNewFile,BufRead *.json set ft=javascript
-autocmd BufNewFile,BufRead *.mesos set syntax=python
-autocmd BufNewFile,BufRead *.thermos set syntax=python
-autocmd BufNewFile,BufRead *.vert set syntax=python
 autocmd BufNewFile,BufRead BUILD* set syntax=python
 
 "Kill all the trailing whitespace
@@ -74,19 +68,6 @@ autocmd BufWinEnter * match ExtraWhitespace /\s\+$/
 autocmd InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$/
 autocmd InsertLeave * match ExtraWhitespace /\s\+$/
 autocmd BufWinLeave * call clearmatches()
-
-" Plugin key-mappings.
-imap <C-k>     <Plug>(neosnippet_expand_or_jump)
-smap <C-k>     <Plug>(neosnippet_expand_or_jump)
-xmap <C-k>     <Plug>(neosnippet_expand_target)
-" SuperTab like snippets behavior.
-imap <expr><TAB> neosnippet#expandable() ? "\<Plug>(neosnippet_expand_or_jump)" : pumvisible() ? "\<C-n>" : "\<TAB>"
-smap <expr><TAB> neosnippet#expandable() ? "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
-" For snippet_complete marker.
-if has('conceal')
-  set conceallevel=2 concealcursor=i
-endif
-let g:neosnippet#snippets_directory='~/.vim/bundle/snipmate-snippets/snippets'
 
 " For vim-airline to display
 set laststatus=2

@@ -27,11 +27,6 @@ if [ -d "${HOME}/.pyenv" ] >/dev/null; then
   eval "$(pyenv virtualenv-init -)"
 fi
 
-if [ -d "/usr/local/opt/go/" ]; then
-  export GOROOT="/usr/local/opt/go"
-  export PATH="${PATH}:${GOROOT}/bin"
-fi
-
 export EDITOR="vim"
 export DIFF_VIEWER="vimdiff"
 
