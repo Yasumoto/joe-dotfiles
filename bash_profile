@@ -27,6 +27,11 @@ if [ -d "${HOME}/.pyenv" ] >/dev/null; then
   eval "$(pyenv virtualenv-init -)"
 fi
 
+if [ -d "${HOME}/Documents/go" ] >/dev/null; then
+  export GOPATH=${HOME}/Documents/go
+  export PATH="${GOPATH}/bin:${PATH}"
+fi
+
 export EDITOR="vim"
 export DIFF_VIEWER="vimdiff"
 
