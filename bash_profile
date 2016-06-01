@@ -1,18 +1,15 @@
 [ -z "$PS1" ] && return
 
-# don't put duplicate lines in the history. See bash(1) for more options
-export HISTCONTROL=ignoredups
-# ... and ignore same sucessive entries.
+# Ignore same successive entries and entries that start with space. See bash(1) for more options
 export HISTCONTROL=ignoreboth
-#Make history size way bigger
 export HISTSIZE=5000
 export HISTFILESIZE=5000
 
 export LC_CTYPE=en_US.UTF-8
 export CLICOLOR=1
 
-source ~/.git-completion.bash
-source ~/.git-prompt.sh
+source "${HOME}/.git-completion.bash"
+source "${HOME}/.git-prompt.sh"
 export GIT_PS1_SHOWDIRTYSTATE='yep'
 
 PS1='\[\e[34;1m\]\t \[\e[33;1m\][\h \[\e[37;1m\]\W\[\e[33;1m\]] \[\e[35;1m\]$(__git_ps1 "(%s)") \[\e[31;1m\]\$ \[\e[0m\]'
@@ -27,6 +24,10 @@ if [ -d "${HOME}/.pyenv" ] >/dev/null; then
   eval "$(pyenv virtualenv-init -)"
 fi
 
+if [ -d "${HOME}/.gem/ruby/2.0.0/bin" ] >/dev/null; then
+  export PATH="${HOME}/.gem/ruby/2.0.0/bin:${PATH}"
+fi
+
 if [ -d "${HOME}/Documents/go" ] >/dev/null; then
   export GOPATH=${HOME}/Documents/go
   export PATH="${GOPATH}/bin:${PATH}"
@@ -35,7 +36,6 @@ fi
 export EDITOR="vim"
 export DIFF_VIEWER="vimdiff"
 
-# Weird workaround for git commit+certain vim plugins and exit code
 if [ $(uname) == "Darwin" ];
 then
   export DIFF_VIEWER="ksdiff"
