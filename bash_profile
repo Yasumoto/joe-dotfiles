@@ -33,6 +33,16 @@ if [ -d "${HOME}/Documents/go" ] >/dev/null; then
   export PATH="${GOPATH}/bin:${PATH}"
 fi
 
+if [ -d "${HOME}/workspace" ] >/dev/null; then
+  update_repos () {
+    cd "${HOME}/workspace/chef-repo"; git checkout master; git pull origin master
+    cd "${HOME}/workspace/docs"; git checkout master; git pull origin master
+    cd "${HOME}/workspace/webapp"; git checkout master; git pull origin master
+    cd "${HOME}/workspace/JavaBackend"; git checkout master; git pull origin master
+    cd "${HOME}"
+  }
+fi
+
 export EDITOR="vim"
 export DIFF_VIEWER="vimdiff"
 
