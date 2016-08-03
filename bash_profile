@@ -79,6 +79,8 @@ then
   then ln -fs "$SSH_AUTH_SOCK" "$HOME/.ssh/agent"
   fi
   export SSH_AUTH_SOCK="$HOME/.ssh/agent"
+  export GOROOT="${HOME}/go"
+  export PATH="${HOME}/go/bin:${PATH}"
 fi
 
 # Totally put this into a buddy's bashrc if they leave their screen unlocked
