@@ -49,3 +49,6 @@
 [submodule "vim/bundle/vim-chef"]
 	path = vim/bundle/vim-chef
 	url = https://github.com/vadv/vim-chef
+[submodule "vim/bundle/vim-terraform"]
+	path = vim/bundle/vim-terraform
+	url = https://github.com/hashivim/vim-terraform.git
