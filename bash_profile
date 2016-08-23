@@ -34,12 +34,17 @@ if [ -d "${HOME}/Documents/go" ] >/dev/null; then
 fi
 
 if [ -d "${HOME}/workspace" ] >/dev/null; then
+  cleanup_repo () {
+    CURRENT_BRANCH=$( git branch | grep \* | awk '{ print $2 }')
+    cd "${1}"; git checkout master; git pull origin master; git remote prune origin; git checkout "${CURRENT_BRANCH}"
+  }
   update_repos () {
-    cd "${HOME}/workspace/chef-repo"; git checkout master; git pull origin master
-    cd "${HOME}/workspace/docs"; git checkout master; git pull origin master
-    cd "${HOME}/workspace/webapp"; git checkout master; git pull origin master
-    cd "${HOME}/workspace/JavaBackend"; git checkout master; git pull origin master
-    cd "${HOME}"
+    $(
+      cleanup_repo "${HOME}/workspace/chef-repo"
+      cleanup_repo "${HOME}/workspace/docs"
+      cleanup_repo "${HOME}/workspace/webapp"
+      cleanup_repo "${HOME}/workspace/JavaBackend"
+    )
   }
 fi
 
