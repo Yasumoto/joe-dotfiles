@@ -63,6 +63,7 @@ fi
 
 if [ "$(hostname)" = 'ops7' ];
 then
+  # Use local SSH Key
   unset SSH_AUTH_SOCK
   for PATHNAME in "/tmp/ssh-"*"/agent."* "/var/folders/"*"/"*"/"*"/ssh-"*"/agent."*
   do
@@ -85,6 +86,10 @@ then
   then ln -fs "$SSH_AUTH_SOCK" "$HOME/.ssh/agent"
   fi
   export SSH_AUTH_SOCK="$HOME/.ssh/agent"
+  ssh-add
+
+
+  # Go Bootstrapping
   export GOROOT="${HOME}/go"
   export PATH="${HOME}/go/bin:${PATH}"
 fi
