@@ -35,11 +35,12 @@ fi
 
 if [ -d "${HOME}/workspace" ] >/dev/null; then
   cleanup_repo () {
-    CURRENT_BRANCH=$( git branch | grep \* | awk '{ print $2 }')
-    cd "${1}"; git checkout master; git pull origin master; git remote prune origin; git checkout "${CURRENT_BRANCH}"
+    cd "${1}" || exit
+    CURRENT_BRANCH=$( git branch | grep '\*' | awk '{ print $2 }')
+    git checkout master; git pull origin master; git remote prune origin; git checkout "${CURRENT_BRANCH}"
   }
   update_repos () {
-    $(
+    (
       cleanup_repo "${HOME}/workspace/chef-repo"
       cleanup_repo "${HOME}/workspace/docs"
       cleanup_repo "${HOME}/workspace/webapp"
@@ -55,12 +56,12 @@ if [ $(uname) == "Darwin" ];
 then
   export DIFF_VIEWER="ksdiff"
   export JAVA_HOME=$(/usr/libexec/java_home -v 1.8)
-  if [ -f $(brew --prefix)/etc/bash_completion ]; then
-    . $(brew --prefix)/etc/bash_completion
+  if [ -f "$(brew --prefix)/etc/bash_completion" ]; then
+    . "$(brew --prefix)/etc/bash_completion"
   fi
 fi
 
-if [ $(hostname) = 'ops7' ];
+if [ "$(hostname)" = 'ops7' ];
 then
   unset SSH_AUTH_SOCK
   for PATHNAME in "/tmp/ssh-"*"/agent."* "/var/folders/"*"/"*"/"*"/ssh-"*"/agent."*
