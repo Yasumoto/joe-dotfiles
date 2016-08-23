@@ -91,7 +91,6 @@ then
   then ln -fs "$SSH_AUTH_SOCK" "$HOME/.ssh/agent"
   fi
   export SSH_AUTH_SOCK="$HOME/.ssh/agent"
-  ssh-add
 
 
   # Go Bootstrapping
