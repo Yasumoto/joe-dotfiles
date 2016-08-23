@@ -33,6 +33,23 @@ if [ -d "${HOME}/Documents/go" ] >/dev/null; then
   export PATH="${GOPATH}/bin:${PATH}"
 fi
 
+export EDITOR="vim"
+export DIFF_VIEWER="vimdiff"
+
+if [ $(uname) == "Darwin" ];
+then
+  export DIFF_VIEWER="ksdiff"
+  export JAVA_HOME=$(/usr/libexec/java_home -v 1.8)
+  if [ -f "$(brew --prefix)/etc/bash_completion" ]; then
+    . "$(brew --prefix)/etc/bash_completion"
+  fi
+fi
+
+# Totally put this into a buddy's bashrc if they leave their screen unlocked
+#osascript -e 'say "linux" using "Zarvox"'
+
+# Work-related
+alias ops7='ssh -a ops7'
 if [ -d "${HOME}/workspace" ] >/dev/null; then
   cleanup_repo () {
     cd "${1}" || exit
@@ -47,18 +64,6 @@ if [ -d "${HOME}/workspace" ] >/dev/null; then
       cleanup_repo "${HOME}/workspace/JavaBackend"
     )
   }
-fi
-
-export EDITOR="vim"
-export DIFF_VIEWER="vimdiff"
-
-if [ $(uname) == "Darwin" ];
-then
-  export DIFF_VIEWER="ksdiff"
-  export JAVA_HOME=$(/usr/libexec/java_home -v 1.8)
-  if [ -f "$(brew --prefix)/etc/bash_completion" ]; then
-    . "$(brew --prefix)/etc/bash_completion"
-  fi
 fi
 
 if [ "$(hostname)" = 'ops7' ];
@@ -93,6 +98,3 @@ then
   export GOROOT="${HOME}/go"
   export PATH="${HOME}/go/bin:${PATH}"
 fi
-
-# Totally put this into a buddy's bashrc if they leave their screen unlocked
-#osascript -e 'say "linux" using "Zarvox"'
