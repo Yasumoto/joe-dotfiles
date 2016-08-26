@@ -54,7 +54,14 @@ if [ -d "${HOME}/workspace" ] >/dev/null; then
   cleanup_repo () {
     cd "${1}" || exit
     CURRENT_BRANCH=$( git branch | grep '\*' | awk '{ print $2 }')
-    git checkout master; git pull origin master; git remote prune origin; git checkout "${CURRENT_BRANCH}"
+    git checkout master
+    git pull origin master
+    git remote prune origin
+    for branch in $(git branch --merged master | grep -v master)
+    do
+      git branch -D $branch
+    done
+    git checkout "${CURRENT_BRANCH}"
   }
   update_repos () {
     (
