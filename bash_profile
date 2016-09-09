@@ -12,6 +12,8 @@ source "${HOME}/.git-completion.bash"
 source "${HOME}/.git-prompt.sh"
 export GIT_PS1_SHOWDIRTYSTATE='yep'
 
+export TERM=xterm-256color
+
 PS1='\[\e[34;1m\]\t \[\e[33;1m\][\h \[\e[37;1m\]\W\[\e[33;1m\]] \[\e[35;1m\]$(__git_ps1 "(%s)") \[\e[31;1m\]\$ \[\e[0m\]'
 
 
