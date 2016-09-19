@@ -31,8 +31,12 @@ if [ -d "${HOME}/.gem/ruby/2.0.0/bin" ] >/dev/null; then
 fi
 
 if [ -d "${HOME}/Documents/go" ] >/dev/null; then
-  export GOPATH=${HOME}/Documents/go
+  export GOPATH="${HOME}/Documents/go"
   export PATH="${GOPATH}/bin:${PATH}"
+fi
+
+if [ -d "${HOME}/Documents/swift-3.0-RELEASE-ubuntu14.04/" ] >/dev/null; then
+  export PATH="${HOME}/Documents/swift-3.0-RELEASE-ubuntu14.04/usr/bin/:${PATH}"
 fi
 
 export EDITOR="vim"
