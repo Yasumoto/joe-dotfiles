@@ -18,10 +18,10 @@ set incsearch
 set novisualbell
 set number
 set ruler
-set shiftwidth=2
+set shiftwidth=4
 set showmatch
 set smartindent
-set tabstop=2
+set softtabstop=4
 set title
 set virtualedit=all
 set wildmode=list:longest
