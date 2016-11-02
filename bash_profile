@@ -35,8 +35,10 @@ if [ -d "${HOME}/Documents/go" ] >/dev/null; then
   export PATH="${GOPATH}/bin:${PATH}"
 fi
 
-if [ -d "${HOME}/Documents/swift-3.0-RELEASE-ubuntu14.04/" ] >/dev/null; then
-  export PATH="${HOME}/Documents/swift-3.0-RELEASE-ubuntu14.04/usr/bin/:${PATH}"
+if [ -d "${HOME}/.swiftenv/" ] >/dev/null; then
+    export SWIFTENV_ROOT="${HOME}/.swiftenv"
+    export PATH="${SWIFTENV_ROOT}/bin:${PATH}"
+    eval "$(swiftenv init -)"
 fi
 
 export EDITOR="vim"
