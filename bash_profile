@@ -53,6 +53,14 @@ then
   fi
 fi
 
+shipped() {
+    BRANCH=$(git branch | grep \* | awk '{print $2}')
+    echo "Deleting ${BRANCH}"
+    git checkout master
+    git branch -D $BRANCH
+    git pull origin master
+}
+
 # Totally put this into a buddy's bashrc if they leave their screen unlocked
 #osascript -e 'say "linux" using "Zarvox"'
 
