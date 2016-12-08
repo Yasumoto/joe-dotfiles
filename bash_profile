@@ -44,7 +44,7 @@ fi
 export EDITOR="vim"
 export DIFF_VIEWER="vimdiff"
 
-if [ $(uname) == "Darwin" ];
+if [ "$(uname)" == "Darwin" ];
 then
   export DIFF_VIEWER="ksdiff"
   export JAVA_HOME=$(/usr/libexec/java_home -v 1.8)
@@ -57,9 +57,16 @@ shipped() {
     BRANCH=$(git branch | grep \* | awk '{print $2}')
     echo "Deleting ${BRANCH}"
     git checkout master
-    git branch -D $BRANCH
+    git branch -D "${BRANCH}"
     git pull origin master
 }
+
+if [ -d "${HOME}/workspace/Cappuccino" ] > /dev/null;
+then
+    export NARWHAL_ENGINE=jsc
+    export PATH="${HOME}/workspace/Cappuccino/narwhal/bin:$PATH"
+    export CAPP_BUILD="${HOME}/workspace/Cappuccino/Build"
+fi
 
 # Totally put this into a buddy's bashrc if they leave their screen unlocked
 #osascript -e 'say "linux" using "Zarvox"'
@@ -75,7 +82,7 @@ if [ -d "${HOME}/workspace" ] >/dev/null; then
     git remote prune origin
     for branch in $(git branch --merged master | grep -v master)
     do
-      git branch -D $branch
+      git branch -D "${branch}"
     done
     git checkout "${CURRENT_BRANCH}"
   }
