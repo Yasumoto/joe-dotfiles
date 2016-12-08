@@ -41,6 +41,17 @@ if [ -d "${HOME}/.swiftenv/" ] >/dev/null; then
     eval "$(swiftenv init -)"
 fi
 
+if [ -d "${HOME}/workspace/Cappuccino" ] > /dev/null;
+then
+    export NARWHAL_ENGINE=jsc
+    export PATH="${HOME}/workspace/Cappuccino/narwhal/bin:$PATH"
+    export CAPP_BUILD="${HOME}/workspace/Cappuccino/Build"
+fi
+
+if [ -d "${HOME}/workspace/bin" ] > /dev/null; then
+    export PATH="${HOME}/workspace/bin:${PATH}"
+fi
+
 export EDITOR="vim"
 export DIFF_VIEWER="vimdiff"
 
@@ -60,13 +71,6 @@ shipped() {
     git branch -D "${BRANCH}"
     git pull origin master
 }
-
-if [ -d "${HOME}/workspace/Cappuccino" ] > /dev/null;
-then
-    export NARWHAL_ENGINE=jsc
-    export PATH="${HOME}/workspace/Cappuccino/narwhal/bin:$PATH"
-    export CAPP_BUILD="${HOME}/workspace/Cappuccino/Build"
-fi
 
 # Totally put this into a buddy's bashrc if they leave their screen unlocked
 #osascript -e 'say "linux" using "Zarvox"'
