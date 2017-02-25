@@ -26,6 +26,7 @@ if [ -d "${HOME}/.pyenv" ] >/dev/null; then
   eval "$(pyenv virtualenv-init -)"
 fi
 
+GEM_HOME="${HOME}/.gem"
 if [ -d "${HOME}/.gem/ruby/2.0.0/bin" ] >/dev/null; then
   export PATH="${HOME}/.gem/ruby/2.0.0/bin:${PATH}"
 fi
