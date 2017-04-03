@@ -42,6 +42,10 @@ if [ -d "${HOME}/.swiftenv/" ] >/dev/null; then
     eval "$(swiftenv init -)"
 fi
 
+if [ -d "${HOME}/.rbenv" ] > /dev/null; then
+    export PATH="${HOME}/.rbenv/bin:${PATH}"
+fi
+
 if [ -d "${HOME}/workspace/Cappuccino" ] > /dev/null;
 then
     export NARWHAL_ENGINE=jsc
