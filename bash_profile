@@ -44,6 +44,7 @@ fi
 
 if [ -d "${HOME}/.rbenv" ] > /dev/null; then
     export PATH="${HOME}/.rbenv/bin:${PATH}"
+    eval "$(rbenv init -)"
 fi
 
 if [ -d "${HOME}/workspace/Cappuccino" ] > /dev/null;
