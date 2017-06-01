@@ -55,3 +55,6 @@
 [submodule "vim/bundle/vim-fish"]
 	path = vim/bundle/vim-fish
 	url = https://github.com/dag/vim-fish
+[submodule "oh-my-fish"]
+	path = oh-my-fish
+	url = https://github.com/oh-my-fish/oh-my-fish
