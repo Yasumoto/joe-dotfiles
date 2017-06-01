@@ -52,3 +52,6 @@
 [submodule "vim/bundle/vim-terraform"]
 	path = vim/bundle/vim-terraform
 	url = https://github.com/hashivim/vim-terraform.git
+[submodule "vim/bundle/vim-fish"]
+	path = vim/bundle/vim-fish
+	url = https://github.com/dag/vim-fish
