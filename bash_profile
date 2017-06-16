@@ -10,6 +10,7 @@ export CLICOLOR=1
 
 source "${HOME}/.git-completion.bash"
 source "${HOME}/.git-prompt.sh"
+source "${HOME}/.config/bash/iterm2_shell_integration.bash"
 export GIT_PS1_SHOWDIRTYSTATE='yep'
 
 export TERM=xterm-256color
