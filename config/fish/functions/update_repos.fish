@@ -20,7 +20,13 @@ function update_repos
     cleanup_repo $HOME"/workspace/deploy.tinyspeck.com"
     cleanup_repo $HOME"/workspace/wwwTSAuth"
     cleanup_repo $HOME"/workspace/slack-objc"
-    cleanup_repo $HOME"/workspace/Baseline/swift-corelib-foundation"
+    cleanup_repo $HOME"/workspace/auth.tinyspeck.com"
+    cleanup_repo $HOME"/workspace/checkpoint"
+    cleanup_repo $HOME"/workspace/data-java"
+    cleanup_repo $HOME"/workspace/data-etl"
+    cleanup_repo $HOME"/workspace/flannel"
+    cleanup_repo $HOME"/workspace/slauth"
+    cleanup_repo $HOME"/workspace/Baseline/swift-corelibs-foundation"
     cleanup_repo $HOME"/workspace/Baseline/swift-package-manager"
     cd $CurrentDirectory
 end

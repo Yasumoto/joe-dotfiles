@@ -103,6 +103,15 @@ if [ -d "${HOME}/workspace" ] >/dev/null; then
       cleanup_repo "${HOME}/workspace/docs"
       cleanup_repo "${HOME}/workspace/webapp"
       cleanup_repo "${HOME}/workspace/JavaBackend"
+      cleanup_repo "${HOME}/workspace/auth.tinyspeck.com"
+      cleanup_repo "${HOME}/workspace/wwwTSAuth"
+      cleanup_repo "${HOME}/workspace/checkpoint"
+      cleanup_repo "${HOME}/workspace/data-java"
+      cleanup_repo "${HOME}/workspace/data-etl"
+      cleanup_repo "${HOME}/workspace/deploy.tinyspeck.com"
+      cleanup_repo "${HOME}/workspace/flannel"
+      cleanup_repo "${HOME}/workspace/slack-objc"
+      cleanup_repo "${HOME}/workspace/slauth"
     )
   }
 fi
