@@ -8,9 +8,15 @@ export HISTFILESIZE=5000
 export LC_CTYPE=en_US.UTF-8
 export CLICOLOR=1
 
-source "${HOME}/.git-completion.bash"
-source "${HOME}/.git-prompt.sh"
-source "${HOME}/.config/bash/iterm2_shell_integration.bash"
+enable_config() {
+    if [ -f "${1}" ]; then
+        source "${1}";
+    fi
+}
+
+enable_config "${HOME}/.git-completion.bash"
+enable_config "${HOME}/.git-prompt.sh"
+enable_config "${HOME}/.config/bash/iterm2_shell_integration.bash"
 export GIT_PS1_SHOWDIRTYSTATE='yep'
 
 export TERM=xterm-256color
