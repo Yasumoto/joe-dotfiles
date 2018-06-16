@@ -26,7 +26,9 @@ function update_repos
     cleanup_repo $HOME"/workspace/data-etl"
     cleanup_repo $HOME"/workspace/flannel"
     cleanup_repo $HOME"/workspace/slauth"
-    cleanup_repo $HOME"/workspace/Baseline/swift-corelibs-foundation"
-    cleanup_repo $HOME"/workspace/Baseline/swift-package-manager"
+    cleanup_repo $HOME"/workspace/boto3"
+    cleanup_repo $HOME"/workspace/Baseline/apple/swift-corelibs-foundation"
+    cleanup_repo $HOME"/workspace/Baseline/apple/swift-package-manager"
+    cleanup_repo $HOME"/workspace/Baseline/apple/swift-nio"
     cd $CurrentDirectory
 end
