@@ -18,7 +18,6 @@ function update_repos
     cleanup_repo $HOME"/workspace/slack/webapp"
     cleanup_repo $HOME"/workspace/slack/JavaBackend"
     cleanup_repo $HOME"/workspace/slack/deploy.tinyspeck.com"
-    cleanup_repo $HOME"/workspace/slack/wwwTSAuth"
     cleanup_repo $HOME"/workspace/slack/slack-objc"
     cleanup_repo $HOME"/workspace/slack/auth.tinyspeck.com"
     cleanup_repo $HOME"/workspace/slack/checkpoint"
@@ -27,8 +26,12 @@ function update_repos
     cleanup_repo $HOME"/workspace/slack/flannel"
     cleanup_repo $HOME"/workspace/slack/slauth"
     cleanup_repo $HOME"/workspace/boto/boto3"
+    cleanup_repo $HOME"/workspace/swift-aws/aws-sdk-swift-core"
+    cleanup_repo $HOME"/workspace/swift-aws/aws-sdk-swift"
     cleanup_repo $HOME"/workspace/apple/swift-corelibs-foundation"
     cleanup_repo $HOME"/workspace/apple/swift-package-manager"
+    cleanup_repo $HOME"/workspace/apple/swift-llbuild"
     cleanup_repo $HOME"/workspace/apple/swift-nio"
+    cleanup_repo $HOME"/workspace/apple/swift-nio-ssl"
     cd $CurrentDirectory
 end
