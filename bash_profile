@@ -122,7 +122,7 @@ if [ -d "${HOME}/workspace" ] >/dev/null; then
   }
 fi
 
-if [ "$(hostname)" = 'ops7' -o "$(hostname)" = 'ops9' ];
+if [ "$(hostname)" = 'z-ops-jmsmith-01' -o "$(hostname)" = 'ops9' ];
 then
   # Use local SSH Key
   unset SSH_AUTH_SOCK

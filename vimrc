@@ -56,7 +56,6 @@ else
   set background=dark
 endif
 
-autocmd BufNewFile,BufRead *.aurora set syntax=python
 autocmd BufNewFile,BufRead *.bbcode set syntax=bbcode
 autocmd BufNewFile,BufRead *.gradle set syntax=java
 autocmd BufNewFile,BufRead *.json set ft=javascript
@@ -91,3 +90,6 @@ let g:syntastic_auto_loc_list = 1
 let g:syntastic_check_on_wq = 0
 
 let g:terraform_fmt_on_save = 0
+
+"TODO(jmsmith): Remove on 18.04
+let g:go_version_warning = 0
