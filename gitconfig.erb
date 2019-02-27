@@ -87,3 +87,10 @@
 	smudge = git-lfs smudge -- %f
 	process = git-lfs filter-process
 	required = true
+
+[url "git+ssh://git@slack-github.com"]
+  insteadOf = "https://slack-github.com"
+  insteadOf = "git://slack-github.com"
+
+[includeIf "gitdir:~/workspace/slack-github.com"]
+  path = ~/workspace/slack-github.com/.gitconfig_include

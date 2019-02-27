@@ -93,3 +93,10 @@ let g:terraform_fmt_on_save = 0
 
 "TODO(jmsmith): Remove on 18.04
 let g:go_version_warning = 0
+
+" Our custom hackfmt wrapper doesn't play well with ALE's builtin hackfmt fixer
+function! Slackfmt(buffer) abort
+    let l:executable ='/Users/jmsmith/workspace/slack-github.com/slack/webapp/bin/hackfmt'
+    return {'command': ale#Escape(l:executable) . ' %t -i %s', 'read_temporary_file': 1,}
+endfunction
+let g:ale_fixers={'hack': ['Slackfmt']}

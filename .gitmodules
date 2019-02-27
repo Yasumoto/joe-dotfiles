@@ -55,3 +55,12 @@
 [submodule "oh-my-fish"]
 	path = oh-my-fish
 	url = https://github.com/oh-my-fish/oh-my-fish
+[submodule "vim/bundle/vim-hack"]
+	path = vim/bundle/vim-hack
+	url = git://github.com/hhvm/vim-hack.git
+[submodule "vim/bundle/editorconfig-vim"]
+	path = vim/bundle/editorconfig-vim
+	url = https://github.com/editorconfig/editorconfig-vim.git
+[submodule "vim/bundle/ale"]
+	path = vim/bundle/ale
+	url = git://github.com/w0rp/ale.git

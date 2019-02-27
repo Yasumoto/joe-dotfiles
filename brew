@@ -1,4 +1,5 @@
 fish
+jq
 curl
 fontforge
 fortune
@@ -7,3 +8,13 @@ nmap
 the_silver_searcher
 bash-completion
 coda-cli
+carthage
+homebrew/cask/ksdiff
+nghttp2
+; brew tap vapor/tap
+vapor/tap/vapor
+cmake
+ninja
+shellcheck
+pyenv
+prometheus

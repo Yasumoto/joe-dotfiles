@@ -38,8 +38,8 @@ if [ -d "${GEM_HOME}/bin" ] >/dev/null; then
   export PATH="${GEM_HOME}/bin:${PATH}"
 fi
 
-if [ -d "${HOME}/Documents/go" ] >/dev/null; then
-  export GOPATH="${HOME}/Documents/go"
+if [ -d "${HOME}/workspace" ] >/dev/null; then
+  export GOPATH="${HOME}/go"
   export PATH="${GOPATH}/bin:${PATH}"
 fi
 
@@ -153,4 +153,3 @@ then
   export GOROOT="${HOME}/go"
   export PATH="${HOME}/go/bin:${PATH}"
 fi
-
