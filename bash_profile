@@ -153,3 +153,4 @@ then
   export GOROOT="${HOME}/go"
   export PATH="${HOME}/go/bin:${PATH}"
 fi
+\nsource ~/.bashrc  # so nvm commands work as expected\n
