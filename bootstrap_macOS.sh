@@ -42,8 +42,16 @@ defaults write com.apple.Safari SendDoNotTrackHTTPHeader -bool true
 defaults write com.apple.DiskUtility DUDebugMenuEnabled -bool true
 defaults write com.apple.DiskUtility advanced-image-options -bool true
 
+./bootstrap_homedir_config_files.sh
 
-brew update && brew install fish jq curl fontforge fortune macvim nmap the_silver_searcher bash-completion homebrew/cask/ksdiff nghttp2 shellcheck pyenv prometheus
+brew update
+brew install fish jq curl fontforge fortune nmap the_silver_searcher homebrew/cask/ksdiff nghttp2 shellcheck pyenv prometheus
+
+#https://github.com/tonsky/FiraCode/wiki/Installing
+brew tap homebrew/cask-fonts
+brew install --cask font-fira-code
+
+pip3 install powerline-status
 
 sudo bash -c "echo '/usr/local/bin/fish' >> /etc/shells"
 chsh -s /usr/local/bin/fish

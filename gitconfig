@@ -3,7 +3,7 @@
 
 [user]
   name = Joe Smith
-  email = <%= ENV['GIT_EMAIL'] %>
+  email = yasumoto7@gmail.com
 
 [alias]
   # View the SHA, description, and history graph of the latest 20 commits
@@ -39,7 +39,7 @@
 [core]
 	# Also needed for whitespace
 	whitespace=fix,-indent-with-non-tab,trailing-space,cr-at-eol
-  excludesfile = /Users/<%= ENV['GIT_USERNAME'] %>/.gitignore
+  excludesfile = /Users/joe/.gitignore
 
 [difftool "Kaleidoscope"]
   cmd = ksdiff --partial-changeset --relative-path \"$MERGED\" -- \"$LOCAL\" \"$REMOTE\"

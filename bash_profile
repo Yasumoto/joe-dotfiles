@@ -23,46 +23,13 @@ export TERM=xterm-256color
 
 PS1='\[\e[34;1m\]\t \[\e[33;1m\][\h \[\e[37;1m\]\W\[\e[33;1m\]] \[\e[35;1m\]$(__git_ps1 "(%s)") \[\e[31;1m\]\$ \[\e[0m\]'
 
-
 alias ls='ls -G'
 alias grep='grep --color=auto'
-
-if [ -d "${HOME}/.pyenv" ] >/dev/null; then
-  export PATH="${HOME}/.pyenv/bin:${PATH}"
-  eval "$(pyenv init -)"
-  eval "$(pyenv virtualenv-init -)"
-fi
-
-export GEM_HOME="${HOME}/.gem"
-if [ -d "${GEM_HOME}/bin" ] >/dev/null; then
-  export PATH="${GEM_HOME}/bin:${PATH}"
-fi
-
-if [ -d "${HOME}/workspace" ] >/dev/null; then
-  export GOPATH="${HOME}/go"
-  export PATH="${GOPATH}/bin:${PATH}"
-fi
 
 if [ -d "${HOME}/.swiftenv/" ] >/dev/null; then
     export SWIFTENV_ROOT="${HOME}/.swiftenv"
     export PATH="${SWIFTENV_ROOT}/bin:${PATH}"
     eval "$(swiftenv init -)"
-fi
-
-if [ -d "${HOME}/.rbenv" ] > /dev/null; then
-    export PATH="${HOME}/.rbenv/bin:${PATH}"
-    eval "$(rbenv init -)"
-fi
-
-if [ -d "${HOME}/workspace/Cappuccino" ] > /dev/null;
-then
-    export NARWHAL_ENGINE=jsc
-    export PATH="${HOME}/workspace/Cappuccino/narwhal/bin:$PATH"
-    export CAPP_BUILD="${HOME}/workspace/Cappuccino/Build"
-fi
-
-if [ -d "${HOME}/workspace/bin" ] > /dev/null; then
-    export PATH="${HOME}/workspace/bin:${PATH}"
 fi
 
 export EDITOR="vim"
@@ -89,38 +56,6 @@ shipped() {
 #osascript -e 'say "linux" using "Zarvox"'
 
 # Work-related
-if [ -d "${HOME}/workspace" ] >/dev/null; then
-  cleanup_repo () {
-    cd "${1}" || exit
-    CURRENT_BRANCH=$( git branch | grep '\*' | awk '{ print $2 }')
-    git checkout master
-    git pull origin master
-    git remote prune origin
-    for branch in $(git branch --merged master | grep -v master)
-    do
-      git branch -D "${branch}"
-    done
-    git checkout "${CURRENT_BRANCH}"
-  }
-  update_repos () {
-    (
-      cleanup_repo "${HOME}/workspace/chef-repo"
-      cleanup_repo "${HOME}/workspace/docs"
-      cleanup_repo "${HOME}/workspace/webapp"
-      cleanup_repo "${HOME}/workspace/JavaBackend"
-      cleanup_repo "${HOME}/workspace/auth.tinyspeck.com"
-      cleanup_repo "${HOME}/workspace/wwwTSAuth"
-      cleanup_repo "${HOME}/workspace/checkpoint"
-      cleanup_repo "${HOME}/workspace/data-java"
-      cleanup_repo "${HOME}/workspace/data-etl"
-      cleanup_repo "${HOME}/workspace/deploy.tinyspeck.com"
-      cleanup_repo "${HOME}/workspace/flannel"
-      cleanup_repo "${HOME}/workspace/slack-objc"
-      cleanup_repo "${HOME}/workspace/slauth"
-    )
-  }
-fi
-
 if [ "$(hostname)" = 'z-ops-jmsmith-01' -o "$(hostname)" = 'ops9' ];
 then
   # Use local SSH Key
@@ -146,10 +81,4 @@ then
   then ln -fs "$SSH_AUTH_SOCK" "$HOME/.ssh/agent"
   fi
   export SSH_AUTH_SOCK="$HOME/.ssh/agent"
-
-
-  # Go Bootstrapping
-  export GOROOT="${HOME}/go"
-  export PATH="${HOME}/go/bin:${PATH}"
 fi
-source ~/.bashrc  # so nvm commands work as expected\n
