@@ -22,7 +22,6 @@ task :install => [:submodules] do
   linkables += Dir.glob('git-prompt.sh')
   linkables += Dir.glob('vim')
   linkables += Dir.glob('vimrc')
-  linkables += Dir.glob('screenrc')
   linkables += Dir.glob('gitignore')
   linkables += Dir.glob('gitconfig.erb')
 

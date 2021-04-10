@@ -28,9 +28,6 @@
 [submodule "vim/bundle/vim-protobuf"]
 	path = vim/bundle/vim-protobuf
 	url = git://github.com/uarun/vim-protobuf.git
-[submodule "osx-terminal.app-colors-solarized"]
-	path = osx-terminal.app-colors-solarized
-	url = https://github.com/tomislav/osx-terminal.app-colors-solarized.git
 [submodule "vim/bundle/vim-emoji"]
 	path = vim/bundle/vim-emoji
 	url = https://github.com/junegunn/vim-emoji.git
@@ -64,3 +61,6 @@
 [submodule "vim/bundle/ale"]
 	path = vim/bundle/ale
 	url = git://github.com/w0rp/ale.git
+[submodule "vim/bundle/vim-toml"]
+	path = vim/bundle/vim-toml
+	url = https://github.com/cespare/vim-toml

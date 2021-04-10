@@ -89,7 +89,6 @@ shipped() {
 #osascript -e 'say "linux" using "Zarvox"'
 
 # Work-related
-alias ops7='ssh -a ops7'
 if [ -d "${HOME}/workspace" ] >/dev/null; then
   cleanup_repo () {
     cd "${1}" || exit
@@ -153,4 +152,4 @@ then
   export GOROOT="${HOME}/go"
   export PATH="${HOME}/go/bin:${PATH}"
 fi
-\nsource ~/.bashrc  # so nvm commands work as expected\n
+source ~/.bashrc  # so nvm commands work as expected\n
