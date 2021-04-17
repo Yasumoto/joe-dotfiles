@@ -42,7 +42,7 @@ defaults write com.apple.Safari SendDoNotTrackHTTPHeader -bool true
 defaults write com.apple.DiskUtility DUDebugMenuEnabled -bool true
 defaults write com.apple.DiskUtility advanced-image-options -bool true
 
-./bootstrap_homedir_config_files.sh
+./_bootstrap_homedir_config_files.sh
 
 brew update
 brew install fish jq curl fontforge fortune nmap the_silver_searcher homebrew/cask/ksdiff nghttp2 shellcheck pyenv prometheus pipx

@@ -1,3 +1,7 @@
+if uname -r | grep -qi wsl
+    exit 0
+end
+
 if test -d "$HOME"/.pyenv/bin
     set PATH "$HOME"/.pyenv/bin $PATH
 end
