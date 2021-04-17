@@ -27,7 +27,7 @@
     {
         "defaults":
         {
-            "acrylicOpacity": 0.7,
+            "acrylicOpacity": 0.85,
             "antialiasingMode": "cleartype",
             "fontFace": "Cascadia Mono PL",
             "colorScheme": "Solarized Dark",
