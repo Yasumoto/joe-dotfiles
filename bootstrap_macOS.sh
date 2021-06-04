@@ -45,7 +45,7 @@ defaults write com.apple.DiskUtility advanced-image-options -bool true
 ./_bootstrap_homedir_config_files.sh
 
 brew update
-brew install fish jq curl fontforge fortune nmap the_silver_searcher homebrew/cask/ksdiff nghttp2 shellcheck pyenv prometheus pipx
+brew install fish jq curl fontforge fortune nmap the_silver_searcher homebrew/cask/ksdiff nghttp2 shellcheck pyenv prometheus pipx neofetch
 
 #https://github.com/tonsky/FiraCode/wiki/Installing
 brew tap homebrew/cask-fonts

@@ -1,5 +1,7 @@
 function fish_greeting
     echo
+    neofetch
+    echo
     fortune
     echo
 end
