@@ -1,3 +1,5 @@
+set -U EDITOR vim # WSL Ubuntu 20.04 needs this?
+
 function fish_greeting
     neofetch
     echo
