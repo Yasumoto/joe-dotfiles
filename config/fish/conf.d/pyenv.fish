@@ -7,7 +7,6 @@ if test -d "$HOME"/.pyenv/bin
 end
 
 if not command -s pyenv > /dev/null
-    echo "Install <github.com/yyuu/pyenv> to use 'pyenv'."
     exit 1
 end
 
