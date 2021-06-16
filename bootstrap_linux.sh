@@ -8,7 +8,11 @@ sudo apt-get update
 
 sudo apt-get upgrade
 
-sudo apt-get install fish jq fortune-mod nmap nghttp2-client shellcheck pipenv powerline neofetch curl fonts-cascadia-code
+sudo apt-get install vim fish jq fortune-mod nmap nghttp2-client shellcheck pipenv powerline neofetch curl fonts-cascadia-code
+
+if command -v snap > /dev/null; then
+    sudo snap install --classic code
+fi
 
 chsh -s /usr/bin/fish
 
