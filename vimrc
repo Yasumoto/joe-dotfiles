@@ -49,6 +49,7 @@ let mapleader = ','
 nnoremap <leader>W :%s/\s\+$//<cr>:let @/=''<CR>
 
 syntax on
+let g:solarized_termcolors=256
 colorscheme solarized
 if has('gui_running')
   set background=light
