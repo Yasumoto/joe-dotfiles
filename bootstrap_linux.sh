@@ -12,6 +12,9 @@ sudo apt-get install vim fish jq fortune-mod nmap nghttp2-client shellcheck pipe
 
 if command -v snap > /dev/null; then
     sudo snap install --classic code
+else
+    curl -L "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64" -o ~/Downloads/vscode.deb
+    sudo apt install ~/Downloads/vscode.deb
 fi
 
 chsh -s /usr/bin/fish
