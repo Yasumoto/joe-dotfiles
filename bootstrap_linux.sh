@@ -10,12 +10,6 @@ sudo apt-get upgrade
 
 sudo apt-get install vim fish jq fortune-mod nmap nghttp2-client shellcheck pipenv powerline neofetch curl fonts-cascadia-code
 
-if command -v snap > /dev/null; then
-    sudo snap install --classic code
-else
-    curl -L "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64" -o ~/Downloads/vscode.deb
-    sudo apt install ~/Downloads/vscode.deb
-fi
 
 chsh -s /usr/bin/fish
 
@@ -26,6 +20,13 @@ chsh -s /usr/bin/fish
 if uname -r | grep -qi wsl; then
     echo "Make sure you download the powerline-compatible font at:"
     echo "https://github.com/microsoft/cascadia-code/releases/tag/latest"
+else
+    if command -v snap > /dev/null; then
+        sudo snap install --classic code
+    else
+        curl -L "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64" -o ~/Downloads/vscode.deb
+        sudo apt install ~/Downloads/vscode.deb
+    fi
 fi
 
 if command -v dconf > /dev/null; then
