@@ -10,10 +10,17 @@ Run `./bootstrap_macOS.sh`, which will also call `./bootstrap_homedir_config_fil
 ## Ubuntu
 
 ```sh
-sudo apt install git
+sudo apt install git xclip
 ssh-keygen -t ed25519 -C "yasumoto7+$(hostname)@gmail.com"
+cat ~/.ssh/id_ed25519.pub | xclip -sel clip
+firefox https://github.com/settings/ssh/new
+echo "Update your SSH keys"
+read
+
 mkdir -p ~/workspace/github.com/Yasumoto
 cd ~/workspace/github.com/Yasumoto
 git clone git@github.com:Yasumoto/joe-dotfiles.git
+
+cd ./joe-dotfiles
 ./bootstrap_linux.sh
 ```
