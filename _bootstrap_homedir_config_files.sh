@@ -10,10 +10,11 @@ for target in bash_profile config git-completion.bash git-prompt.sh vim vimrc gi
     original_source="${SCRIPT_DIRECTORY}/${target}"
     destination="${HOME}/.${target}"
     if [ -L "${destination}" ] && [ "$(readlink "${destination}")" = "${original_source}" ]; then
-        echo "${destination} already a symlink, ignoring!"
+        echo "✅ ${destination} already a symlink, ignoring!"
     else
-	echo "Fixing ${destination} to point to ${original_source}"
+	echo "🛠️ Fixing ${destination} to point to ${original_source}"
 	rm -rf "${destination}"
         /bin/ln -s "${original_source}" "${destination}"
     fi
 done
+

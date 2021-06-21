@@ -1,20 +1,20 @@
-joe-dotfiles
-============
+🚀 joe-dotfiles
+===============
 
 A collection of basic dot files
 
-## macOS
+## 🍎 macOS
 
 Run `./bootstrap_macOS.sh`, which will also call `./bootstrap_homedir_config_files.sh`
 
-## Ubuntu
+## 🐧 Ubuntu
 
 ```sh
 sudo apt install git xclip
 ssh-keygen -t ed25519 -C "yasumoto7+$(hostname)@gmail.com"
 cat ~/.ssh/id_ed25519.pub | xclip -sel clip
 firefox https://github.com/settings/ssh/new
-echo "Update your SSH keys"
+echo "🔐 Update your SSH key"
 read
 
 mkdir -p ~/workspace/github.com/Yasumoto
