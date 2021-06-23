@@ -44,16 +44,28 @@ defaults write com.apple.DiskUtility advanced-image-options -bool true
 
 ./_bootstrap_homedir_config_files.sh
 
+if ! command -v brew > /dev/null; then
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+fi
+
 brew update
-brew install fish jq curl fontforge fortune nmap the_silver_searcher homebrew/cask/ksdiff nghttp2 shellcheck pyenv prometheus pipx neofetch
+brew install fish jq curl fontforge fortune nmap \
+    the_silver_searcher homebrew/cask/ksdiff nghttp2 \
+    shellcheck pyenv prometheus pipx neofetch \
+    flake8 clang-format
 
 #https://github.com/tonsky/FiraCode/wiki/Installing
 brew tap homebrew/cask-fonts
 brew install --cask font-fira-code
 
-pip3 install powerline-status
+pip3 install --user powerline-status
 
-sudo bash -c "echo '/usr/local/bin/fish' >> /etc/shells"
-chsh -s /usr/local/bin/fish
+if ! grep fish /etc/shells; then
+    sudo bash -c "echo '/opt/homebrew/bin/fish' >> /etc/shells"
+fi
+
+if [ "$SHELL" != /opt/homebrew/bin/fish ]; then
+    chsh -s /opt/homebrew/bin/fish
+fi
 
 ./oh-my-fish/bin/install --offline
