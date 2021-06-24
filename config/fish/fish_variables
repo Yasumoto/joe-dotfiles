@@ -1,6 +1,6 @@
 # This file contains fish universal variable definitions.
 # VERSION: 3.0
-SETUVAR EDITOR:vim
+SETUVAR --export EDITOR:vim
 SETUVAR __fish_classic_git_prompt_initialized:\x1d
 SETUVAR __fish_initialized:3100
 SETUVAR fish_color_autosuggestion:555\x1ebrblack
