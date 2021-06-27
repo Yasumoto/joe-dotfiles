@@ -60,14 +60,18 @@ chatnets = {
     max_kicks = "1";
     max_msgs = "1";
     max_whois = "1";
-    autosendcmd = "wait 2000; /msg nickserv identify LIBERA_NICKSERV_PASSWORD;wait 2000;";
+    sasl_mechanism = "PLAIN";
+    sasl_username = "Yasumoto";
+    sasl_password = "LIBERA_NICKSERV_PASSWORD";
   };
   GIMPNet = {
     type = "IRC";
     max_kicks = "1";
     max_msgs = "1";
     max_whois = "1";
-    autosendcmd = "wait 2000; /msg nickserv identify GIMPNET_NICKSERV_PASSWORD;wait 2000;";
+    sasl_mechanism = "PLAIN";
+    sasl_username = "Yasumoto";
+    sasl_password = "GIMPNET_NICKSERV_PASSWORD";
   };
 };
 
@@ -81,7 +85,7 @@ channels = (
   { name = "#python"; chatnet = "LiberaChat"; autojoin = "yes"; },
   { name = "#prometheus"; chatnet = "LiberaChat"; autojoin = "yes"; },
   { name = "#gnome"; chatnet = "GIMPNet"; autojoin = "yes"; },
-  { name = "#newcomers"; chatnet = "GIMPNet"; autojoin = "yes"; },
+  { name = "#newcomers"; chatnet = "GIMPNet"; autojoin = "no"; },
   { name = "#c++"; chatnet = "GIMPNet"; autojoin = "yes"; }
 );
 
