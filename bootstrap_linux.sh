@@ -67,7 +67,7 @@ if command -v dconf > /dev/null; then
 fi
 
 echo "🗣️ Setting irssi config, "
-if command -v snam > /dev/null; then
+if command -v snap > /dev/null; then
     snap install irssi
     IRSSI_CONFIG_PATH="${HOME}/snap/irssi/common/.irssi/config"
 else
