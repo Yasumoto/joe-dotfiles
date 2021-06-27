@@ -6,7 +6,7 @@ git submodule update --init
 
 SCRIPT_DIRECTORY=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 
-for target in bash_profile config git-completion.bash git-prompt.sh vim vimrc gitignore gitconfig tmux.conf; do
+for target in bash_profile config git-completion.bash git-prompt.sh vim vimrc gitignore gitconfig tmux.conf.local; do
     original_source="${SCRIPT_DIRECTORY}/${target}"
     destination="${HOME}/.${target}"
     if [ -L "${destination}" ] && [ "$(readlink "${destination}")" = "${original_source}" ]; then
@@ -18,3 +18,4 @@ for target in bash_profile config git-completion.bash git-prompt.sh vim vimrc gi
     fi
 done
 
+ln -s -f "${SCRIPT_DIRECTORY}/tmux/.tmux.conf" "${HOME}/.tmux.conf"

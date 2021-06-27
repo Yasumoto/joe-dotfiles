@@ -67,3 +67,6 @@
 [submodule "vim/bundle/vim-irssi-syntax"]
 	path = vim/bundle/vim-irssi-syntax
 	url = git@github.com:isundil/vim-irssi-syntax.git
+[submodule "tmux"]
+	path = tmux
+	url = https://github.com/gpakosz/.tmux.git

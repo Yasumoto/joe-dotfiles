@@ -1,6 +1,23 @@
 #!/bin/sh
+#
+#/ Usage: bootstrap_linux.sh
+#/
+#/ Setup a development Ubuntu box (should also work with WSL)
+#/
 
-# Setup a development Ubuntu box (should also work with WSL)
+usage() {
+    grep "^#/" "$0" | cut -c"4-" >&2
+    exit "$1"
+}
+
+while [ "$#" -gt 0 ]
+do
+    case "$1" in
+        -h|--help) usage 0;;
+        -*) usage 1;;
+        *) break;;
+    esac
+done
 
 set -eux
 
