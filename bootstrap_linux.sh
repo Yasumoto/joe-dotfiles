@@ -70,6 +70,7 @@ echo "🗣️ Setting irssi config, "
 if [ "$(which irssi)" = "" ] && command -v snap > /dev/null; then
     snap install irssi
     IRSSI_CONFIG_PATH="${HOME}/snap/irssi/common/.irssi/config"
+    mkdir -p "${IRSSI_CONFIG_PATH}"
 else
     sudo apt install irssi
     IRSSI_CONFIG_PATH="${HOME}/.irssi/config"
