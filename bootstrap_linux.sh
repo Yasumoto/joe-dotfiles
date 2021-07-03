@@ -85,7 +85,7 @@ read -r GIMPNET_NICKSERV_PASSWORD
 sed -e "s/LIBERA_NICKSERV_PASSWORD/${LIBERA_NICKSERV_PASSWORD}/g" "${SCRIPT_DIRECTORY}/irssi_config_template" | \
    sed -e "s/GIMPNET_NICKSERV_PASSWORD/${GIMPNET_NICKSERV_PASSWORD}/g" > \
    "${SCRIPT_DIRECTORY}/irssi_config"
-rm -f "${IRSSI_CONFIG_PATH}"
+rm -rf "${IRSSI_CONFIG_PATH}"
 /bin/ln -s "${SCRIPT_DIRECTORY}/irssi_config" "${IRSSI_CONFIG_PATH}"
 
 echo "🐧 All set!"

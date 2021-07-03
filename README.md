@@ -23,4 +23,6 @@ git clone git@github.com:Yasumoto/joe-dotfiles.git
 
 cd ./joe-dotfiles
 ./bootstrap_linux.sh
+
+./install_cli_tools.sh
 ```
