@@ -23,6 +23,10 @@ resource "aws_instance" "bouncer" {
   subnet_id       = aws_subnet.main.id
   user_data       = templatefile("${path.module}/cloud-config.yml.tpl", { hostname = "bouncer" })
 
+  root_block_device {
+      volume_type = "gp3"
+  }
+
   tags = {
     terraform = "true"
     Name      = "bouncer"

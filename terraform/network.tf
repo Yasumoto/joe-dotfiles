@@ -20,6 +20,17 @@ resource "aws_subnet" "main" {
   }
 }
 
+resource "aws_subnet" "second" {
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = "172.16.11.0/24"
+  availability_zone = "us-west-2b"
+
+  tags = {
+    terraform = true
+    Name      = "main"
+  }
+}
+
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
   tags = {
@@ -44,5 +55,10 @@ resource "aws_route_table" "main" {
 
 resource "aws_route_table_association" "main-subnet-association" {
   subnet_id      = aws_subnet.main.id
+  route_table_id = aws_route_table.main.id
+}
+
+resource "aws_route_table_association" "second-subnet-association" {
+  subnet_id      = aws_subnet.second.id
   route_table_id = aws_route_table.main.id
 }
