@@ -33,7 +33,7 @@ if [ "$(which kubectl)" = "" ]; then
     echo "☸️ Installing kubectl"
     curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
     chmod +x ./kubectl
-    mv ./kubctl "${HOME}/workspace/bin"
+    mv ./kubectl "${HOME}/workspace/bin"
     kubectl version --client
 fi
 
