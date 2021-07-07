@@ -80,13 +80,10 @@ channels = (
   { name = "#ubuntu-server"; chatnet = "LiberaChat"; autojoin = "yes"; },
   { name = "#ubuntu-next"; chatnet = "LiberaChat"; autojoin = "yes"; },
   { name = "#ubuntu-devel"; chatnet = "LiberaChat"; autojoin = "yes"; },
-  { name = "#ansible"; chatnet = "LiberaChat"; autojoin = "yes"; },
   { name = "#linux"; chatnet = "LiberaChat"; autojoin = "yes"; },
   { name = "#python"; chatnet = "LiberaChat"; autojoin = "yes"; },
   { name = "#prometheus"; chatnet = "LiberaChat"; autojoin = "yes"; },
   { name = "#gnome"; chatnet = "GIMPNet"; autojoin = "yes"; },
-  { name = "#newcomers"; chatnet = "GIMPNet"; autojoin = "no"; },
-  { name = "#c++"; chatnet = "GIMPNet"; autojoin = "yes"; }
 );
 
 aliases = {
