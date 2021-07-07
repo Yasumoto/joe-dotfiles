@@ -17,6 +17,7 @@ data "aws_ami" "ubuntu" {
 resource "aws_ebs_volume" "bouncer" {
   availability_zone = aws_instance.bouncer.availability_zone
   size              = 40
+  type              = "gp3"
 
   tags = {
     terraform = "true"
@@ -25,7 +26,7 @@ resource "aws_ebs_volume" "bouncer" {
 }
 
 resource "aws_volume_attachment" "ebs_bouncer" {
-  device_name = "/dev/sdb"
+  device_name = "/dev/xvdf"
   volume_id   = aws_ebs_volume.bouncer.id
   instance_id = aws_instance.bouncer.id
 }

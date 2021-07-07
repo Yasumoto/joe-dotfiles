@@ -34,3 +34,12 @@ variable "cluster_service_ipv4_cidr" {
   type    = string
   default = "10.31.0.0/24"
 }
+
+# This is an escape hatch for the occasional 🐔️ chicken-and-egg
+# problem of not being able to connect to a cluster to modify the
+# config_map. If you're having connectivity problems to localhost
+# during a terraform plan/apply, set this to false.
+variable "manage_aws_auth" {
+  type    = bool
+  default = true
+}

@@ -11,8 +11,8 @@ resource "aws_vpc" "main" {
 
 resource "aws_subnet" "main" {
   vpc_id            = aws_vpc.main.id
-  cidr_block        = "172.31.10.0/24"
-  availability_zone = "us-west-2a"
+  cidr_block        = "172.31.0.0/20"
+  availability_zone = "us-west-2c"
 
   tags = {
     terraform = true
@@ -22,8 +22,8 @@ resource "aws_subnet" "main" {
 
 resource "aws_subnet" "second" {
   vpc_id            = aws_vpc.main.id
-  cidr_block        = "172.31.11.0/24"
-  availability_zone = "us-west-2b"
+  cidr_block        = "172.31.48.0/20"
+  availability_zone = "us-west-2d"
 
   tags = {
     terraform = true
@@ -31,22 +31,20 @@ resource "aws_subnet" "second" {
   }
 }
 
-resource "aws_subnet" "public_main" {
+resource "aws_subnet" "third" {
   vpc_id            = aws_vpc.main.id
-  cidr_block        = "172.31.12.0/24"
+  cidr_block        = "172.31.16.0/20"
   availability_zone = "us-west-2a"
 
-  map_public_ip_on_launch = true
-
   tags = {
     terraform = true
     Name      = "main"
   }
 }
 
-resource "aws_subnet" "public_second" {
+resource "aws_subnet" "fourth" {
   vpc_id            = aws_vpc.main.id
-  cidr_block        = "172.31.13.0/24"
+  cidr_block        = "172.31.32.0/20"
   availability_zone = "us-west-2b"
 
   map_public_ip_on_launch = true
@@ -91,11 +89,11 @@ resource "aws_route_table_association" "second-subnet-association" {
 }
 
 resource "aws_route_table_association" "public-main-subnet-association" {
-  subnet_id      = aws_subnet.public_main.id
+  subnet_id      = aws_subnet.third.id
   route_table_id = aws_route_table.main.id
 }
 
 resource "aws_route_table_association" "public-second-subnet-association" {
-  subnet_id      = aws_subnet.public_second.id
+  subnet_id      = aws_subnet.fourth.id
   route_table_id = aws_route_table.main.id
 }
