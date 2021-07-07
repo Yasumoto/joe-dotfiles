@@ -69,26 +69,22 @@ if command -v dconf > /dev/null; then
     fi
 fi
 
-echo "🗣️ Setting irssi config, "
-if [ "$(which irssi)" = "" ] && command -v snap > /dev/null; then
-    snap install irssi
-    IRSSI_CONFIG_PATH="${HOME}/snap/irssi/common/.irssi/config"
-    mkdir -p "${IRSSI_CONFIG_PATH}"
-else
+if [ "$(which irssi)" = "" ] > /dev/null; then
+    echo "🗣️ Setting irssi config, "
     sudo apt install irssi
-    IRSSI_CONFIG_PATH="${HOME}/.irssi/config"
     mkdir -p "${HOME}/.irssi"
+    IRSSI_CONFIG_PATH="${HOME}/.irssi/config"
+
+    echo "🆓 What's your LiberaChat nickserv password?"
+    read -r LIBERA_NICKSERV_PASSWORD
+    echo "👣 What's your GIMPNet nickserv password?"
+    read -r GIMPNET_NICKSERV_PASSWORD
+
+    sed -e "s/LIBERA_NICKSERV_PASSWORD/${LIBERA_NICKSERV_PASSWORD}/g" "${SCRIPT_DIRECTORY}/irssi_config_template" | \
+       sed -e "s/GIMPNET_NICKSERV_PASSWORD/${GIMPNET_NICKSERV_PASSWORD}/g" > \
+       "${SCRIPT_DIRECTORY}/irssi_config"
+    rm -rf "${IRSSI_CONFIG_PATH}"
+    /bin/ln -s "${SCRIPT_DIRECTORY}/irssi_config" "${IRSSI_CONFIG_PATH}"
 fi
-
-echo "🆓 What's your LiberaChat nickserv password?"
-read -r LIBERA_NICKSERV_PASSWORD
-echo "👣 What's your GIMPNet nickserv password?"
-read -r GIMPNET_NICKSERV_PASSWORD
-
-sed -e "s/LIBERA_NICKSERV_PASSWORD/${LIBERA_NICKSERV_PASSWORD}/g" "${SCRIPT_DIRECTORY}/irssi_config_template" | \
-   sed -e "s/GIMPNET_NICKSERV_PASSWORD/${GIMPNET_NICKSERV_PASSWORD}/g" > \
-   "${SCRIPT_DIRECTORY}/irssi_config"
-rm -rf "${IRSSI_CONFIG_PATH}"
-/bin/ln -s "${SCRIPT_DIRECTORY}/irssi_config" "${IRSSI_CONFIG_PATH}"
 
 echo "🐧 All set!"
