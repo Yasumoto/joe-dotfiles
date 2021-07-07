@@ -24,7 +24,7 @@ resource "aws_instance" "bouncer" {
   user_data       = templatefile("${path.module}/cloud-config.yml.tpl", { hostname = "bouncer" })
 
   root_block_device {
-      volume_type = "gp3"
+    volume_type = "gp3"
   }
 
   tags = {

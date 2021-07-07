@@ -7,6 +7,10 @@ AWS_CLI_VERSION="2.2.16"
 TERRAFORM_VERSION="1.0.1"
 TERRAFORM_ZIPFILE="terraform_${TERRAFORM_VERSION}_linux_amd64.zip"
 
+TERRAFORM_DOCS_VERSION="0.14.1"
+TERRAFORM_TFSEC_VERSION="0.42.0"
+TERRAFORM_TFLINT_VERSION="0.30.0"
+
 K9S_VERSION="0.24.13"
 
 mkdir -p ~/workspace/bin
@@ -27,6 +31,26 @@ if [ "$(which terraform)" = "" ]; then
     unzip "${TERRAFORM_ZIPFILE}"
     mv ./terraform "${HOME}/workspace/bin"
     rm "${TERRAFORM_ZIPFILE}"
+fi
+
+if [ "$(which terraform-docs)" = "" ]; then
+    echo "📖️ Installing terraform-docs"
+    curl -OL "https://github.com/terraform-docs/terraform-docs/releases/download/v${TERRAFORM_DOCS_VERSION}/terraform-docs-v${TERRAFORM_DOCS_VERSION}-linux-amd64.tar.gz"
+    tar -xzvf "./terraform-docs-v${TERRAFORM_DOCS_VERSION}-linux-amd64.tar.gz"
+    mv ./terraform-docs "${HOME}/workspace/bin"
+    rm -f ./LICENSE ./README "./terraform-docs-v${TERRAFORM_DOCS_VERSION}-linux-amd64.tar.gz"
+fi
+
+if [ "$(which tfsec)" = "" ]; then
+    curl -OL "https://github.com/tfsec/tfsec/releases/download/v${TERRAFORM_TFSEC_VERSION}/tfsec-linux-amd64"
+    mv ./tfsec-linux-amd64 "${HOME}/workspace/bin/tfsec"
+fi
+
+if [ "$(which tflint)" = "" ]; then
+    curl -OL "https://github.com/terraform-linters/tflint/releases/download/v${TERRAFORM_TFLINT_VERSION}/tflint_linux_amd64.zip"
+    unzip ./tflint_linux_amd64.zip
+    mv ./tflint "${HOME}/workspace/bin"
+    rm ./tflint_linux_amd64.zip
 fi
 
 if [ "$(which kubectl)" = "" ]; then
