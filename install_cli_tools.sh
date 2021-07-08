@@ -3,6 +3,7 @@
 set -eux
 
 AWS_CLI_VERSION="2.2.16"
+AWS_EKSCTL_VERSION="0.55.0"
 
 TERRAFORM_VERSION="1.0.1"
 TERRAFORM_ZIPFILE="terraform_${TERRAFORM_VERSION}_linux_amd64.zip"
@@ -25,6 +26,14 @@ if [ "$(which aws)"  = "" ]; then
     rm -rf ./aws
 fi
 
+if [ "$(which eksctl)" = "" ]; then
+    echo "🎛️ Installing eksctl"
+    curl -LO "https://github.com/weaveworks/eksctl/releases/download/${AWS_EKSCTL_VERSION}/eksctl_Linux_amd64.tar.gz"
+    tar -xzvf ./eksctl_Linux_amd64.tar.gz eksctl
+    mv ./eksctl "${HOME}/workspace/bin"
+    rm -f ./eksctl_Linux_amd64.tar.gz
+fi
+
 if [ "$(which terraform)" = "" ]; then
     echo "🏗️ Installing terraform"
     curl -O "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/${TERRAFORM_ZIPFILE}"
@@ -42,6 +51,7 @@ if [ "$(which terraform-docs)" = "" ]; then
 fi
 
 if [ "$(which tfsec)" = "" ]; then
+    echo "🔒️ Installing tfsec"
     curl -OL "https://github.com/tfsec/tfsec/releases/download/v${TERRAFORM_TFSEC_VERSION}/tfsec-linux-amd64"
     mv ./tfsec-linux-amd64 "${HOME}/workspace/bin/tfsec"
 fi
