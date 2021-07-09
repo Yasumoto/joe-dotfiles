@@ -21,7 +21,7 @@ resource "aws_ebs_volume" "bouncer" {
 
   tags = {
     terraform = "true"
-    Name = "bouncer"
+    Name      = "bouncer"
   }
 }
 
@@ -37,8 +37,8 @@ resource "aws_instance" "bouncer" {
   associate_public_ip_address = true
 
   vpc_security_group_ids = [aws_security_group.allow_ssh.id, aws_security_group.allow_mosh.id]
-  subnet_id       = aws_subnet.main.id
-  user_data       = templatefile("${path.module}/cloud-config.yml.tpl", { hostname = "bouncer" })
+  subnet_id              = aws_subnet.main.id
+  user_data              = templatefile("${path.module}/cloud-config.yml.tpl", { hostname = "bouncer" })
 
   tags = {
     terraform = "true"

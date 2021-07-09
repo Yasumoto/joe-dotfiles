@@ -1,60 +1,28 @@
-resource "aws_vpc" "main" {
-  cidr_block           = "172.31.0.0/16"
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "~> 2.47"
+
+  name                 = local.cluster_name
+  cidr                 = "172.31.0.0/16"
+  azs                  = ["us-west-1a", "us-west-1b", "us-west-1c", "us-west-1d"]
+  private_subnets      = ["172.16.1.0/24", "172.16.2.0/24", "172.16.3.0/24"]
+  public_subnets       = ["172.31.0.0/20", "172.31.16.0/20", "172.31.32.0/20", "172.31.48.0/20"]
+  enable_nat_gateway   = true
+  single_nat_gateway   = true
   enable_dns_hostnames = true
-  enable_dns_support   = true
 
-  tags = {
-    terraform = true
-    Name      = "main"
-  }
+  public_subnet_tags = merge(local.tags, {
+    "kubernetes.io/cluster/${local.cluster_name}" = "shared"
+    "kubernetes.io/role/elb"                      = "1"
+  })
+
+  private_subnet_tags = merge(local.tags, {
+    "kubernetes.io/cluster/${local.cluster_name}" = "shared"
+    "kubernetes.io/role/internal-elb"             = "1"
+  })
+
+  tags = local.tags
 }
-
-resource "aws_subnet" "main" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "172.31.0.0/20"
-  availability_zone = "us-west-2c"
-
-  tags = {
-    terraform = true
-    Name      = "main"
-  }
-}
-
-resource "aws_subnet" "second" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "172.31.48.0/20"
-  availability_zone = "us-west-2d"
-
-  tags = {
-    terraform = true
-    Name      = "main"
-  }
-}
-
-resource "aws_subnet" "third" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "172.31.16.0/20"
-  availability_zone = "us-west-2a"
-
-  tags = {
-    terraform = true
-    Name      = "main"
-  }
-}
-
-resource "aws_subnet" "fourth" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "172.31.32.0/20"
-  availability_zone = "us-west-2b"
-
-  map_public_ip_on_launch = true
-
-  tags = {
-    terraform = true
-    Name      = "main"
-  }
-}
-
 
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id

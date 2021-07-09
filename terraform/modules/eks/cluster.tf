@@ -26,27 +26,53 @@ module "cluster" {
   subnets = var.subnet_ids
   vpc_id  = var.vpc_id
 
+  #TODO(joe): Remove after landing
+  # https://github.com/terraform-aws-modules/terraform-aws-eks/pull/1235/
+  kubeconfig_aws_authenticator_command = "aws"
+  kubeconfig_aws_authenticator_command_args = [
+    "--region",
+    var.region,
+    "eks",
+    "get-token",
+    "--cluster-name",
+    "${var.environment}-${var.region}-${var.project}" # this is cluster_name, defined above
+  ]
+
+  cluster_enabled_log_types = [
+    "controllerManager",
+    "scheduler",
+  ]
+
   # Enable when ready
   #cluster_service_ipv4_cidr = var.cluster_service_ipv4_cidr
 
   # https://docs.aws.amazon.com/eks/latest/userguide/fargate-profile.html
-  fargate_profiles = {
-    default = {
-      name = "default"
-      selectors = [
-        {
-          namespace = "kube-system"
-        },
-        {
-          namespace = "kubernetes-dashboard"
-        },
-        {
-          namespace = "default"
-        }
-      ]
-      tags = local.tags
+  #fargate_profiles = {
+  #  default = {
+  #    name = "default"
+  #    selectors = [
+  #      {
+  #        namespace = "kube-system"
+  #      },
+  #      {
+  #        namespace = "kubernetes-dashboard"
+  #      },
+  #      {
+  #        namespace = "default"
+  #      }
+  #    ]
+  #    tags = local.tags
+  #  }
+  #}
+
+  worker_groups = [
+    {
+      name                 = "main-worker-group"
+      instance_type        = "t3.small"
+      asg_desired_capacity = 2
     }
-  }
+  ]
+
 
   map_users = [
     {
