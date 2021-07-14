@@ -20,6 +20,7 @@ function potentially_update_path
 end
 
 potentially_update_path "$HOME/.local/bin"
+potentially_update_path "$HOME/.cargo/bin"
 potentially_update_path "$HOME/workspace/go/bin"
 potentially_update_path "$HOME/workspace/bin"
 potentially_update_path "/opt/homebrew/bin"
