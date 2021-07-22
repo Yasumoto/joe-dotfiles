@@ -45,20 +45,21 @@ fi
 if [ "$(which terraform-docs)" = "" ]; then
     echo "📖️ Installing terraform-docs"
     curl -OL "https://github.com/terraform-docs/terraform-docs/releases/download/v${TERRAFORM_DOCS_VERSION}/terraform-docs-v${TERRAFORM_DOCS_VERSION}-linux-amd64.tar.gz"
-    tar -xzvf "./terraform-docs-v${TERRAFORM_DOCS_VERSION}-linux-amd64.tar.gz"
+    tar -xzvf "./terraform-docs-v${TERRAFORM_DOCS_VERSION}-linux-amd64.tar.gz" terraform-docs
     mv ./terraform-docs "${HOME}/workspace/bin"
-    rm -f ./LICENSE ./README "./terraform-docs-v${TERRAFORM_DOCS_VERSION}-linux-amd64.tar.gz"
+    rm "./terraform-docs-v${TERRAFORM_DOCS_VERSION}-linux-amd64.tar.gz"
 fi
 
 if [ "$(which tfsec)" = "" ]; then
     echo "🔒️ Installing tfsec"
     curl -OL "https://github.com/tfsec/tfsec/releases/download/v${TERRAFORM_TFSEC_VERSION}/tfsec-linux-amd64"
     mv ./tfsec-linux-amd64 "${HOME}/workspace/bin/tfsec"
+    chmod +x "${HOME}/workspace/bin/tfsec"
 fi
 
 if [ "$(which tflint)" = "" ]; then
     curl -OL "https://github.com/terraform-linters/tflint/releases/download/v${TERRAFORM_TFLINT_VERSION}/tflint_linux_amd64.zip"
-    unzip ./tflint_linux_amd64.zip
+    unzip ./tflint_linux_amd64.zip tflint
     mv ./tflint "${HOME}/workspace/bin"
     rm ./tflint_linux_amd64.zip
 fi
@@ -71,6 +72,21 @@ if [ "$(which kubectl)" = "" ]; then
     kubectl version --client
 fi
 
+if [ "$(which k9s)" = "" ]; then
+    echo "🐶️ Installing k9s"
+    curl -LO "https://github.com/derailed/k9s/releases/download/v${K9S_VERSION}/k9s_Linux_x86_64.tar.gz"
+    tar -xzvf ./k9s_Linux_x86_64.tar.gz k9s
+    rm ./k9s_Linux_x86_64.tar.gz
+    mv ./k9s "${HOME}/workspace/bin"
+fi
+
+if [ "$(which cbonsai)" = "" ]; then
+    echo "🌳 Installing cbonsai"
+    mkdir -p "${HOME}/workspace/gitlab.com/jallbrit"
+    git clone git@gitlab.com:jallbrit/cbonsai.git "${HOME}/workspace/gitlab.com/jallbrit/cbonsai"
+    make -C "${HOME}/workspace/gitlab.com/jallbrit/cbonsai" install PREFIX="${HOME}/workspace"
+fi
+
 if [ "$(which docker)" = "" ]; then
     echo "🐳️ Installing Docker"
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
@@ -81,12 +97,5 @@ if [ "$(which docker)" = "" ]; then
     sudo apt-get install docker-ce docker-ce-cli containerd.io
 fi
 
-if [ "$(which k9s)" = "" ]; then
-    echo "🐶️ Installing k9s"
-    curl -LO "https://github.com/derailed/k9s/releases/download/v${K9S_VERSION}/k9s_Linux_x86_64.tar.gz"
-    tar -xzvf ./k9s_Linux_x86_64.tar.gz k9s
-    rm ./k9s_Linux_x86_64.tar.gz
-    mv ./k9s "${HOME}/workspace/bin"
-fi
 
 echo "🐧️ Happy hacking!"
