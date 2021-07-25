@@ -47,7 +47,7 @@ if [ "$(which terraform-docs)" = "" ]; then
     curl -OL "https://github.com/terraform-docs/terraform-docs/releases/download/v${TERRAFORM_DOCS_VERSION}/terraform-docs-v${TERRAFORM_DOCS_VERSION}-linux-amd64.tar.gz"
     tar -xzvf "./terraform-docs-v${TERRAFORM_DOCS_VERSION}-linux-amd64.tar.gz" terraform-docs
     mv ./terraform-docs "${HOME}/workspace/bin"
-    rm "./terraform-docs-v${TERRAFORM_DOCS_VERSION}-linux-amd64.tar.gz"
+    rm -f "./terraform-docs-v${TERRAFORM_DOCS_VERSION}-linux-amd64.tar.gz"
 fi
 
 if [ "$(which tfsec)" = "" ]; then
