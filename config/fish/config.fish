@@ -1,5 +1,7 @@
 set -Ux EDITOR vim # WSL Ubuntu 20.04 needs this?
 
+set -gx GPG_TTY (tty)
+
 function fish_greeting
     if command -v neofetch > /dev/null
         echo
