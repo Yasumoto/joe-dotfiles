@@ -17,6 +17,7 @@ set hlsearch
 set incsearch
 set novisualbell
 set number
+set paste
 set ruler
 set shiftwidth=4
 set showmatch
@@ -61,6 +62,7 @@ autocmd BufNewFile,BufRead *.bbcode set syntax=bbcode
 autocmd BufNewFile,BufRead *.gradle set syntax=java
 autocmd BufNewFile,BufRead *.json set ft=javascript
 autocmd BufNewFile,BufRead BUILD* set syntax=python
+autocmd BufNewFile,BufRead kubeconfig* set syntax=yaml
 
 "Kill all the trailing whitespace
 highlight ExtraWhitespace ctermbg=red guibg=red
