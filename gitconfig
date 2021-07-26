@@ -4,6 +4,7 @@
 [user]
   name = Joe Smith
   email = yasumoto7@gmail.com
+  signingkey = 14FA88BD7850A541
 
 [alias]
   # View the SHA, description, and history graph of the latest 20 commits
@@ -37,37 +38,38 @@
   untracked = cyan
 
 [core]
-	# Also needed for whitespace
-	whitespace=fix,-indent-with-non-tab,trailing-space,cr-at-eol
+  # Also needed for whitespace
+  whitespace=fix,-indent-with-non-tab,trailing-space,cr-at-eol
   excludesfile = /Users/joe/.gitignore
 
-[difftool "Kaleidoscope"]
-  cmd = ksdiff --partial-changeset --relative-path \"$MERGED\" -- \"$LOCAL\" \"$REMOTE\"
+# Templatize for macOS eventually
+#[diff]
+#  guitool = Kaleidoscope
+#
+#[difftool "Kaleidoscope"]
+#  cmd = ksdiff --partial-changeset --relative-path \"$MERGED\" -- \"$LOCAL\" \"$REMOTE\"
+#
+#[merge]
+#  tool = Kaleidoscope
+#
+#[mergetool "Kaleidoscope"]
+#  cmd = ksdiff --merge --output \"$MERGED\" --base \"$BASE\" -- \"$LOCAL\" \"$REMOTE\"
+#
+#[credential]
+#  helper = osxkeychain
 
 [difftool]
   prompt = false
 
-[diff]
-  guitool = Kaleidoscope
-
-[mergetool "Kaleidoscope"]
-  cmd = ksdiff --merge --output \"$MERGED\" --base \"$BASE\" -- \"$LOCAL\" \"$REMOTE\"
-
 [mergetool]
   prompt = false
 
-[merge]
-  tool = Kaleidoscope
-
 [branch]
-	#tells git-branch and git-checkout to setup new branches so that git-pull(1)
-	#will appropriately merge from that remote branch.  Recommended.  Without this,
-	#you will have to add --track to your branch command or manually merge remote
-	#tracking branches with "fetch" and then "merge".
-	autosetupmerge = true
-
-[credential]
-	helper = osxkeychain
+  #tells git-branch and git-checkout to setup new branches so that git-pull(1)
+  #will appropriately merge from that remote branch.  Recommended.  Without this,
+  #you will have to add --track to your branch command or manually merge remote
+  #tracking branches with "fetch" and then "merge".
+  autosetupmerge = true
 
 # Always use origin as the default remote for master.
 [branch "master"]
@@ -75,22 +77,18 @@
   merge = refs/heads/master
 
 [filter "media"]
-	clean = git media clean %f
-	smudge = git media smudge %f
-	required = true
+  clean = git media clean %f
+  smudge = git media smudge %f
+  required = true
 
 [push]
   default = current
 
 [filter "lfs"]
-	clean = git-lfs clean -- %f
-	smudge = git-lfs smudge -- %f
-	process = git-lfs filter-process
-	required = true
+  clean = git-lfs clean -- %f
+  smudge = git-lfs smudge -- %f
+  process = git-lfs filter-process
+  required = true
 
-[url "git+ssh://git@slack-github.com"]
-  insteadOf = "https://slack-github.com"
-  insteadOf = "git://slack-github.com"
-
-[includeIf "gitdir:~/workspace/slack-github.com"]
-  path = ~/workspace/slack-github.com/.gitconfig_include
+[includeIf "gitdir:~/src"]
+  path = ~/src/.gitconfig_include
