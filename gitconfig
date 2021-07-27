@@ -90,5 +90,5 @@
   process = git-lfs filter-process
   required = true
 
-[includeIf "gitdir:~/src"]
+[includeIf "gitdir:~/src/"]
   path = ~/src/.gitconfig_include
