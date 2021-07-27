@@ -1,3 +1,7 @@
+if status --is-login
+    exit
+end
+
 set -e SSH_AUTH_SOCK
 
 for PATHNAME in /tmp/ssh-*/agent.*
