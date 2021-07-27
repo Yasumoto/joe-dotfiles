@@ -13,4 +13,5 @@ function clone
     set FILESYSTEM_LOCATION "/home/$USER/workspace/$PROVIDER/$OWNER"
     mkdir -p "$FILESYSTEM_LOCATION"
     git clone "$LOCATION" "$FILESYSTEM_LOCATION/$REPO"
+    cd "$FILESYSTEM_LOCATION/$REPO"
 end
