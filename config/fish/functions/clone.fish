@@ -7,10 +7,19 @@ function clone
     else
         set PROVIDER (echo $LOCATION | cut -f1 -d: | cut -f2 -d\@)
         set OWNER (echo $LOCATION | cut -f2 -d: | cut -f1 -d/)
-        set REPO (echo $LOCATION | cut -f2 -d: | cut -f2 -d/ | cut -f1 -d.)
+        set REPO (echo $LOCATION | cut -f2 -d: | cut -f3 -d/ | cut -f1 -d.)
+	if [ -n $REPO ]
+          # This is a GitLab-ism
+          set SUBPROJECT (echo $LOCATION | cut -f2 -d: | cut -f2 -d/ | cut -f1 -d.)
+	end
     end
 
-    set FILESYSTEM_LOCATION "/home/$USER/workspace/$PROVIDER/$OWNER"
+    if [ -n $SUBPROJECT ]
+      set FILESYSTEM_LOCATION "/home/$USER/workspace/$PROVIDER/$OWNER/$SUBPROJECT"
+    else
+      set FILESYSTEM_LOCATION "/home/$USER/workspace/$PROVIDER/$OWNER"
+    end
+
     mkdir -p "$FILESYSTEM_LOCATION"
     git clone "$LOCATION" "$FILESYSTEM_LOCATION/$REPO"
     cd "$FILESYSTEM_LOCATION/$REPO"
