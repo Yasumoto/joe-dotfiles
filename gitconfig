@@ -24,14 +24,6 @@
   local = yellow
   remote = green
 
-[color "diff"]
-  meta = yellow bold
-  frag = magenta bold
-  old = red bold
-  new = green bold
-  # allow for highlighting whitespace in diffs
-  whitespace = red reverse
-
 [color "status"]
   added = yellow
   changed = green
@@ -58,20 +50,30 @@
 #[credential]
 #  helper = osxkeychain
 
-[diff]
-    tool = meld
-[difftool "meld"]
-    cmd = meld "$LOCAL" "$REMOTE"
-[merge]
-    tool = meld
-[mergetool "meld"]
-    cmd = meld "$LOCAL" "$MERGED" "$REMOTE" --output "$MERGED"
+# https://github.com/dandavison/delta
+[pager]
+    diff = delta
+    log = delta
+    reflog = delta
+    show = delta
 
-[difftool]
-  prompt = false
+[interactive]
+    diffFilter = delta --color-only --features=interactive
 
-[mergetool]
-  prompt = false
+[delta]
+    features = decorations
+
+[delta "interactive"]
+    keep-plus-minus-markers = false
+
+[delta "decorations"]
+    commit-decoration-style = blue ol
+    commit-style = raw
+    file-style = omit
+    hunk-header-decoration-style = blue box
+    hunk-header-file-style = red
+    hunk-header-line-number-style = "#067a00"
+    hunk-header-style = file line-number syntax
 
 [branch]
   #tells git-branch and git-checkout to setup new branches so that git-pull(1)
