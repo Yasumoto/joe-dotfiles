@@ -6,7 +6,6 @@ AWS_CLI_VERSION="2.2.16"
 AWS_EKSCTL_VERSION="0.55.0"
 
 TERRAFORM_VERSION="1.0.1"
-TERRAFORM_ZIPFILE="terraform_${TERRAFORM_VERSION}_linux_amd64.zip"
 
 TERRAFORM_DOCS_VERSION="0.14.1"
 TERRAFORM_TFSEC_VERSION="0.42.0"
@@ -16,6 +15,8 @@ K9S_VERSION="0.24.13"
 
 BAT_VERSION="v0.18.2"
 DELTA_VERSION="0.8.3"
+
+NEOVIM_VERSION="0.5.0"
 
 mkdir -p ~/workspace/bin
 cd "${HOME}" || exit
@@ -38,6 +39,7 @@ if [ "$(which eksctl)" = "" ]; then
 fi
 
 if [ "$(which terraform)" = "" ]; then
+    TERRAFORM_ZIPFILE="terraform_${TERRAFORM_VERSION}_linux_amd64.zip"
     echo "🏗️ Installing terraform"
     curl -L -O "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/${TERRAFORM_ZIPFILE}"
     unzip "${TERRAFORM_ZIPFILE}"
@@ -124,6 +126,13 @@ if [ "$(which delta)" = "" ]; then
     rm ./delta-${DELTA_VERSION}-x86_64-unknown-linux-gnu.tar.gz
     mv ./delta-${DELTA_VERSION}-x86_64-unknown-linux-gnu/delta "${HOME}/workspace/bin"
     rm -rf ./delta-${DELTA_VERSION}-x86_64-unknown-linux-gnu
+fi
+
+if [ "$(which nvim)" = "" ]; then
+    echo "🌟️ Installing Neovim"
+    curl -L -O "https://github.com/neovim/neovim/releases/download/v${NEOVIM_VERSION}/nvim.appimage"
+    chmod +x ./nvim.appimage
+    mv ./nvim.appimage "${HOME}/workspace/bin/nvim"
 fi
 
 echo "🐧️ Happy hacking!"
