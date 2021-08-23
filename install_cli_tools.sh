@@ -12,6 +12,7 @@ TERRAFORM_TFSEC_VERSION="0.42.0"
 TERRAFORM_TFLINT_VERSION="0.30.0"
 
 K9S_VERSION="0.24.15"
+MINIKUBE_VERSION="1.22.0"
 
 BAT_VERSION="v0.18.2"
 DELTA_VERSION="0.8.3"
@@ -83,6 +84,11 @@ if [ "$(which k9s)" = "" ]; then
     tar -xzvf ./k9s_Linux_x86_64.tar.gz k9s
     rm ./k9s_Linux_x86_64.tar.gz
     mv ./k9s "${HOME}/workspace/bin"
+fi
+
+if [ "$(which minikube)" = "" ]; then
+    curl -L "https://storage.googleapis.com/minikube/releases/v${MINIKUBE_VERSION}/minikube-linux-amd64" -o "${HOME}/workspace/bin/minikube"
+    chmod +x "${HOME}/workspace/bin/minikube"
 fi
 
 if [ "$(which cbonsai)" = "" ]; then

@@ -47,3 +47,5 @@ if [ -d /usr/local/cuda-11.3/bin ]
     set PATH $PATH "$HOME/.local/bin" /usr/local/cuda-11.3/bin
     set LD_LIBRARY_PATH "/usr/local/cuda-11.3/lib64:$LD_LIBRARY_PATH"
 end
+
+starship init fish | source
