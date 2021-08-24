@@ -87,4 +87,6 @@ if [ "$(which irssi)" = "" ] > /dev/null; then
     /bin/ln -s "${SCRIPT_DIRECTORY}/irssi_config" "${IRSSI_CONFIG_PATH}"
 fi
 
+./install_starship.sh
+
 echo "🐧 All set!"

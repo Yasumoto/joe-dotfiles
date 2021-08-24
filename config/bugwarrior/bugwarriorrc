@@ -9,7 +9,7 @@ annotation_links = True
 
 # Setting this to True will include issue comments and author name in task
 # annotations
-annotation_comments = True
+annotation_comments = False
 
 [nlk]
 service = gitlab
