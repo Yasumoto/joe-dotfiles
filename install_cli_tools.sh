@@ -91,6 +91,13 @@ if [ "$(which minikube)" = "" ]; then
     chmod +x "${HOME}/workspace/bin/minikube"
 fi
 
+if [ "$(which microk8s)" = "" ]; then
+    sudo snap install microk8s --classic
+    # https://github.com/ubuntu/microk8s#user-access-without-sudo
+    sudo usermod -a -G microk8s "${USER}"
+    sudo chown -f -R "${USER}" ~/.kube
+fi
+
 if [ "$(which cbonsai)" = "" ]; then
     echo "🌳 Installing cbonsai"
     mkdir -p "${HOME}/workspace/gitlab.com/jallbrit"
@@ -106,6 +113,8 @@ if [ "$(which docker)" = "" ]; then
   $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
     sudo apt-get update
     sudo apt-get install docker-ce docker-ce-cli containerd.io
+    # https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user
+    sudo usermod -aG docker "${USER}"
 fi
 
 if [ "$(which gh)" = "" ]; then
