@@ -64,6 +64,7 @@ if [ "$(which tfsec)" = "" ]; then
 fi
 
 if [ "$(which tflint)" = "" ]; then
+    echo "🧹️ Installing tflint"
     curl -L -O "https://github.com/terraform-linters/tflint/releases/download/v${TERRAFORM_TFLINT_VERSION}/tflint_linux_amd64.zip"
     unzip ./tflint_linux_amd64.zip tflint
     mv ./tflint "${HOME}/workspace/bin"
@@ -86,12 +87,17 @@ if [ "$(which k9s)" = "" ]; then
     mv ./k9s "${HOME}/workspace/bin"
 fi
 
+if [ "$(which helm)" = "" ]; then
+    sudo snap install helm --classic
+fi
+
 if [ "$(which minikube)" = "" ]; then
     curl -L "https://storage.googleapis.com/minikube/releases/v${MINIKUBE_VERSION}/minikube-linux-amd64" -o "${HOME}/workspace/bin/minikube"
     chmod +x "${HOME}/workspace/bin/minikube"
 fi
 
 if [ "$(which microk8s)" = "" ]; then
+    echo "🔬️ Installing microk8s"
     sudo snap install microk8s --classic
     # https://github.com/ubuntu/microk8s#user-access-without-sudo
     sudo usermod -a -G microk8s "${USER}"
