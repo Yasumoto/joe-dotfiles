@@ -49,3 +49,4 @@ if [ -d /usr/local/cuda-11.3/bin ]
 end
 
 starship init fish | source
+zoxide init fish | source

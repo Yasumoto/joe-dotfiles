@@ -23,13 +23,15 @@ set -eux
 
 SCRIPT_DIRECTORY=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 
+sudo apt-add-repository ppa:fish-shell/release-3
+
 sudo apt-get update
 
 sudo apt-get upgrade
 
 sudo apt-get install vim fish jq fortune-mod nmap nghttp2-client shellcheck pipenv powerline \
     neofetch curl fonts-cascadia-code tmux mosh apt-transport-https ca-certificates gnupg \
-    lsb-release gnome-common gawk golang gopls libncursesw5-dev
+    lsb-release gnome-common gawk golang gopls libncursesw5-dev zoxide
 
 
 if [ "$SHELL" != "/usr/bin/fish" ]; then
@@ -88,5 +90,7 @@ if [ "$(which irssi)" = "" ] > /dev/null; then
 fi
 
 ./install_starship.sh
+./install_fisher.fish
+./install_fisher_plugins.fish
 
 echo "🐧 All set!"
