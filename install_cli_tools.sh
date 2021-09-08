@@ -16,6 +16,7 @@ MINIKUBE_VERSION="1.22.0"
 DIVE_VERSION="0.10.0"
 KUBESCAPE_VERSION=1.0.66
 STERN_VERSION=1.20.0
+KUBECTX_VERSION=0.9.4
 
 BAT_VERSION="v0.18.3"
 DELTA_VERSION="0.8.3"
@@ -300,3 +301,21 @@ install_tool gping 📈️ \
     "https://github.com/orf/gping/releases/download/gping-v${GPING_VERSION}/gping-Linux-x86_64.tar.gz" \
     ./gping-Linux-x86_64.tar.gz \
     "tar -xzvf"
+
+install_tool kubectx 🛹️ \
+    "https://github.com/ahmetb/kubectx/releases/download/v${KUBECTX_VERSION}/kubectx_v${KUBECTX_VERSION}_linux_x86_64.tar.gz" \
+    "./kubectx_v${KUBECTX_VERSION}_linux_x86_64.tar.gz" \
+    "tar -xzvf"
+
+if [ ! -f "${HOME}/.config/fish/completions/kubectx.fish" ]; then
+    curl -L -o "${HOME}/.config/fish/completions/kubectx.fish" "https://raw.githubusercontent.com/ahmetb/kubectx/v${KUBECTX_VERSION}/completion/kubectx.fish"
+fi
+
+install_tool kubens 🍀️ \
+    "https://github.com/ahmetb/kubectx/releases/download/v${KUBECTX_VERSION}/kubens_v${KUBECTX_VERSION}_linux_x86_64.tar.gz" \
+    "./kubens_v${KUBECTX_VERSION}_linux_x86_64.tar.gz" \
+    "tar -xzvf"
+
+if [ ! -f "${HOME}/.config/fish/completions/kubens.fish" ]; then
+    curl -L -o "${HOME}/.config/fish/completions/kubens.fish" "https://raw.githubusercontent.com/ahmetb/kubectx/v${KUBECTX_VERSION}/completion/kubens.fish"
+fi
