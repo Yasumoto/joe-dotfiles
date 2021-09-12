@@ -92,6 +92,16 @@ install_tool() {
     fi
 }
 
+snap_install_tool() {
+    SNAP_NAME="$1"
+
+    if [ -f /run/snapd.socket ]; then
+	sudo snap install "$SNAP_NAME" --classic
+    else
+	echo "No snapd to install $SNAP_NAME!"
+    fi
+}
+
 if [ "$(which aws)"  = "" ]; then
     echo "☁️ Installing aws-cli"
     curl -L "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${AWS_CLI_VERSION}.zip" -o "awscliv2.zip"
@@ -158,7 +168,7 @@ if [ "$(which k9s)" = "" ]; then
 fi
 
 if [ "$(which helm)" = "" ]; then
-    sudo snap install helm --classic
+    snap_install_tool helm
 fi
 
 if [ "$(which minikube)" = "" ]; then
@@ -168,10 +178,12 @@ fi
 
 if [ "$(which microk8s)" = "" ]; then
     echo "🔬️ Installing microk8s"
-    sudo snap install microk8s --classic
+    snap_install_tool microk8s
     # https://github.com/ubuntu/microk8s#user-access-without-sudo
-    sudo usermod -a -G microk8s "${USER}"
-    sudo chown -f -R "${USER}" ~/.kube
+    if [ "$(which microk8s)" != "" ]; then
+	sudo usermod -a -G microk8s "${USER}"
+	sudo chown -f -R "${USER}" ~/.kube
+    fi
 fi
 
 if [ "$(which cbonsai)" = "" ]; then
