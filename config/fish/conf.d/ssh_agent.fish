@@ -21,7 +21,12 @@ end
 # Wasn't able to restore an existing agent
 if [ -z $SSH_AUTH_SOCK ]
     eval (ssh-agent -c)
-    ssh-add
+
+    if [ (uname) = "Darwin" ];
+        ssh-add -K
+    else
+        ssh-add
+    end
 end
 
 if [ $SSH_AUTH_SOCK != "$HOME/.ssh/agent" ]

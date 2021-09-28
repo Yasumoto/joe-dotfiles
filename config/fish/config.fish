@@ -24,22 +24,22 @@ potentially_update_path "/opt/homebrew/bin"
 potentially_update_path "$HOME/workspace/github.com/phacility/arcanist/bin/"
 
 # Ubuntu
-if [ -d /usr/local/lib/python3.9/site-packages/powerline/bindings/fish ]
-    set fish_function_path $fish_function_path /usr/local/lib/python3.9/site-packages/powerline/bindings/fish
-end
-if [ -d /usr/share/powerline/bindings/fish ]
-    set fish_function_path $fish_function_path /usr/share/powerline/bindings/fish
-    powerline-setup
-end
+#if [ -d /usr/local/lib/python3.9/site-packages/powerline/bindings/fish ]
+#    set fish_function_path $fish_function_path /usr/local/lib/python3.9/site-packages/powerline/bindings/fish
+#end
+#if [ -d /usr/share/powerline/bindings/fish ]
+#    set fish_function_path $fish_function_path /usr/share/powerline/bindings/fish
+#    powerline-setup
+#end
 
 # macOS
-if [ -d /Users/$USER/Library/Python/3.8/lib/python/site-packages ]
-    set fish_function_path $fish_function_path /Users/$USER/Library/Python/3.8/lib/python/site-packages/powerline/bindings/fish
-end
-if [ -d /Users/joesmith/Library/Python/3.8/bin ]
-    set PATH $PATH /Users/$USER/Library/Python/3.8/bin
-    powerline-setup
-end
+#if [ -d /Users/$USER/Library/Python/3.8/lib/python/site-packages ]
+#    set fish_function_path $fish_function_path /Users/$USER/Library/Python/3.8/lib/python/site-packages/powerline/bindings/fish
+#end
+#if [ -d /Users/joesmith/Library/Python/3.8/bin ]
+#    set PATH $PATH /Users/$USER/Library/Python/3.8/bin
+#    powerline-setup
+#end
 
 
 # https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#post-installation-actions
