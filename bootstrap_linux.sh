@@ -21,7 +21,6 @@ done
 
 set -eux
 
-SCRIPT_DIRECTORY=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 
 sudo apt-add-repository ppa:fish-shell/release-3
 
@@ -71,26 +70,34 @@ if command -v dconf > /dev/null; then
     fi
 fi
 
-if [ "$(which irssi)" = "" ] > /dev/null; then
-    echo "🗣️ Setting irssi config, "
-    sudo apt install irssi
-    mkdir -p "${HOME}/.irssi"
-    IRSSI_CONFIG_PATH="${HOME}/.irssi/config"
-
-    echo "🆓 What's your LiberaChat nickserv password?"
-    read -r LIBERA_NICKSERV_PASSWORD
-    echo "👣 What's your GIMPNet nickserv password?"
-    read -r GIMPNET_NICKSERV_PASSWORD
-
-    sed -e "s/LIBERA_NICKSERV_PASSWORD/${LIBERA_NICKSERV_PASSWORD}/g" "${SCRIPT_DIRECTORY}/irssi_config_template" | \
-       sed -e "s/GIMPNET_NICKSERV_PASSWORD/${GIMPNET_NICKSERV_PASSWORD}/g" > \
-       "${SCRIPT_DIRECTORY}/irssi_config"
-    rm -rf "${IRSSI_CONFIG_PATH}"
-    /bin/ln -s "${SCRIPT_DIRECTORY}/irssi_config" "${IRSSI_CONFIG_PATH}"
-fi
+#SCRIPT_DIRECTORY=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
+#
+#if [ "$(which irssi)" = "" ] > /dev/null; then
+#    echo "🗣️ Setting irssi config, "
+#    sudo apt install irssi
+#    mkdir -p "${HOME}/.irssi"
+#    IRSSI_CONFIG_PATH="${HOME}/.irssi/config"
+#
+#    echo "🆓 What's your LiberaChat nickserv password?"
+#    read -r LIBERA_NICKSERV_PASSWORD
+#    echo "👣 What's your GIMPNet nickserv password?"
+#    read -r GIMPNET_NICKSERV_PASSWORD
+#
+#    sed -e "s/LIBERA_NICKSERV_PASSWORD/${LIBERA_NICKSERV_PASSWORD}/g" "${SCRIPT_DIRECTORY}/irssi_config_template" | \
+#       sed -e "s/GIMPNET_NICKSERV_PASSWORD/${GIMPNET_NICKSERV_PASSWORD}/g" > \
+#       "${SCRIPT_DIRECTORY}/irssi_config"
+#    rm -rf "${IRSSI_CONFIG_PATH}"
+#    /bin/ln -s "${SCRIPT_DIRECTORY}/irssi_config" "${IRSSI_CONFIG_PATH}"
+#fi
 
 ./install_starship.sh
 ./install_fisher.fish
 ./install_fisher_plugins.fish
+
+# Install Vim Plug to manage Neovim plugins
+# https://github.com/junegunn/vim-plug#neovim
+if [ ! -f "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim ]; then
+  sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+fi
 
 echo "🐧 All set!"

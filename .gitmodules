@@ -22,9 +22,6 @@
 [submodule "vim/bundle/vim-airline"]
 	path = vim/bundle/vim-airline
 	url = https://github.com/bling/vim-airline
-[submodule "vim/bundle/dash.vim"]
-	path = vim/bundle/dash.vim
-	url = https://github.com/rizzatti/dash.vim.git
 [submodule "vim/bundle/vim-protobuf"]
 	path = vim/bundle/vim-protobuf
 	url = git://github.com/uarun/vim-protobuf.git
@@ -40,9 +37,6 @@
 [submodule "vim/bundle/vim-go"]
 	path = vim/bundle/vim-go
 	url = https://github.com/fatih/vim-go.git
-[submodule "vim/bundle/vim-chef"]
-	path = vim/bundle/vim-chef
-	url = https://github.com/vadv/vim-chef
 [submodule "vim/bundle/vim-terraform"]
 	path = vim/bundle/vim-terraform
 	url = https://github.com/hashivim/vim-terraform.git
@@ -52,9 +46,6 @@
 [submodule "oh-my-fish"]
 	path = oh-my-fish
 	url = https://github.com/oh-my-fish/oh-my-fish
-[submodule "vim/bundle/vim-hack"]
-	path = vim/bundle/vim-hack
-	url = git://github.com/hhvm/vim-hack.git
 [submodule "vim/bundle/editorconfig-vim"]
 	path = vim/bundle/editorconfig-vim
 	url = https://github.com/editorconfig/editorconfig-vim.git
