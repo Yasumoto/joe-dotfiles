@@ -101,6 +101,8 @@ local opts = {
 }
 
 require('rust-tools').setup(opts)
+
+require'lspconfig'.pyright.setup{}
 EOF
 
 " Code navigation shortcuts

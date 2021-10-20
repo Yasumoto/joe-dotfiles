@@ -94,6 +94,11 @@ fi
 ./install_fisher.fish
 ./install_fisher_plugins.fish
 
+# https://github.com/mklement0/n-install
+if [ "$(which n)" = "" ]; then
+  curl -L https://git.io/n-install | bash
+fi
+
 # Install Vim Plug to manage Neovim plugins
 # https://github.com/junegunn/vim-plug#neovim
 if [ ! -f "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim ]; then
