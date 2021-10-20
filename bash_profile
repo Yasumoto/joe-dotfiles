@@ -82,3 +82,4 @@ then
   fi
   export SSH_AUTH_SOCK="$HOME/.ssh/agent"
 fi
+. "$HOME/.cargo/env"

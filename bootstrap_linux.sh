@@ -30,7 +30,7 @@ sudo apt-get upgrade
 
 sudo apt-get install vim fish jq fortune-mod nmap nghttp2-client shellcheck pipenv powerline \
     neofetch curl fonts-cascadia-code tmux mosh apt-transport-https ca-certificates gnupg \
-    lsb-release gnome-common gawk golang gopls libncursesw5-dev zoxide
+    lsb-release gnome-common gawk golang gopls libncursesw5-dev zoxide cmake clang
 
 
 if [ "$SHELL" != "/usr/bin/fish" ]; then

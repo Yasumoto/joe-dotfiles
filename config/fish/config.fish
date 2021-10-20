@@ -21,7 +21,7 @@ potentially_update_path "$HOME/.cargo/bin"
 potentially_update_path "$HOME/workspace/go/bin"
 potentially_update_path "$HOME/workspace/bin"
 potentially_update_path "/opt/homebrew/bin"
-potentially_update_path "$HOME/workspace/github.com/phacility/arcanist/bin/"
+potentially_update_path "$HOME/src/sw/ops/bin/cache"
 
 # Ubuntu
 #if [ -d /usr/local/lib/python3.9/site-packages/powerline/bindings/fish ]
