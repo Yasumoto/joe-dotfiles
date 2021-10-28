@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -eu
+
 # System defaults from
 # https://github.com/mathiasbynens/dotfiles/blob/master/.macos
 
@@ -49,16 +51,15 @@ if ! command -v brew > /dev/null; then
 fi
 
 brew update
-brew install fish jq curl fontforge fortune nmap \
+brew install fish jq curl fortune nmap \
     the_silver_searcher homebrew/cask/ksdiff nghttp2 \
     shellcheck pyenv prometheus pipx neofetch \
-    flake8 clang-format
+    flake8 clang-format exa fd rg mosh tmux \
+    starship zoxide delta
 
 #https://github.com/tonsky/FiraCode/wiki/Installing
 brew tap homebrew/cask-fonts
 brew install --cask font-fira-code
-
-pip3 install --user powerline-status
 
 if ! grep fish /etc/shells; then
     sudo bash -c "echo '/opt/homebrew/bin/fish' >> /etc/shells"
@@ -68,4 +69,12 @@ if [ "$SHELL" != /opt/homebrew/bin/fish ]; then
     chsh -s /opt/homebrew/bin/fish
 fi
 
-./oh-my-fish/bin/install --offline
+if [ ! -d "${HOME}/.local/share/omf" ]; then
+    ./oh-my-fish/bin/install --offline
+else
+    echo "🐟 Already installed oh-my-fish"
+fi
+
+./install_fisher_plugins.fish
+
+echo "🍎 All set!"

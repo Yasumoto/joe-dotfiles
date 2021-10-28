@@ -33,14 +33,14 @@ sudo apt-get install vim fish jq fortune-mod nmap nghttp2-client shellcheck pipe
     lsb-release gnome-common gawk golang gopls libncursesw5-dev zoxide cmake clang
 
 
-if [ "$SHELL" != "/usr/bin/fish" ]; then
+if [ "${SHELL}" != "/usr/bin/fish" ]; then
     echo "🐟 Correcting your default shell"
     chsh -s /usr/bin/fish
 fi
 
 ./_bootstrap_homedir_config_files.sh
 
-if [ ! -d "/home/${USER}/.local/share/omf" ]; then
+if [ ! -d "${HOME}/.local/share/omf" ]; then
     ./oh-my-fish/bin/install --offline
 else
     echo "🐟 Already installed oh-my-fish"
