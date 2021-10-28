@@ -55,7 +55,7 @@ brew install fish jq curl fortune nmap \
     the_silver_searcher homebrew/cask/ksdiff nghttp2 \
     shellcheck pyenv prometheus pipx neofetch \
     flake8 clang-format exa fd rg mosh tmux \
-    starship zoxide delta
+    starship zoxide git-delta
 
 #https://github.com/tonsky/FiraCode/wiki/Installing
 brew tap homebrew/cask-fonts
