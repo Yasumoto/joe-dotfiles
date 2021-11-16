@@ -46,7 +46,7 @@ Plug 'arcticicestudio/nord-vim'
 
 call plug#end()
 
-"colorscheme nord
+colorscheme nord
 
 
 " Set completeopt to have a better completion experience

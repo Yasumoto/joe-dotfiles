@@ -17,6 +17,7 @@ DIVE_VERSION="0.10.0"
 KUBESCAPE_VERSION="1.0.131"
 STERN_VERSION=1.20.0
 KUBECTX_VERSION=0.9.4
+HELM_VERSION="3.7.1"
 
 BAT_VERSION="v0.18.3"
 DELTA_VERSION="0.9.2"
@@ -29,6 +30,8 @@ RIPGREP_VERSION=13.0.0
 PROCS_VERSION=0.11.9
 DOG_VERSION=0.1.0
 GPING_VERSION=1.2.6
+
+RUST_ANALYZER_VERSION="2021-11-15"
 
 NEOVIM_VERSION="0.5.1"
 
@@ -89,16 +92,6 @@ install_tool() {
 	    chmod +x "./${BUNDLE_NAME}"
 	    mv "${BUNDLE_NAME}" "${HOME}/workspace/bin/${TOOL_NAME}"
 	fi
-    fi
-}
-
-snap_install_tool() {
-    SNAP_NAME="$1"
-
-    if [ -f /run/snapd.socket ]; then
-	sudo snap install "$SNAP_NAME" --classic
-    else
-	echo "No snapd to install $SNAP_NAME!"
     fi
 }
 
@@ -167,23 +160,17 @@ if [ "$(which k9s)" = "" ]; then
     mv ./k9s "${HOME}/workspace/bin"
 fi
 
-if [ "$(which helm)" = "" ]; then
-    snap_install_tool helm
-fi
-
 if [ "$(which minikube)" = "" ]; then
     curl -L "https://storage.googleapis.com/minikube/releases/v${MINIKUBE_VERSION}/minikube-linux-amd64" -o "${HOME}/workspace/bin/minikube"
     chmod +x "${HOME}/workspace/bin/minikube"
 fi
 
-if [ "$(which microk8s)" = "" ]; then
-    echo "🔬️ Installing microk8s"
-    snap_install_tool microk8s
-    # https://github.com/ubuntu/microk8s#user-access-without-sudo
-    if [ "$(which microk8s)" != "" ]; then
-	sudo usermod -a -G microk8s "${USER}"
-	sudo chown -f -R "${USER}" ~/.kube
-    fi
+if [ "$(which rust-analyzer)" = "" ]; then
+    echo "🦀️ Installing rust-analyzer"
+    curl -L -O "https://github.com/rust-analyzer/rust-analyzer/releases/download/${RUST_ANALYZER_VERSION}/rust-analyzer-x86_64-unknown-linux-gnu.gz"
+    gunzip rust-analyzer-x86_64-unknown-linux-gnu.gz
+    chmod +x ./rust-analyzer-x86_64-unknown-linux-gnu
+    mv ./rust-analyzer-x86_64-unknown-linux-gnu "${HOME}/workspace/bin/rust-analyzer"
 fi
 
 if [ "$(which cbonsai)" = "" ]; then
@@ -331,3 +318,9 @@ install_tool kubens 🍀️ \
 if [ ! -f "${HOME}/.config/fish/completions/kubens.fish" ]; then
     curl -L -o "${HOME}/.config/fish/completions/kubens.fish" "https://raw.githubusercontent.com/ahmetb/kubectx/v${KUBECTX_VERSION}/completion/kubens.fish"
 fi
+
+install_tool helm ☸️ \
+    "https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz" \
+    "./helm-v${HELM_VERSION}-linux-amd64.tar.gz" \
+    "tar -xzvf" \
+    "linux-amd64/helm"

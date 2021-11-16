@@ -22,7 +22,9 @@ done
 set -eux
 
 
-sudo apt-add-repository ppa:fish-shell/release-3
+if [ ! -f /etc/apt/sources.list.d/fish-shell-ubuntu-release-3-hirsute.list ]; then
+  sudo apt-add-repository ppa:fish-shell/release-3
+fi
 
 sudo apt-get update
 
@@ -90,8 +92,12 @@ fi
 #    /bin/ln -s "${SCRIPT_DIRECTORY}/irssi_config" "${IRSSI_CONFIG_PATH}"
 #fi
 
-./install_starship.sh
-./install_fisher.fish
+if [ "$(which starship)" = "" ]; then
+  ./install_starship.sh
+fi
+if [ "$(which fisher)" = "" ]; then
+  ./install_fisher.fish
+fi
 ./install_fisher_plugins.fish
 
 # https://github.com/mklement0/n-install
