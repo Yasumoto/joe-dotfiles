@@ -103,6 +103,20 @@ local opts = {
 require('rust-tools').setup(opts)
 
 require'lspconfig'.pyright.setup{}
+
+-- https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#bashls
+require'lspconfig'.bashls.setup{}
+
+-- https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#dockerls
+require'lspconfig'.dockerls.setup{}
+
+-- https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#gopls
+-- https://github.com/golang/tools/tree/master/gopls
+require'lspconfig'.gopls.setup{}
+
+-- https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#terraformls
+-- https://github.com/hashicorp/terraform-ls
+require'lspconfig'.terraformls.setup{}
 EOF
 
 " Code navigation shortcuts

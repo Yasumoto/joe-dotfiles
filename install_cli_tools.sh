@@ -10,6 +10,7 @@ TERRAFORM_VERSION="1.0.11"
 TERRAFORM_DOCS_VERSION="0.15.0"
 TERRAFORM_TFSEC_VERSION="0.58.6"
 TERRAFORM_TFLINT_VERSION="0.31.0"
+TERRAFORM_LS_VERSION="0.24.0"
 
 K9S_VERSION="0.24.15"
 MINIKUBE_VERSION="1.24.0"
@@ -143,6 +144,11 @@ if [ "$(which tflint)" = "" ]; then
     mv ./tflint "${HOME}/workspace/bin"
     rm ./tflint_linux_amd64.zip
 fi
+
+install_tool terraform-ls 📚️ \
+    "https://github.com/hashicorp/terraform-ls/releases/download/v${TERRAFORM_LS_VERSION}/terraform-ls_${TERRAFORM_LS_VERSION}_linux_amd64.zip" \
+    "terraform-ls_${TERRAFORM_LS_VERSION}_linux_amd64.zip" \
+    "unzip"
 
 if [ "$(which kubectl)" = "" ]; then
     echo "☸️ Installing kubectl"
@@ -324,3 +330,26 @@ install_tool helm ☸️ \
     "./helm-v${HELM_VERSION}-linux-amd64.tar.gz" \
     "tar -xzvf" \
     "linux-amd64/helm"
+
+# https://github.com/mklement0/n-install
+if [ "$(which n)" = "" ]; then
+  curl -L https://git.io/n-install | bash
+fi
+
+# https://github.com/Microsoft/pyright#command-line
+if [ "$(which pyright)" = "" ]; then
+  npm -g install pyright
+fi
+
+# https://github.com/bash-lsp/bash-language-server#installation
+if [ "$(which bash-language-server)" = "" ]; then
+  npm -g install bash-language-server
+fi
+
+if [ "$(which docker-langserver)" = "" ]; then
+  npm -g install dockerfile-language-server-nodejs
+fi
+
+if [ "$(which gopls)" = "" ]; then
+  go install golang.org/x/tools/gopls@latest
+fi
