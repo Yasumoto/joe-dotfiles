@@ -21,8 +21,10 @@ done
 
 set -eux
 
+UBUNTU_RELEASE="$( grep CODENAME /etc/lsb-release | cut -f2 -d= )"
 
-if [ ! -f /etc/apt/sources.list.d/fish-shell-ubuntu-release-3-hirsute.list ]; then
+
+if [ ! -f "/etc/apt/sources.list.d/fish-shell-ubuntu-release-3-${UBUNTU_RELEASE}.list" ]; then
   sudo apt-add-repository ppa:fish-shell/release-3
 fi
 
