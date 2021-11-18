@@ -55,7 +55,32 @@ brew install fish jq curl fortune nmap \
     the_silver_searcher homebrew/cask/ksdiff nghttp2 \
     shellcheck pyenv prometheus pipx neofetch \
     flake8 clang-format exa fd rg mosh tmux \
-    starship zoxide git-delta
+    starship zoxide git-delta terraform terraform-docs \
+    tfsec tflint kubectl k9s helm minikube bat nvim fzf \
+    n go
+
+# https://github.com/mklement0/n-install
+if [ "$(which n)" = "" ]; then
+  curl -L https://git.io/n-install | bash
+fi
+
+# https://github.com/Microsoft/pyright#command-line
+if [ "$(which pyright)" = "" ]; then
+  npm -g install pyright
+fi
+
+# https://github.com/bash-lsp/bash-language-server#installation
+if [ "$(which bash-language-server)" = "" ]; then
+  npm -g install bash-language-server
+fi
+
+if [ "$(which docker-langserver)" = "" ]; then
+  npm -g install dockerfile-language-server-nodejs
+fi
+
+if [ "$(which gopls)" = "" ]; then
+  go install golang.org/x/tools/gopls@latest
+fi
 
 #https://github.com/tonsky/FiraCode/wiki/Installing
 brew tap homebrew/cask-fonts

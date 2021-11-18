@@ -15,9 +15,9 @@ function clone
     end
 
     if [ -n $SUBPROJECT ]
-      set FILESYSTEM_LOCATION "/home/$USER/workspace/$PROVIDER/$OWNER/$SUBPROJECT"
+      set FILESYSTEM_LOCATION "$HOME/workspace/$PROVIDER/$OWNER/$SUBPROJECT"
     else
-      set FILESYSTEM_LOCATION "/home/$USER/workspace/$PROVIDER/$OWNER"
+      set FILESYSTEM_LOCATION "$HOME/$PROVIDER/$OWNER"
     end
 
     #echo $PROVIDER
