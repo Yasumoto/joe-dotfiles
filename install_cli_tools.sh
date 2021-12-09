@@ -19,6 +19,7 @@ KUBESCAPE_VERSION="1.0.131"
 STERN_VERSION=1.20.0
 KUBECTX_VERSION=0.9.4
 HELM_VERSION="3.7.1"
+DOCKER_COMPOSE_VERSION="1.29.2"
 
 BAT_VERSION="v0.18.3"
 DELTA_VERSION="0.9.2"
@@ -198,6 +199,8 @@ if [ "$(which docker)" = "" ]; then
     sudo usermod -aG docker "${USER}"
 fi
 
+
+
 if [ "$(which gh)" = "" ]; then
     echo "🐙️ Installing gh"
     curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo gpg --dearmor -o /usr/share/keyrings/githubcli-archive-keyring.gpg
@@ -330,6 +333,10 @@ install_tool helm ☸️ \
     "./helm-v${HELM_VERSION}-linux-amd64.tar.gz" \
     "tar -xzvf" \
     "linux-amd64/helm"
+
+install_tool docker-compose 🐳️ \
+    "https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" \
+    "docker-compose-$(uname -s)-$(uname -m)"
 
 # https://github.com/mklement0/n-install
 if [ "$(which n)" = "" ]; then
