@@ -48,6 +48,11 @@ call plug#end()
 
 colorscheme nord
 
+" This is included in vimrc, but looks like the
+" colorscheme overrides custom highlights
+"Kill all the trailing whitespace
+highlight ExtraWhitespace ctermbg=red guibg=red
+match ExtraWhitespace /\s\+$/
 
 " Set completeopt to have a better completion experience
 " :help completeopt
