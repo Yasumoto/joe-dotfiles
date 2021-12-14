@@ -41,6 +41,9 @@ Plug 'nvim-lua/popup.nvim'
 Plug 'nvim-lua/plenary.nvim'
 Plug 'nvim-telescope/telescope.nvim'
 
+" Joe adding this to test out better syntax highlighting
+Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+
 " Some color scheme other then default
 Plug 'arcticicestudio/nord-vim'
 
@@ -80,7 +83,7 @@ local opts = {
             use_telescope = true
         },
         inlay_hints = {
-            show_parameter_hints = false,
+            show_parameter_hints = true,
             parameter_hints_prefix = "",
             other_hints_prefix = "",
         },
@@ -174,6 +177,21 @@ cmp.setup({
   },
 })
 
+-- Setup lspconfig.
+local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
+-- Replace <YOUR_LSP_SERVER> with each lsp server you've enabled.
+require('lspconfig')['pyright'].setup {
+capabilities = capabilities
+}
+
+require'nvim-treesitter.configs'.setup {
+  ensure_installed = "maintained",
+  -- Modules and its options go here
+  highlight = { enable = true },
+  incremental_selection = { enable = true },
+  textobjects = { enable = true },
+}
+
 -- Use LSP as the handler for omnifunc.
 --    See `:help omnifunc` and `:help ins-completion` for more information.
 vim.api.nvim_buf_set_option(0, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
@@ -183,11 +201,11 @@ EOF
 
 " have a fixed column for the diagnostics to appear in
 " this removes the jitter when warnings/errors flow in
-set signcolumn=yes
+"set signcolumn=yes
 
 " Set updatetime for CursorHold
 " 300ms of no cursor movement to trigger CursorHold
-set updatetime=300
+set updatetime=500
 " Show diagnostic popup on cursor hover
 autocmd CursorHold * lua vim.lsp.diagnostic.show_line_diagnostics()
 
