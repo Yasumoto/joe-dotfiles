@@ -23,6 +23,15 @@ potentially_update_path "$HOME/workspace/bin"
 potentially_update_path "/opt/homebrew/bin"
 potentially_update_path "$HOME/src/sw/ops/bin/cache"
 
+if [ -d $HOME/.pyenv ]
+  status is-login; and pyenv init --path | source
+  status is-interactive; and pyenv init - | source
+end
+
+if [ -d $HOME/n ]
+  set -x N_PREFIX "$HOME/n"; contains "$N_PREFIX/bin" $PATH; or set -a PATH "$N_PREFIX/bin"  # Added by n-install (see http://git.io/n-install-repo).
+end
+
 # Ubuntu
 #if [ -d /usr/local/lib/python3.9/site-packages/powerline/bindings/fish ]
 #    set fish_function_path $fish_function_path /usr/local/lib/python3.9/site-packages/powerline/bindings/fish
@@ -51,4 +60,4 @@ end
 starship init fish | source
 zoxide init fish | source
 
-set -x N_PREFIX "$HOME/n"; contains "$N_PREFIX/bin" $PATH; or set -a PATH "$N_PREFIX/bin"  # Added by n-install (see http://git.io/n-install-repo).
+
