@@ -207,10 +207,6 @@ EOF
 " 300ms of no cursor movement to trigger CursorHold
 set updatetime=500
 " Show diagnostic popup on cursor hover
-autocmd CursorHold * lua vim.lsp.diagnostic.show_line_diagnostics()
-
-" Goto previous/next diagnostic warning/error
-nnoremap <silent> g[ <cmd>lua vim.lsp.diagnostic.goto_prev()<CR>
-nnoremap <silent> g] <cmd>lua vim.lsp.diagnostic.goto_next()<CR>
+autocmd CursorHold * lua vim.diagnostic.get()
 
 "### End of Rust LSP stuff
