@@ -5,7 +5,8 @@ set -eux
 AWS_CLI_VERSION="2.3.6"
 AWS_EKSCTL_VERSION="0.55.0"
 
-TERRAFORM_VERSION="1.1.3"
+TERRAFORM_VERSION="1.0.11"
+VAGRANT_VERSION="2.2.19"
 
 TERRAFORM_DOCS_VERSION="0.15.0"
 TERRAFORM_TFSEC_VERSION="0.58.6"
@@ -122,6 +123,11 @@ if [ "$(which terraform)" = "" ]; then
     mv ./terraform "${HOME}/workspace/bin"
     rm "${TERRAFORM_ZIPFILE}"
 fi
+
+install_tool vagrant ✌️ \
+    "https://releases.hashicorp.com/vagrant/${VAGRANT_VERSION}/vagrant_${VAGRANT_VERSION}_linux_amd64.zip" \
+    "./vagrant_${VAGRANT_VERSION}_linux_amd64.zip" \
+    "unzip"
 
 if [ "$(which terraform-docs)" = "" ]; then
     echo "📖️ Installing terraform-docs"
