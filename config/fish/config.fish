@@ -23,6 +23,10 @@ potentially_update_path "$HOME/workspace/bin"
 potentially_update_path "/opt/homebrew/bin"
 potentially_update_path "$HOME/src/sw/ops/bin/cache"
 
+# For LIMS
+potentially_update_path "$HOME/.rbenv/versions/2.5.9/bin"
+potentially_update_path "$HOME/.gem/ruby/2.5.0/bin"
+
 if [ -d $HOME/.pyenv ]
   status is-login; and pyenv init --path | source
   status is-interactive; and pyenv init - | source
