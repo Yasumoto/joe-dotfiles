@@ -2,16 +2,16 @@
 
 set -eux
 
-AWS_CLI_VERSION="2.3.6"
+AWS_CLI_VERSION="2.5.3"
 AWS_EKSCTL_VERSION="0.55.0"
 
 TERRAFORM_VERSION="1.0.11"
 VAGRANT_VERSION="2.2.19"
 
-TERRAFORM_DOCS_VERSION="0.15.0"
-TERRAFORM_TFSEC_VERSION="0.58.6"
-TERRAFORM_TFLINT_VERSION="0.34.1"
-TERRAFORM_LS_VERSION="0.24.0"
+TERRAFORM_DOCS_VERSION="0.16.0"
+TERRAFORM_TFSEC_VERSION="1.18.0"
+TERRAFORM_TFLINT_VERSION="0.35.0"
+TERRAFORM_LS_VERSION="0.26.0"
 
 K9S_VERSION="0.25.18"
 MINIKUBE_VERSION="1.25.2"
@@ -22,13 +22,13 @@ KUBECTX_VERSION=0.9.4
 HELM_VERSION="3.7.1"
 DOCKER_COMPOSE_VERSION="1.29.2"
 
-BAT_VERSION="v0.18.3"
-DELTA_VERSION="0.9.2"
-CTOP_VERSION="0.7.6"
+BAT_VERSION="v0.20.0"
+DELTA_VERSION="0.12.1"
+CTOP_VERSION="0.7.7"
 EXA_VERSION="0.10.1"
-FD_VERSION="8.2.1"
+FD_VERSION="8.3.2"
 NAVI_VERSION="2.17.0"
-FZF_VERSION=0.28.0
+FZF_VERSION=0.30.0
 RIPGREP_VERSION=13.0.0
 PROCS_VERSION=0.11.9
 DOG_VERSION=0.1.0
@@ -39,8 +39,6 @@ RUST_ANALYZER_VERSION="2021-11-15"
 NEOVIM_VERSION="0.6.1"
 
 EDEX_UI_VERSION="2.2.8"
-
-OPSTRACE_VERSION="2021.08.13"
 
 mkdir -p ~/workspace/bin
 TEMP_DIR="$(mktemp -d)"
@@ -254,11 +252,6 @@ install_tool exa "📂️" \
     "./exa-linux-x86_64-v${EXA_VERSION}.zip" \
     "unzip" \
     bin/exa
-
-install_tool opstrace "🦑️" \
-    "https://github.com/opstrace/opstrace/releases/download/v${OPSTRACE_VERSION}/opstrace-cli-v${OPSTRACE_VERSION}-linux-amd64.tar.bz2" \
-    "./opstrace-cli-v${OPSTRACE_VERSION}-linux-amd64.tar.bz2" \
-    "tar -xjvf"
 
 install_tool fd "🕵️" \
     "https://github.com/sharkdp/fd/releases/download/v${FD_VERSION}/fd-v${FD_VERSION}-x86_64-unknown-linux-gnu.tar.gz" \
