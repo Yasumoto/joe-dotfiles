@@ -33,6 +33,7 @@ RIPGREP_VERSION=13.0.0
 PROCS_VERSION=0.11.9
 DOG_VERSION=0.1.0
 GPING_VERSION=1.2.6
+GLOW_VERSION=1.4.1 # https://github.com/charmbracelet/glow
 
 RUST_ANALYZER_VERSION="2021-11-15"
 
@@ -336,6 +337,11 @@ install_tool helm ☸️ \
 install_tool docker-compose 🐳️ \
     "https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" \
     "docker-compose-$(uname -s)-$(uname -m)"
+
+install_tool glow 💅️ \
+    "https://github.com/charmbracelet/glow/releases/download/v${GLOW_VERSION}/glow_${GLOW_VERSION}_linux_x86_64.tar.gz" \
+    "glow_${GLOW_VERSION}_linux_x86_64.tar.gz" \
+    "tar -xzvf"
 
 # https://github.com/mklement0/n-install
 if [ "$(which n)" = "" ]; then
