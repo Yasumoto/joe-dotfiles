@@ -185,7 +185,7 @@ capabilities = capabilities
 }
 
 require'nvim-treesitter.configs'.setup {
-  ensure_installed = "maintained",
+  ensure_installed = "all",
   -- Modules and its options go here
   highlight = { enable = true },
   incremental_selection = { enable = true },
