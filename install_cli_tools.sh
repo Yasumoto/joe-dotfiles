@@ -34,6 +34,7 @@ PROCS_VERSION=0.11.9
 DOG_VERSION=0.1.0
 GPING_VERSION=1.2.6
 GLOW_VERSION=1.4.1 # https://github.com/charmbracelet/glow
+AWS_VAULT_VERSION="6.6.0" # https://github.com/99designs/aws-vault
 
 RUST_ANALYZER_VERSION="2022-04-18"
 
@@ -343,6 +344,10 @@ install_tool glow 💅️ \
     "glow_${GLOW_VERSION}_linux_x86_64.tar.gz" \
     "tar -xzvf"
 
+install_tool aws-vault 🔐️ \
+    "https://github.com/99designs/aws-vault/releases/download/v${AWS_VAULT_VERSION}/aws-vault-linux-amd64" \
+    "aws-vault-linux-amd64"
+
 # https://github.com/mklement0/n-install
 if [ "$(which n)" = "" ]; then
   curl -L https://git.io/n-install | bash
@@ -364,4 +369,16 @@ fi
 
 if [ "$(which gopls)" = "" ]; then
   go install golang.org/x/tools/gopls@latest
+fi
+
+if [ "$(which cargo)" = "" ]; then
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+fi
+
+if [ "$(which topgrade)" = "" ]; then
+  cargo install topgrade
+fi
+
+if [ "$(which alacritty)" = "" ]; then
+  cargo install alacritty
 fi
