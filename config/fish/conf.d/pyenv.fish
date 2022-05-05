@@ -14,7 +14,7 @@ set -l pyenv_root ""
 
 if test -z "$PYENV_ROOT"
     set pyenv_root ~/.pyenv
-    set -x PYENV_ROOT "$pyenv_root"
+    set -gx PYENV_ROOT "$pyenv_root"
 else
     set pyenv_root "$PYENV_ROOT"
 end
@@ -24,3 +24,12 @@ if status --is-login
     set -x PYENV_SHELL fish
 end
 command mkdir -p "$pyenv_root/"{shims,versions}
+
+eval "$(pyenv init -)"
+
+# Restart your shell for the changes to take effect.
+
+# Load pyenv-virtualenv automatically by adding
+# the following to ~/.bashrc:
+
+eval "$(pyenv virtualenv-init -)"
