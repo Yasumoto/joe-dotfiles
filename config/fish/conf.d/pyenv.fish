@@ -25,11 +25,7 @@ if status --is-login
 end
 command mkdir -p "$pyenv_root/"{shims,versions}
 
-eval "$(pyenv init -)"
+pyenv init - | source
 
-# Restart your shell for the changes to take effect.
-
-# Load pyenv-virtualenv automatically by adding
-# the following to ~/.bashrc:
-
-eval "$(pyenv virtualenv-init -)"
+# Load pyenv-virtualenv automatically
+pyenv virtualenv-init - | source
