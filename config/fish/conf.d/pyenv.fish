@@ -26,6 +26,3 @@ end
 command mkdir -p "$pyenv_root/"{shims,versions}
 
 pyenv init - | source
-
-# Load pyenv-virtualenv automatically
-pyenv virtualenv-init - | source
