@@ -50,6 +50,9 @@ Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 " Some color scheme other then default
 Plug 'arcticicestudio/nord-vim'
 
+" https://github.com/lukas-reineke/indent-blankline.nvim
+Plug 'lukas-reineke/indent-blankline.nvim'
+
 call plug#end()
 
 colorscheme nord
