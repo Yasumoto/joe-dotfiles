@@ -26,6 +26,15 @@ RUN apt-get install -y systemd
 RUN apt-get install -y rsyslog
 RUN systemctl enable rsyslog.service
 
+RUN rsyslogd; apt-get install -y maas \
+    avahi-utils \
+    iputils \
+    postgresql \
+    tcpdump \
+    python3-pip
+
+RUI
+
 COPY ./startup.sh /
 
 CMD /startup.sh $MAAS_PASSWORD
