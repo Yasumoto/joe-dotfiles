@@ -11,6 +11,7 @@ Plug 'neovim/nvim-lspconfig'
 Plug 'hrsh7th/nvim-cmp'
 " cmp LSP completion
 Plug 'hrsh7th/cmp-nvim-lsp'
+Plug 'hrsh7th/cmp-nvim-lsp-signature-help'
 " cmp Path completion
 Plug 'hrsh7th/cmp-path'
 Plug 'hrsh7th/cmp-buffer'
@@ -164,6 +165,7 @@ cmp.setup({
     { name = 'nvim_lsp' },
     { name = 'path' },
     { name = 'buffer' },
+    { name = 'nvim_lsp_signature_help' }
   },
 })
 
