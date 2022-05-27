@@ -2,18 +2,6 @@ set runtimepath^=~/.vim runtimepath+=~/.vim/after
 let &packpath = &runtimepath
 source ~/.vimrc
 
-"#### Start of rust lsp stuff
-" https://github.com/sharksforarms/vim-rust/blob/82b4b1a/neovim-init-lsp-cmp-rust-tools.vim
-" This is an example on how rust-analyzer can be configure using rust-tools
-
-" Prerequisites:
-" - neovim >= 0.5
-" - rust-analyzer: https://rust-analyzer.github.io/manual.html#rust-analyzer-language-server-binary
-
-" Steps:
-" - :PlugInstall
-" - Restart
-
 call plug#begin('~/.vim/plugged')
 
 " Collection of common configurations for the Nvim LSP client
@@ -23,26 +11,17 @@ Plug 'neovim/nvim-lspconfig'
 Plug 'hrsh7th/nvim-cmp'
 " cmp LSP completion
 Plug 'hrsh7th/cmp-nvim-lsp'
-" cmp Snippet completion
-Plug 'hrsh7th/cmp-vsnip'
 " cmp Path completion
 Plug 'hrsh7th/cmp-path'
 Plug 'hrsh7th/cmp-buffer'
-" See hrsh7th other plugins for more great completion sources!
 
 " Adds extra functionality over rust analyzer
+" https://github.com/sharksforarms/vim-rust/blob/82b4b1a/neovim-init-lsp-cmp-rust-tools.vim
 Plug 'simrat39/rust-tools.nvim'
-
-" Snippet engine
-Plug 'hrsh7th/vim-vsnip'
 
 Plug 'nvim-lua/popup.nvim'
 Plug 'nvim-lua/plenary.nvim'
 Plug 'nvim-telescope/telescope.nvim'
-nnoremap <leader>ff <cmd>lua require('telescope.builtin').find_files()<cr>
-nnoremap <leader>fg <cmd>lua require('telescope.builtin').live_grep()<cr>
-nnoremap <leader>fb <cmd>lua require('telescope.builtin').buffers()<cr>
-nnoremap <leader>fh <cmd>lua require('telescope.builtin').help_tags()<cr>
 
 " Joe adding this to test out better syntax highlighting
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
@@ -56,6 +35,11 @@ Plug 'lukas-reineke/indent-blankline.nvim'
 call plug#end()
 
 colorscheme nord
+
+nnoremap <leader>ff <cmd>lua require('telescope.builtin').find_files()<cr>
+nnoremap <leader>fg <cmd>lua require('telescope.builtin').live_grep()<cr>
+nnoremap <leader>fb <cmd>lua require('telescope.builtin').buffers()<cr>
+nnoremap <leader>fh <cmd>lua require('telescope.builtin').help_tags()<cr>
 
 " This is included in vimrc, but looks like the
 " colorscheme overrides custom highlights
@@ -116,7 +100,11 @@ local opts = {
 
 require('rust-tools').setup(opts)
 
-require'lspconfig'.pyright.setup{}
+local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
+
+require('lspconfig')['pyright'].setup{
+  capabilities = capabilities,
+}
 
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#bashls
 require'lspconfig'.bashls.setup{}
@@ -153,17 +141,9 @@ nnoremap <silent> ga    <cmd>lua vim.lsp.buf.code_action()<CR>
 lua <<EOF
 local cmp = require'cmp'
 cmp.setup({
-  snippet = {
-    expand = function(args)
-        vim.fn["vsnip#anonymous"](args.body)
-    end,
-  },
   mapping = {
     ['<C-p>'] = cmp.mapping.select_prev_item(),
     ['<C-n>'] = cmp.mapping.select_next_item(),
-    -- Add tab support
-    ['<S-Tab>'] = cmp.mapping.select_prev_item(),
-    ['<Tab>'] = cmp.mapping.select_next_item(),
     ['<C-d>'] = cmp.mapping.scroll_docs(-4),
     ['<C-f>'] = cmp.mapping.scroll_docs(4),
     ['<C-Space>'] = cmp.mapping.complete(),
@@ -171,24 +151,17 @@ cmp.setup({
     ['<CR>'] = cmp.mapping.confirm({
       behavior = cmp.ConfirmBehavior.Insert,
       select = true,
-    })
+    }),
   },
 
   -- Installed sources
   sources = {
     { name = 'nvim_lsp' },
-    { name = 'vsnip' },
     { name = 'path' },
     { name = 'buffer' },
   },
 })
 
--- Setup lspconfig.
-local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
--- Replace <YOUR_LSP_SERVER> with each lsp server you've enabled.
-require('lspconfig')['pyright'].setup {
-capabilities = capabilities
-}
 
 require'nvim-treesitter.configs'.setup {
   ensure_installed = "all",
@@ -204,15 +177,9 @@ vim.api.nvim_buf_set_option(0, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
 
 EOF
 
-
-" have a fixed column for the diagnostics to appear in
-" this removes the jitter when warnings/errors flow in
-"set signcolumn=yes
-
 " Set updatetime for CursorHold
-" 300ms of no cursor movement to trigger CursorHold
+" 500ms of no cursor movement to trigger CursorHold
 set updatetime=500
 " Show diagnostic popup on cursor hover
 autocmd CursorHold * lua vim.diagnostic.get()
 
-"### End of Rust LSP stuff

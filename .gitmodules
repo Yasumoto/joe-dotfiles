@@ -46,9 +46,6 @@
 [submodule "vim/bundle/editorconfig-vim"]
 	path = vim/bundle/editorconfig-vim
 	url = https://github.com/editorconfig/editorconfig-vim.git
-[submodule "vim/bundle/ale"]
-	path = vim/bundle/ale
-	url = https://github.com/w0rp/ale.git
 [submodule "vim/bundle/vim-irssi-syntax"]
 	path = vim/bundle/vim-irssi-syntax
 	url = git@github.com:isundil/vim-irssi-syntax.git
