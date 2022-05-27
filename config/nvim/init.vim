@@ -23,6 +23,9 @@ Plug 'nvim-lua/popup.nvim'
 Plug 'nvim-lua/plenary.nvim'
 Plug 'nvim-telescope/telescope.nvim'
 
+" https://github.com/lewis6991/gitsigns.nvim
+Plug 'lewis6991/gitsigns.nvim'
+
 " Joe adding this to test out better syntax highlighting
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 
@@ -119,6 +122,8 @@ require'lspconfig'.gopls.setup{}
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#terraformls
 -- https://github.com/hashicorp/terraform-ls
 require'lspconfig'.terraformls.setup{}
+
+require('gitsigns').setup()
 EOF
 
 " Code navigation shortcuts

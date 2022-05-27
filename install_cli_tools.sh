@@ -35,6 +35,8 @@ DOG_VERSION=0.1.0
 GPING_VERSION=1.2.6
 GLOW_VERSION=1.4.1 # https://github.com/charmbracelet/glow
 AWS_VAULT_VERSION="6.6.0" # https://github.com/99designs/aws-vault
+TASKWARRIOR_TUI_VERSION=0.23.4 # https://github.com/kdheepak/taskwarrior-tui
+LAZYDOCKER_VERSION=0.18.1 # https://github.com/jesseduffield/lazydocker
 
 RUST_ANALYZER_VERSION="2022-04-18"
 
@@ -347,6 +349,18 @@ install_tool glow 💅️ \
 install_tool aws-vault 🔐️ \
     "https://github.com/99designs/aws-vault/releases/download/v${AWS_VAULT_VERSION}/aws-vault-linux-amd64" \
     "aws-vault-linux-amd64"
+
+install_tool taskwarrior-tui 🛡️ \
+    "https://github.com/kdheepak/taskwarrior-tui/releases/download/v${TASKWARRIOR_TUI_VERSION}/taskwarrior-tui-x86_64-unknown-linux-gnu.tar.gz" \
+    "taskwarrior-tui-x86_64-unknown-linux-gnu.tar.gz" \
+    "tar -xzvf" \
+    "taskwarrior-tui"
+
+install_tool lazydocker X\
+    "https://github.com/jesseduffield/lazydocker/releases/download/v${LAZYDOCKER_VERSION}/lazydocker_${LAZYDOCKER_VERSION}_Linux_x86_64.tar.gz" \
+    "lazydocker_${LAZYDOCKER_VERSION}_Linux_x86_64.tar.gz" \
+    "tar -xzvf" \
+    "lazydocker"
 
 # https://github.com/mklement0/n-install
 if [ "$(which n)" = "" ]; then
