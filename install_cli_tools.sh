@@ -138,12 +138,6 @@ if [ "$(which delta)" = "" ]; then
     rm -rf "./delta-${DELTA_VERSION}-${ARCH}-unknown-linux-gnu"
 fi
 
-install_tool exa "📂️" \
-    "https://github.com/ogham/exa/releases/download/v${EXA_VERSION}/exa-linux-${ARCH}-v${EXA_VERSION}.zip" \
-    "./exa-linux-${ARCH}-v${EXA_VERSION}.zip" \
-    "unzip" \
-    bin/exa
-
 install_tool fd "🕵️" \
     "https://github.com/sharkdp/fd/releases/download/v${FD_VERSION}/fd-v${FD_VERSION}-${ARCH}-unknown-linux-gnu.tar.gz" \
     "./fd-v${FD_VERSION}-${ARCH}-unknown-linux-gnu.tar.gz" \
@@ -170,6 +164,12 @@ install_tool rg ✂️  \
     "tar -xzvf" \
     "ripgrep-${RIPGREP_VERSION}-${ARCH}-unknown-linux-musl/rg" \
     "ripgrep-${RIPGREP_VERSION}-${ARCH}-unknown-linux-musl/complete/rg.fish"
+
+install_tool exa "📂️" \
+    "https://github.com/ogham/exa/releases/download/v${EXA_VERSION}/exa-linux-x86_64-v${EXA_VERSION}.zip" \
+    "./exa-linux-x86_64-v${EXA_VERSION}.zip" \
+    "unzip" \
+    bin/exa
 
 # https://github.com/mklement0/n-install
 if [ "$(which n)" = "" ]; then
