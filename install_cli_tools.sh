@@ -22,14 +22,14 @@ KUBECTX_VERSION=0.9.4
 HELM_VERSION="3.7.1"
 DOCKER_COMPOSE_VERSION="1.29.2"
 
-BAT_VERSION="v0.20.0"
-DELTA_VERSION="0.12.1"
+BAT_VERSION="v0.21.0" # https://github.com/sharkdp/bat
+DELTA_VERSION="0.13.0" # https://github.com/dandavison/delta
 CTOP_VERSION="0.7.7"
-EXA_VERSION="0.10.1"
-FD_VERSION="8.3.2"
+EXA_VERSION="0.10.1" # https://github.com/ogham/exa
+FD_VERSION="8.4.0" # https://github.com/sharkdp/fd
 NAVI_VERSION="2.17.0"
-FZF_VERSION=0.30.0
-RIPGREP_VERSION=13.0.0
+FZF_VERSION=0.30.0 # https://github.com/junegunn/fzf
+RIPGREP_VERSION=13.0.0 # https://github.com/BurntSushi/ripgrep
 PROCS_VERSION=0.11.9
 DOG_VERSION=0.1.0
 GPING_VERSION=1.2.6
@@ -38,7 +38,7 @@ AWS_VAULT_VERSION="6.6.0" # https://github.com/99designs/aws-vault
 TASKWARRIOR_TUI_VERSION=0.23.4 # https://github.com/kdheepak/taskwarrior-tui
 LAZYDOCKER_VERSION=0.18.1 # https://github.com/jesseduffield/lazydocker
 
-RUST_ANALYZER_VERSION="2022-04-18"
+RUST_ANALYZER_VERSION="2022-05-23"
 
 NEOVIM_VERSION="0.7.0"
 
@@ -47,6 +47,8 @@ EDEX_UI_VERSION="2.2.8"
 mkdir -p ~/workspace/bin
 TEMP_DIR="$(mktemp -d)"
 cd "${TEMP_DIR}" || exit
+
+ARCH="$(uname -m)"
 
 install_tool() {
     # The eventual executable name
@@ -100,6 +102,107 @@ install_tool() {
     fi
 }
 
+
+if [ "$(which terraform)" = "" ]; then
+    if [ "$ARCH" = "x86_64" ]; then
+        TERRAFORM_ARCH=amd64
+    elif [ "$ARCH" = "aarch64" ]; then
+	TERRAFORM_ARCH="arm64"
+    else
+        echo "Unsupported terraform architecture! Please review: ${ARCH}"
+        exit 1
+    fi
+    TERRAFORM_ZIPFILE="terraform_${TERRAFORM_VERSION}_linux_${TERRAFORM_ARCH}.zip"
+    echo "🏗️ Installing terraform"
+    curl -L -O "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/${TERRAFORM_ZIPFILE}"
+    unzip "${TERRAFORM_ZIPFILE}"
+    mv ./terraform "${HOME}/workspace/bin"
+    rm "${TERRAFORM_ZIPFILE}"
+fi
+
+if [ "$(which bat)" = "" ]; then
+    echo "🦇️ Installing bat"
+    curl -L -O "https://github.com/sharkdp/bat/releases/download/${BAT_VERSION}/bat-${BAT_VERSION}-${ARCH}-unknown-linux-gnu.tar.gz"
+    tar -xzvf ."/bat-${BAT_VERSION}-${ARCH}-unknown-linux-gnu.tar.gz" "bat-${BAT_VERSION}-${ARCH}-unknown-linux-gnu/bat"
+    rm "./bat-${BAT_VERSION}-${ARCH}-unknown-linux-gnu.tar.gz"
+    mv "./bat-${BAT_VERSION}-${ARCH}-unknown-linux-gnu/bat" "${HOME}/workspace/bin"
+    rm -rf "./bat-${BAT_VERSION}-${ARCH}-unknown-linux-gnu"
+fi
+
+if [ "$(which delta)" = "" ]; then
+    echo "🌊️ Installing delta"
+    curl -L -O "https://github.com/dandavison/delta/releases/download/${DELTA_VERSION}/delta-${DELTA_VERSION}-${ARCH}-unknown-linux-gnu.tar.gz"
+    tar -xzvf "./delta-${DELTA_VERSION}-${ARCH}-unknown-linux-gnu.tar.gz" "delta-${DELTA_VERSION}-${ARCH}-unknown-linux-gnu/delta"
+    rm "./delta-${DELTA_VERSION}-${ARCH}-unknown-linux-gnu.tar.gz"
+    mv "./delta-${DELTA_VERSION}-${ARCH}-unknown-linux-gnu/delta" "${HOME}/workspace/bin"
+    rm -rf "./delta-${DELTA_VERSION}-${ARCH}-unknown-linux-gnu"
+fi
+
+install_tool exa "📂️" \
+    "https://github.com/ogham/exa/releases/download/v${EXA_VERSION}/exa-linux-${ARCH}-v${EXA_VERSION}.zip" \
+    "./exa-linux-${ARCH}-v${EXA_VERSION}.zip" \
+    "unzip" \
+    bin/exa
+
+install_tool fd "🕵️" \
+    "https://github.com/sharkdp/fd/releases/download/v${FD_VERSION}/fd-v${FD_VERSION}-${ARCH}-unknown-linux-gnu.tar.gz" \
+    "./fd-v${FD_VERSION}-${ARCH}-unknown-linux-gnu.tar.gz" \
+    "tar -xzvf" \
+    "fd-v${FD_VERSION}-${ARCH}-unknown-linux-gnu/fd" \
+    "fd-v${FD_VERSION}-${ARCH}-unknown-linux-gnu/autocomplete/fd.fish"
+
+if [ "${ARCH}" = "x86_64" ]; then
+    FZF_ARCH=amd64
+elif [ "${ARCH}" = "aarch64" ]; then
+    FZF_ARCH="arm64"
+else
+    echo "Unsupported terraform architecture! Please review: ${ARCH}"
+    exit 1
+fi
+install_tool fzf 🧶️ \
+    "https://github.com/junegunn/fzf/releases/download/${FZF_VERSION}/fzf-${FZF_VERSION}-linux_${FZF_ARCH}.tar.gz" \
+    "./fzf-${FZF_VERSION}-linux_${FZF_ARCH}.tar.gz" \
+    "tar -xzvf"
+
+install_tool rg ✂️  \
+    "https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}/ripgrep-${RIPGREP_VERSION}-${ARCH}-unknown-linux-musl.tar.gz" \
+    "./ripgrep-${RIPGREP_VERSION}-${ARCH}-unknown-linux-musl.tar.gz" \
+    "tar -xzvf" \
+    "ripgrep-${RIPGREP_VERSION}-${ARCH}-unknown-linux-musl/rg" \
+    "ripgrep-${RIPGREP_VERSION}-${ARCH}-unknown-linux-musl/complete/rg.fish"
+
+# https://github.com/mklement0/n-install
+if [ "$(which n)" = "" ]; then
+  curl -L https://git.io/n-install | bash
+fi
+
+# https://github.com/Microsoft/pyright#command-line
+if [ "$(which pyright)" = "" ]; then
+  npm -g install pyright
+fi
+
+if [ "$(which cargo)" = "" ]; then
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+fi
+
+if [ "$(which topgrade)" = "" ]; then
+  cargo install topgrade
+fi
+
+if [ "$ARCH" = aarch64 ]; then
+  echo "!!!!!!!!!!!!!!!*******************!!!!!!!!!!!!"
+  echo "Add more tools to be architecture-appropriate!"
+  echo "!!!!!!!!!!!!!!!*******************!!!!!!!!!!!!"
+  exit 1
+fi
+
+if [ "$(which nvim)" = "" ]; then
+    echo "🌟️ Installing Neovim"
+    curl -L -O "https://github.com/neovim/neovim/releases/download/v${NEOVIM_VERSION}/nvim.appimage"
+    chmod +x ./nvim.appimage
+    mv ./nvim.appimage "${HOME}/workspace/bin/nvim"
+fi
+
 if [ "$(which aws)"  = "" ]; then
     echo "☁️ Installing aws-cli"
     curl -L "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${AWS_CLI_VERSION}.zip" -o "awscliv2.zip"
@@ -115,15 +218,6 @@ if [ "$(which eksctl)" = "" ]; then
     tar -xzvf ./eksctl_Linux_amd64.tar.gz eksctl
     mv ./eksctl "${HOME}/workspace/bin"
     rm -f ./eksctl_Linux_amd64.tar.gz
-fi
-
-if [ "$(which terraform)" = "" ]; then
-    TERRAFORM_ZIPFILE="terraform_${TERRAFORM_VERSION}_linux_amd64.zip"
-    echo "🏗️ Installing terraform"
-    curl -L -O "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/${TERRAFORM_ZIPFILE}"
-    unzip "${TERRAFORM_ZIPFILE}"
-    mv ./terraform "${HOME}/workspace/bin"
-    rm "${TERRAFORM_ZIPFILE}"
 fi
 
 install_tool vagrant ✌️ \
@@ -207,8 +301,6 @@ if [ "$(which docker)" = "" ]; then
     sudo usermod -aG docker "${USER}"
 fi
 
-
-
 if [ "$(which gh)" = "" ]; then
     echo "🐙️ Installing gh"
     curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo gpg --dearmor -o /usr/share/keyrings/githubcli-archive-keyring.gpg
@@ -217,32 +309,6 @@ if [ "$(which gh)" = "" ]; then
     sudo apt install gh
 fi
 
-if [ "$(which bat)" = "" ]; then
-    echo "🦇️ Installing bat"
-    curl -L -O "https://github.com/sharkdp/bat/releases/download/${BAT_VERSION}/bat-${BAT_VERSION}-x86_64-unknown-linux-gnu.tar.gz"
-    tar -xzvf ./bat-${BAT_VERSION}-x86_64-unknown-linux-gnu.tar.gz bat-${BAT_VERSION}-x86_64-unknown-linux-gnu/bat
-    rm ./bat-${BAT_VERSION}-x86_64-unknown-linux-gnu.tar.gz
-    mv ./bat-${BAT_VERSION}-x86_64-unknown-linux-gnu/bat "${HOME}/workspace/bin"
-    rm -rf ./bat-${BAT_VERSION}-x86_64-unknown-linux-gnu
-fi
-
-if [ "$(which delta)" = "" ]; then
-    echo "🌊️ Installing delta"
-    curl -L -O "https://github.com/dandavison/delta/releases/download/${DELTA_VERSION}/delta-${DELTA_VERSION}-x86_64-unknown-linux-gnu.tar.gz"
-    tar -xzvf ./delta-${DELTA_VERSION}-x86_64-unknown-linux-gnu.tar.gz delta-${DELTA_VERSION}-x86_64-unknown-linux-gnu/delta
-    rm ./delta-${DELTA_VERSION}-x86_64-unknown-linux-gnu.tar.gz
-    mv ./delta-${DELTA_VERSION}-x86_64-unknown-linux-gnu/delta "${HOME}/workspace/bin"
-    rm -rf ./delta-${DELTA_VERSION}-x86_64-unknown-linux-gnu
-fi
-
-if [ "$(which nvim)" = "" ]; then
-    echo "🌟️ Installing Neovim"
-    curl -L -O "https://github.com/neovim/neovim/releases/download/v${NEOVIM_VERSION}/nvim.appimage"
-    chmod +x ./nvim.appimage
-    mv ./nvim.appimage "${HOME}/workspace/bin/nvim"
-fi
-
-
 install_tool ctop "📊️" \
     "https://github.com/bcicen/ctop/releases/download/${CTOP_VERSION}/ctop-${CTOP_VERSION}-linux-amd64" \
     "./ctop-${CTOP_VERSION}-linux-amd64"
@@ -250,19 +316,6 @@ install_tool ctop "📊️" \
 install_tool edex-ui "🌐️" \
     "https://github.com/GitSquared/edex-ui/releases/download/v${EDEX_UI_VERSION}/eDEX-UI-Linux-x86_64.AppImage" \
     eDEX-UI-Linux-x86_64.AppImage
-
-install_tool exa "📂️" \
-    "https://github.com/ogham/exa/releases/download/v${EXA_VERSION}/exa-linux-x86_64-v${EXA_VERSION}.zip" \
-    "./exa-linux-x86_64-v${EXA_VERSION}.zip" \
-    "unzip" \
-    bin/exa
-
-install_tool fd "🕵️" \
-    "https://github.com/sharkdp/fd/releases/download/v${FD_VERSION}/fd-v${FD_VERSION}-x86_64-unknown-linux-gnu.tar.gz" \
-    "./fd-v${FD_VERSION}-x86_64-unknown-linux-gnu.tar.gz" \
-    "tar -xzvf" \
-    "fd-v${FD_VERSION}-x86_64-unknown-linux-gnu/fd" \
-    "fd-v${FD_VERSION}-x86_64-unknown-linux-gnu/autocomplete/fd.fish"
 
 install_tool dive "🧜️" \
     "https://github.com/wagoodman/dive/releases/download/v${DIVE_VERSION}/dive_${DIVE_VERSION}_linux_amd64.tar.gz" \
@@ -274,21 +327,9 @@ install_tool navi 🧚️ \
     "./navi-v${NAVI_VERSION}-x86_64-unknown-linux-musl.tar.gz" \
     "tar -xzvf"
 
-install_tool fzf 🧶️ \
-    "https://github.com/junegunn/fzf/releases/download/${FZF_VERSION}/fzf-${FZF_VERSION}-linux_amd64.tar.gz" \
-    "./fzf-${FZF_VERSION}-linux_amd64.tar.gz" \
-    "tar -xzvf"
-
 install_tool kubescape 🔒️ \
     "https://github.com/armosec/kubescape/releases/download/v${KUBESCAPE_VERSION}/kubescape-ubuntu-latest" \
     kubescape-ubuntu-latest
-
-install_tool rg ✂️  \
-    "https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}/ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl.tar.gz" \
-    "./ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl.tar.gz" \
-    "tar -xzvf" \
-    "ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl/rg" \
-    "ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl/complete/rg.fish"
 
 install_tool stern 📜️ \
     "https://github.com/stern/stern/releases/download/v${STERN_VERSION}/stern_${STERN_VERSION}_linux_amd64.tar.gz" \
@@ -362,16 +403,6 @@ install_tool lazydocker X\
     "tar -xzvf" \
     "lazydocker"
 
-# https://github.com/mklement0/n-install
-if [ "$(which n)" = "" ]; then
-  curl -L https://git.io/n-install | bash
-fi
-
-# https://github.com/Microsoft/pyright#command-line
-if [ "$(which pyright)" = "" ]; then
-  npm -g install pyright
-fi
-
 # https://github.com/bash-lsp/bash-language-server#installation
 if [ "$(which bash-language-server)" = "" ]; then
   npm -g install bash-language-server
@@ -383,14 +414,6 @@ fi
 
 if [ "$(which gopls)" = "" ]; then
   go install golang.org/x/tools/gopls@latest
-fi
-
-if [ "$(which cargo)" = "" ]; then
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-fi
-
-if [ "$(which topgrade)" = "" ]; then
-  cargo install topgrade
 fi
 
 if [ "$(which alacritty)" = "" ]; then
