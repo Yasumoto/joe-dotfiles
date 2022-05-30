@@ -158,19 +158,6 @@ install_tool fzf 🧶️ \
     "./fzf-${FZF_VERSION}-linux_${FZF_ARCH}.tar.gz" \
     "tar -xzvf"
 
-install_tool rg ✂️  \
-    "https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}/ripgrep-${RIPGREP_VERSION}-${ARCH}-unknown-linux-musl.tar.gz" \
-    "./ripgrep-${RIPGREP_VERSION}-${ARCH}-unknown-linux-musl.tar.gz" \
-    "tar -xzvf" \
-    "ripgrep-${RIPGREP_VERSION}-${ARCH}-unknown-linux-musl/rg" \
-    "ripgrep-${RIPGREP_VERSION}-${ARCH}-unknown-linux-musl/complete/rg.fish"
-
-install_tool exa "📂️" \
-    "https://github.com/ogham/exa/releases/download/v${EXA_VERSION}/exa-linux-x86_64-v${EXA_VERSION}.zip" \
-    "./exa-linux-x86_64-v${EXA_VERSION}.zip" \
-    "unzip" \
-    bin/exa
-
 # https://github.com/mklement0/n-install
 if [ "$(which n)" = "" ]; then
   curl -L https://git.io/n-install | bash
@@ -202,6 +189,19 @@ if [ "$(which nvim)" = "" ]; then
     chmod +x ./nvim.appimage
     mv ./nvim.appimage "${HOME}/workspace/bin/nvim"
 fi
+
+install_tool exa "📂️" \
+    "https://github.com/ogham/exa/releases/download/v${EXA_VERSION}/exa-linux-x86_64-v${EXA_VERSION}.zip" \
+    "./exa-linux-x86_64-v${EXA_VERSION}.zip" \
+    "unzip" \
+    bin/exa
+
+install_tool rg ✂️  \
+    "https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}/ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl.tar.gz" \
+    "./ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl.tar.gz" \
+    "tar -xzvf" \
+    "ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl/rg" \
+    "ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl/complete/rg.fish"
 
 if [ "$(which aws)"  = "" ]; then
     echo "☁️ Installing aws-cli"
