@@ -37,6 +37,7 @@ GLOW_VERSION=1.4.1 # https://github.com/charmbracelet/glow
 AWS_VAULT_VERSION="6.6.0" # https://github.com/99designs/aws-vault
 TASKWARRIOR_TUI_VERSION=0.23.4 # https://github.com/kdheepak/taskwarrior-tui
 LAZYDOCKER_VERSION=0.18.1 # https://github.com/jesseduffield/lazydocker
+TFSWITCH_VERSION=0.13.1288 # https://github.com/warrensbox/terraform-switcher
 
 RUST_ANALYZER_VERSION="2022-05-23"
 
@@ -391,17 +392,23 @@ install_tool aws-vault 🔐️ \
     "https://github.com/99designs/aws-vault/releases/download/v${AWS_VAULT_VERSION}/aws-vault-linux-amd64" \
     "aws-vault-linux-amd64"
 
-install_tool taskwarrior-tui 🛡️ \
+install_tool taskwarrior-tui 🛡️  \
     "https://github.com/kdheepak/taskwarrior-tui/releases/download/v${TASKWARRIOR_TUI_VERSION}/taskwarrior-tui-x86_64-unknown-linux-gnu.tar.gz" \
     "taskwarrior-tui-x86_64-unknown-linux-gnu.tar.gz" \
     "tar -xzvf" \
     "taskwarrior-tui"
 
-install_tool lazydocker X\
+install_tool lazydocker X \
     "https://github.com/jesseduffield/lazydocker/releases/download/v${LAZYDOCKER_VERSION}/lazydocker_${LAZYDOCKER_VERSION}_Linux_x86_64.tar.gz" \
     "lazydocker_${LAZYDOCKER_VERSION}_Linux_x86_64.tar.gz" \
     "tar -xzvf" \
     "lazydocker"
+
+install_tool tfswitch X \
+    "https://github.com/warrensbox/terraform-switcher/releases/download/${TFSWITCH_VERSION}/terraform-switcher_${TFSWITCH_VERSION}_linux_amd64.tar.gz" \
+    "terraform-switcher_${TFSWITCH_VERSION}_linux_amd64.tar.gz" \
+    "tar -xzvf" \
+    "tfswitch"
 
 # https://github.com/bash-lsp/bash-language-server#installation
 if [ "$(which bash-language-server)" = "" ]; then
