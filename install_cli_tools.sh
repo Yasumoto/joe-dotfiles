@@ -38,6 +38,7 @@ AWS_VAULT_VERSION="6.6.0" # https://github.com/99designs/aws-vault
 TASKWARRIOR_TUI_VERSION=0.23.4 # https://github.com/kdheepak/taskwarrior-tui
 LAZYDOCKER_VERSION=0.18.1 # https://github.com/jesseduffield/lazydocker
 TFSWITCH_VERSION=0.13.1288 # https://github.com/warrensbox/terraform-switcher
+CHEAT_VERSION=4.2.5 # https://github.com/cheat/cheat
 
 RUST_ANALYZER_VERSION="2022-05-23"
 
@@ -159,23 +160,6 @@ install_tool fzf 🧶️ \
     "./fzf-${FZF_VERSION}-linux_${FZF_ARCH}.tar.gz" \
     "tar -xzvf"
 
-# https://github.com/mklement0/n-install
-if [ "$(which n)" = "" ]; then
-  curl -L https://git.io/n-install | bash
-fi
-
-# https://github.com/Microsoft/pyright#command-line
-if [ "$(which pyright)" = "" ]; then
-  npm -g install pyright
-fi
-
-if [ "$(which cargo)" = "" ]; then
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-fi
-
-if [ "$(which topgrade)" = "" ]; then
-  cargo install topgrade
-fi
 
 if [ "$ARCH" = aarch64 ]; then
   echo "!!!!!!!!!!!!!!!*******************!!!!!!!!!!!!"
@@ -302,13 +286,13 @@ if [ "$(which docker)" = "" ]; then
     sudo usermod -aG docker "${USER}"
 fi
 
-if [ "$(which gh)" = "" ]; then
-    echo "🐙️ Installing gh"
-    curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo gpg --dearmor -o /usr/share/keyrings/githubcli-archive-keyring.gpg
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-    sudo apt update
-    sudo apt install gh
-fi
+# if [ "$(which gh)" = "" ]; then
+#     echo "🐙️ Installing gh"
+#     curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo gpg --dearmor -o /usr/share/keyrings/githubcli-archive-keyring.gpg
+#     echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+#     sudo apt update
+#     sudo apt install gh
+# fi
 
 install_tool ctop "📊️" \
     "https://github.com/bcicen/ctop/releases/download/${CTOP_VERSION}/ctop-${CTOP_VERSION}-linux-amd64" \
@@ -410,19 +394,41 @@ install_tool tfswitch X \
     "tar -xzvf" \
     "tfswitch"
 
-# https://github.com/bash-lsp/bash-language-server#installation
-if [ "$(which bash-language-server)" = "" ]; then
-  npm -g install bash-language-server
-fi
-
-if [ "$(which docker-langserver)" = "" ]; then
-  npm -g install dockerfile-language-server-nodejs
-fi
+install_tool cheat X \
+    "https://github.com/cheat/cheat/releases/download/${CHEAT_VERSION}/cheat-linux-amd64.gz" \
+    "cheat-linux-amd64.gz" \
+    gunzip \
+    cheat
 
 if [ "$(which gopls)" = "" ]; then
   go install golang.org/x/tools/gopls@latest
 fi
 
-if [ "$(which alacritty)" = "" ]; then
-  cargo install alacritty
+# https://github.com/mklement0/n-install
+if [ "$(which n)" = "" ]; then
+  curl -L https://git.io/n-install | bash
+  export PATH="${HOME}/n/bin:${PATH}"
 fi
+# https://github.com/Microsoft/pyright#command-line
+if [ "$(which pyright)" = "" ]; then
+  npm -g install pyright
+fi
+# https://github.com/bash-lsp/bash-language-server#installation
+if [ "$(which bash-language-server)" = "" ]; then
+  npm -g install bash-language-server
+fi
+if [ "$(which docker-langserver)" = "" ]; then
+  npm -g install dockerfile-language-server-nodejs
+fi
+
+
+if [ "$(which cargo)" = "" ]; then
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+fi
+if [ "$(which topgrade)" = "" ]; then
+  cargo install topgrade
+fi
+#if [ "$(which alacritty)" = "" ]; then
+#  cargo install alacritty
+#fi
+
