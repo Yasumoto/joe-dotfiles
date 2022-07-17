@@ -1,6 +1,5 @@
 if not command -s tfswitch > /dev/null
-    echo "tfswitch not found"
-    exit 1
+    exit 0
 end
 
 function switch_terraform --on-event fish_postexec

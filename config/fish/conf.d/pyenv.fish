@@ -7,8 +7,7 @@ if test -d "$HOME"/.pyenv/bin
 end
 
 if not command -s pyenv > /dev/null
-    echo "pyenv not found"
-    exit 1
+    exit 0
 end
 
 set -l pyenv_root ""
