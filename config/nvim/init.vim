@@ -190,3 +190,5 @@ set updatetime=500
 " Show diagnostic popup on cursor hover
 autocmd CursorHold * lua vim.diagnostic.get()
 
+" why the heck is this getting overridden
+nmap <silent> <C-Q> :silent noh<CR> :echo "Highlights Cleared! bjoli"<CR>
