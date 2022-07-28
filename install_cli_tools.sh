@@ -408,6 +408,9 @@ install_tool cheat X \
     "https://github.com/cheat/cheat/releases/download/${CHEAT_VERSION}/cheat-linux-amd64.gz" \
     "cheat-linux-amd64.gz" \
     gunzip
+if [ ! -d "${HOME}/.config/cheat" ]; then
+  mkdir -p "${HOME}/.config/cheat" && cheat --init > "${HOME}/.config/cheat/conf.yml"
+fi
 
 if [ "$(which gopls)" = "" ]; then
   go install golang.org/x/tools/gopls@latest
