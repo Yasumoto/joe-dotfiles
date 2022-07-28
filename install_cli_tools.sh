@@ -83,7 +83,9 @@ install_tool() {
 
 	# If we're downloading a tarball/zip, we need to extract + remove
 	if [ -n "${UNZIP_TOOL}" ]; then
+	    # The tool is located in some subdirectory of the bundle
 	    if [ -n "${ZIP_PATH}" ]; then
+		# Includes some autocompletion helpers
 		if [ -n "${AUTOCOMPLETE_PATH}" ]; then
 		    ${UNZIP_TOOL} "${BUNDLE_NAME}" "${AUTOCOMPLETE_PATH}"
 		    mv "${AUTOCOMPLETE_PATH}" "${HOME}/.config/fish/completions"
@@ -93,9 +95,17 @@ install_tool() {
 		chmod +x "./${ZIP_PATH}"
 		mv "./${ZIP_PATH}" "${HOME}/workspace/bin/${TOOL_NAME}"
 	    else
-		${UNZIP_TOOL} "${BUNDLE_NAME}" "${TOOL_NAME}"
-		chmod +x "./${TOOL_NAME}"
-		mv "./${TOOL_NAME}" "${HOME}/workspace/bin"
+		if [ "${UNZIP_TOOL}" = gunzip ]; then
+		    gunzip "${BUNDLE_NAME}"
+		    EXTRACTED_NAME="$(echo "${BUNDLE_NAME}" | sed 's/.gz//')"
+		    chmod +x ./"${EXTRACTED_NAME}"
+		    mv ./"${EXTRACTED_NAME}" "${HOME}/workspace/bin/${TOOL_NAME}"
+		else
+		    # Tool is located at the top-level of the bundle
+		    ${UNZIP_TOOL} "${BUNDLE_NAME}" "${TOOL_NAME}"
+		    chmod +x "./${TOOL_NAME}"
+		    mv "./${TOOL_NAME}" "${HOME}/workspace/bin"
+		fi
 	    fi
 	else
 	    chmod +x "./${BUNDLE_NAME}"
@@ -397,8 +407,7 @@ install_tool tfswitch X \
 install_tool cheat X \
     "https://github.com/cheat/cheat/releases/download/${CHEAT_VERSION}/cheat-linux-amd64.gz" \
     "cheat-linux-amd64.gz" \
-    gunzip \
-    cheat
+    gunzip
 
 if [ "$(which gopls)" = "" ]; then
   go install golang.org/x/tools/gopls@latest

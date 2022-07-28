@@ -32,7 +32,7 @@ if [ -d $HOME/.pyenv ]
   status is-interactive; and pyenv init - | source
 end
 
-if [ -d $HOME/n ]
+if [ -d "$HOME/n" ]
   set -x N_PREFIX "$HOME/n"; contains "$N_PREFIX/bin" $PATH; or set -a PATH "$N_PREFIX/bin"  # Added by n-install (see http://git.io/n-install-repo).
 end
 
