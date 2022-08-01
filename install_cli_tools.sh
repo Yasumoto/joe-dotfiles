@@ -440,6 +440,10 @@ fi
 if [ "$(which topgrade)" = "" ]; then
   cargo install topgrade
 fi
+if [ "$(which cargo-update)" = "" ]; then
+  cargo install cargo-update
+fi
+cargo install-update --all
 #if [ "$(which alacritty)" = "" ]; then
 #  cargo install alacritty
 #fi

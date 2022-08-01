@@ -28,9 +28,6 @@
 [submodule "vim/bundle/swift.vim"]
 	path = vim/bundle/swift.vim
 	url = https://github.com/Keithbsmiley/swift.vim.git
-[submodule "vim/bundle/thrift.vim"]
-	path = vim/bundle/thrift.vim
-	url = https://github.com/solarnz/thrift.vim
 [submodule "vim/bundle/vim-go"]
 	path = vim/bundle/vim-go
 	url = https://github.com/fatih/vim-go.git
