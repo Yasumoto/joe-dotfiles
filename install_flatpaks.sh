@@ -75,4 +75,7 @@ flatpak install -y flathub com.github.babluboy.bookworm
 
 flatpak install -y flathub org.gnome.GTG
 
+# https://www.omgubuntu.co.uk/2022/05/paper-is-a-gtk-note-taking-app-for-linux
+flatpak install flathub io.posidon.Paper
+
 flatpak install -y flathub codes.merritt.FeelingFinder
