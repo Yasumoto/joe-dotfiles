@@ -1,4 +1,4 @@
-set -Ux EDITOR vim # WSL Ubuntu 20.04 needs this?
+set -Ux EDITOR nvim # WSL Ubuntu 20.04 needs this?
 
 set -gx GPG_TTY (tty)
 
