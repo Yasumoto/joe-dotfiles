@@ -98,4 +98,7 @@ mkdir -p "${HOME}/workspace/github.com"
 
 fish -c "clone https://github.com/arcticicestudio/nord-gnome-terminal.git"
 
+set +u
+echo "You may need to install a better font! See: https://www.nerdfonts.com/font-downloads"
+
 echo "🐧 All set!"

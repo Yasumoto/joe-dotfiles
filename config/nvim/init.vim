@@ -2,6 +2,9 @@ set runtimepath^=~/.vim runtimepath+=~/.vim/after
 let &packpath = &runtimepath
 source ~/.vimrc
 
+" https://github.com/nvim-neo-tree/neo-tree.nvim
+let g:neo_tree_remove_legacy_commands = 1
+
 call plug#begin('~/.vim/plugged')
 
 " Collection of common configurations for the Nvim LSP client
@@ -38,6 +41,12 @@ Plug 'lukas-reineke/indent-blankline.nvim'
 
 " https://github.com/folke/tokyonight.nvim
 Plug 'folke/tokyonight.nvim', { 'branch': 'main' }
+
+" https://github.com/nvim-neo-tree/neo-tree.nvim
+Plug 'nvim-neo-tree/neo-tree.nvim', { 'branch': 'v2.x' }
+" Plug 'nvim-lua/plenary.nvim' " Already included above
+Plug 'kyazdani42/nvim-web-devicons' " not strictly required, but recommended
+Plug 'MunifTanjim/nui.nvim'
 
 call plug#end()
 
@@ -110,25 +119,28 @@ require('rust-tools').setup(opts)
 
 local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
 
-require('lspconfig')['pyright'].setup{
+require('lspconfig')['pyright'].setup {
   capabilities = capabilities,
 }
 
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#bashls
-require'lspconfig'.bashls.setup{}
+require'lspconfig'.bashls.setup {}
 
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#dockerls
-require'lspconfig'.dockerls.setup{}
+require'lspconfig'.dockerls.setup {}
 
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#gopls
 -- https://github.com/golang/tools/tree/master/gopls
-require'lspconfig'.gopls.setup{}
+require'lspconfig'.gopls.setup {}
 
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#terraformls
 -- https://github.com/hashicorp/terraform-ls
-require'lspconfig'.terraformls.setup{}
+require'lspconfig'.terraformls.setup {}
 
-require('gitsigns').setup()
+require('gitsigns').setup {}
+
+require('nvim-web-devicons').setup { default = true; }
+require("neo-tree").setup { close_if_last_window = true } -- Close Neo-tree if it is the last window left in the tab
 EOF
 
 " Code navigation shortcuts
