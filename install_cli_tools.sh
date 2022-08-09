@@ -39,6 +39,7 @@ TASKWARRIOR_TUI_VERSION=0.23.4 # https://github.com/kdheepak/taskwarrior-tui
 LAZYDOCKER_VERSION=0.18.1 # https://github.com/jesseduffield/lazydocker
 TFSWITCH_VERSION=0.13.1288 # https://github.com/warrensbox/terraform-switcher
 CHEAT_VERSION=4.2.5 # https://github.com/cheat/cheat
+CATP_VERSION=0.2.0 # https://github.com/rapiz1/catp
 
 RUST_ANALYZER_VERSION="2022-05-23"
 
@@ -411,6 +412,11 @@ install_tool cheat X \
 if [ ! -d "${HOME}/.config/cheat" ]; then
   mkdir -p "${HOME}/.config/cheat" && cheat --init > "${HOME}/.config/cheat/conf.yml"
 fi
+
+install_tool catp "cat" \
+    "https://github.com/rapiz1/catp/releases/download/v${CATP_VERSION}/catp-x86_64-unknown-linux-gnu.zip" \
+    "catp-x86_64-unknown-linux-gnu.zip" \
+    unzip
 
 if [ "$(which gopls)" = "" ]; then
   go install golang.org/x/tools/gopls@latest

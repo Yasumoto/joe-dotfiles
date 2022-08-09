@@ -29,6 +29,8 @@ cd ./joe-dotfiles
 
 ### Grub Themes
 
+See [Gorgeous GRUB](https://github.com/Jacksaur/Gorgeous-GRUB)!
+
 #### Virtuaverse
 https://www.reddit.com/r/unixporn/comments/m5522z/grub2_had_some_fun_with_grub/
 https://github.com/Patato777/dotfiles

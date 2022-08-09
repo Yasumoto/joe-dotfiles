@@ -36,9 +36,13 @@ Plug 'arcticicestudio/nord-vim'
 " https://github.com/lukas-reineke/indent-blankline.nvim
 Plug 'lukas-reineke/indent-blankline.nvim'
 
+" https://github.com/folke/tokyonight.nvim
+Plug 'folke/tokyonight.nvim', { 'branch': 'main' }
+
 call plug#end()
 
-colorscheme nord
+"colorscheme nord
+colorscheme tokyonight
 
 nnoremap <leader>ff <cmd>lua require('telescope.builtin').find_files()<cr>
 nnoremap <leader>fg <cmd>lua require('telescope.builtin').live_grep()<cr>

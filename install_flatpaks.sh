@@ -79,3 +79,6 @@ flatpak install -y flathub org.gnome.GTG
 flatpak install flathub io.posidon.Paper
 
 flatpak install -y flathub codes.merritt.FeelingFinder
+
+#https://www.omgubuntu.co.uk/2022/07/cider-is-an-open-source-apple-music-client-for-linux-desktops
+flatpak install flathub sh.cider.Cider
