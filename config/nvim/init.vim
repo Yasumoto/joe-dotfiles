@@ -50,8 +50,8 @@ Plug 'MunifTanjim/nui.nvim'
 
 call plug#end()
 
-"colorscheme nord
-colorscheme tokyonight
+colorscheme nord
+"colorscheme tokyonight
 
 nnoremap <leader>ff <cmd>lua require('telescope.builtin').find_files()<cr>
 nnoremap <leader>fg <cmd>lua require('telescope.builtin').live_grep()<cr>
