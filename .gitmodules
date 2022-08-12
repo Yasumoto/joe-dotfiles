@@ -1,57 +1,12 @@
-[submodule "vim/bundle/vim-colors-solarized"]
-	path = vim/bundle/vim-colors-solarized
-	url = https://github.com/altercation/vim-colors-solarized/
 [submodule "vim/bundle/scss-syntax"]
 	path = vim/bundle/scss-syntax
 	url = https://github.com/cakebaker/scss-syntax.vim.git
-[submodule "vim/bundle/vim-fugitive"]
-	path = vim/bundle/vim-fugitive
-	url = https://github.com/tpope/vim-fugitive.git
-[submodule "vim/bundle/mustache"]
-	path = vim/bundle/mustache
-	url = https://github.com/juvenn/mustache.vim.git
-[submodule "vim/bundle/vim-surround"]
-	path = vim/bundle/vim-surround
-	url = https://github.com/tpope/vim-surround.git
-[submodule "vim/bundle/syntastic"]
-	path = vim/bundle/syntastic
-	url = https://github.com/scrooloose/syntastic.git
-[submodule "vim/bundle/vim-airline"]
-	path = vim/bundle/vim-airline
-	url = https://github.com/bling/vim-airline
-[submodule "vim/bundle/vim-protobuf"]
-	path = vim/bundle/vim-protobuf
-	url = https://github.com/uarun/vim-protobuf.git
-[submodule "vim/bundle/vim-emoji"]
-	path = vim/bundle/vim-emoji
-	url = https://github.com/junegunn/vim-emoji.git
-[submodule "vim/bundle/swift.vim"]
-	path = vim/bundle/swift.vim
-	url = https://github.com/Keithbsmiley/swift.vim.git
 [submodule "vim/bundle/vim-go"]
 	path = vim/bundle/vim-go
 	url = https://github.com/fatih/vim-go.git
-[submodule "vim/bundle/vim-terraform"]
-	path = vim/bundle/vim-terraform
-	url = https://github.com/hashivim/vim-terraform.git
-[submodule "vim/bundle/vim-fish"]
-	path = vim/bundle/vim-fish
-	url = https://github.com/dag/vim-fish
 [submodule "oh-my-fish"]
 	path = oh-my-fish
 	url = https://github.com/oh-my-fish/oh-my-fish
-[submodule "vim/bundle/editorconfig-vim"]
-	path = vim/bundle/editorconfig-vim
-	url = https://github.com/editorconfig/editorconfig-vim.git
-[submodule "vim/bundle/vim-irssi-syntax"]
-	path = vim/bundle/vim-irssi-syntax
-	url = git@github.com:isundil/vim-irssi-syntax.git
 [submodule "tmux"]
 	path = tmux
 	url = https://github.com/gpakosz/.tmux.git
-[submodule "vim/bundle/fzf"]
-	path = vim/bundle/fzf
-	url = git@github.com:junegunn/fzf.git
-[submodule "vim/bundle/fzf.vim"]
-	path = vim/bundle/fzf.vim
-	url = git@github.com:junegunn/fzf.vim.git

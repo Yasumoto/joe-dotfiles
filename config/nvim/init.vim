@@ -48,6 +48,26 @@ Plug 'nvim-neo-tree/neo-tree.nvim', { 'branch': 'v2.x' }
 Plug 'kyazdani42/nvim-web-devicons' " not strictly required, but recommended
 Plug 'MunifTanjim/nui.nvim'
 
+" https://github.com/nvim-lualine/lualine.nvim
+Plug 'nvim-lualine/lualine.nvim'
+
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+Plug 'junegunn/fzf.vim'
+
+Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
+
+Plug 'tpope/vim-fugitive'
+
+Plug 'hashivim/vim-terraform'
+
+Plug 'uarun/vim-protobuf'
+
+Plug 'isundil/vim-irssi-syntax'
+
+Plug 'mustache/vim-mustache-handlebars'
+
+Plug 'dag/vim-fish'
+
 call plug#end()
 
 colorscheme nord
