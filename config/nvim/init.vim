@@ -2,9 +2,6 @@ set runtimepath^=~/.vim runtimepath+=~/.vim/after
 let &packpath = &runtimepath
 source ~/.vimrc
 
-" https://github.com/nvim-neo-tree/neo-tree.nvim
-let g:neo_tree_remove_legacy_commands = 1
-
 call plug#begin('~/.vim/plugged')
 
 " Collection of common configurations for the Nvim LSP client
@@ -78,6 +75,10 @@ nnoremap <leader>fg <cmd>lua require('telescope.builtin').live_grep()<cr>
 nnoremap <leader>fb <cmd>lua require('telescope.builtin').buffers()<cr>
 nnoremap <leader>fh <cmd>lua require('telescope.builtin').help_tags()<cr>
 
+" https://github.com/nvim-neo-tree/neo-tree.nvim
+let g:neo_tree_remove_legacy_commands = 1
+
+
 " This is included in vimrc, but looks like the
 " colorscheme overrides custom highlights
 "Kill all the trailing whitespace
@@ -89,10 +90,10 @@ match ExtraWhitespace /\s\+$/
 " menuone: popup even when there's only one match
 " noinsert: Do not insert text until a selection is made
 " noselect: Do not select, force user to select one from the menu
-set completeopt=menuone,noinsert,noselect
+"set completeopt=menuone,noinsert,noselect
 
 " Avoid showing extra messages when using completion
-set shortmess+=c
+"set shortmess+=c
 
 " Configure LSP through rust-tools.nvim plugin.
 " rust-tools will configure and enable certain LSP features for us.
@@ -105,7 +106,6 @@ local nvim_lsp = require'lspconfig'
 local opts = {
     tools = {
         autoSetHints = true,
-        hover_with_actions = true,
         runnables = {
             use_telescope = true
         },
@@ -131,7 +131,13 @@ local opts = {
                     command = "clippy"
                 },
             }
-        }
+        },
+        on_attach = function(_, bufnr)
+          -- Hover actions
+          vim.keymap.set("n", "<C-space>", rt.hover_actions.hover_actions, { buffer = bufnr })
+          -- Code action groups
+          vim.keymap.set("n", "<Leader>a", rt.code_action_group.code_action_group, { buffer = bufnr })
+        end,
     },
 }
 
@@ -144,24 +150,46 @@ require('lspconfig')['pyright'].setup {
 }
 
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#bashls
-require'lspconfig'.bashls.setup {}
+require'lspconfig'.bashls.setup {
+  capabilities = capabilities,
+}
 
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#dockerls
-require'lspconfig'.dockerls.setup {}
+require'lspconfig'.dockerls.setup {
+  capabilities = capabilities,
+}
 
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#gopls
 -- https://github.com/golang/tools/tree/master/gopls
-require'lspconfig'.gopls.setup {}
+require'lspconfig'.gopls.setup {
+  capabilities = capabilities,
+}
 
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#terraformls
 -- https://github.com/hashicorp/terraform-ls
-require'lspconfig'.terraformls.setup {}
+require'lspconfig'.terraformls.setup {
+  capabilities = capabilities,
+}
+
+-- https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#tflint
+require'lspconfig'.tflint.setup{
+  capabilities = capabilities,
+}
 
 require('gitsigns').setup {}
 
 require('nvim-web-devicons').setup { default = true; }
 require("neo-tree").setup { close_if_last_window = true } -- Close Neo-tree if it is the last window left in the tab
 EOF
+
+" https://mukeshsharma.dev/2022/02/08/neovim-workflow-for-terraform.html
+silent! autocmd! filetypedetect BufRead,BufNewFile *.tf
+autocmd BufRead,BufNewFile *.hcl set filetype=hcl]])
+autocmd BufRead,BufNewFile .terraformrc,terraform.rc set filetype=hcl
+autocmd BufRead,BufNewFile *.tf,*.tfvars set filetype=terraform
+autocmd BufRead,BufNewFile *.tfstate,*.tfstate.backup set filetype=json
+let g:terraform_fmt_on_save=1
+let g:terraform_align=1
 
 " Code navigation shortcuts
 " as found in :help lsp
