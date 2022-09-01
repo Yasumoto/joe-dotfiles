@@ -28,7 +28,7 @@ sudo apt-get upgrade
 sudo apt-get install vim fish jq fortune-mod nmap nghttp2-client shellcheck pipenv powerline \
     neofetch curl fonts-cascadia-code tmux mosh apt-transport-https ca-certificates gnupg \
     lsb-release gnome-common gawk golang gopls libncursesw5-dev zoxide cmake clang \
-    taskwarrior vit apt-file btop libgtk-4-dev build-essential libssl-dev
+    taskwarrior vit apt-file btop libgtk-4-dev build-essential libssl-dev direnv
 
 sudo apt-file update
 
