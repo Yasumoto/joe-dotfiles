@@ -65,6 +65,10 @@ Plug 'mustache/vim-mustache-handlebars'
 
 Plug 'dag/vim-fish'
 
+" https://www.youtube.com/watch?v=-InmtHhk2qM
+" https://github.com/numToStr/Comment.nvim
+Plug 'numToStr/Comment.nvim'
+
 call plug#end()
 
 colorscheme nord
@@ -84,6 +88,8 @@ let g:neo_tree_remove_legacy_commands = 1
 "Kill all the trailing whitespace
 highlight ExtraWhitespace ctermbg=red guibg=red
 match ExtraWhitespace /\s\+$/
+
+
 
 " Set completeopt to have a better completion experience
 " :help completeopt
@@ -180,6 +186,7 @@ require('gitsigns').setup {}
 
 require('nvim-web-devicons').setup { default = true; }
 require("neo-tree").setup { close_if_last_window = true } -- Close Neo-tree if it is the last window left in the tab
+require('Comment').setup()
 EOF
 
 " https://mukeshsharma.dev/2022/02/08/neovim-workflow-for-terraform.html
