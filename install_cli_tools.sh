@@ -297,14 +297,6 @@ if [ "$(which docker)" = "" ]; then
     sudo usermod -aG docker "${USER}"
 fi
 
-# if [ "$(which gh)" = "" ]; then
-#     echo "🐙️ Installing gh"
-#     curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo gpg --dearmor -o /usr/share/keyrings/githubcli-archive-keyring.gpg
-#     echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-#     sudo apt update
-#     sudo apt install gh
-# fi
-
 install_tool ctop "📊️" \
     "https://github.com/bcicen/ctop/releases/download/${CTOP_VERSION}/ctop-${CTOP_VERSION}-linux-amd64" \
     "./ctop-${CTOP_VERSION}-linux-amd64"
