@@ -249,6 +249,8 @@ require'nvim-treesitter.configs'.setup {
   textobjects = { enable = true },
 }
 
+require('lualine').setup {}
+
 -- Use LSP as the handler for omnifunc.
 --    See `:help omnifunc` and `:help ins-completion` for more information.
 vim.api.nvim_buf_set_option(0, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
