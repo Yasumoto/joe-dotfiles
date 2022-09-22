@@ -1,5 +1,7 @@
 function substrate_credentials
+   pushd ~/src/sw/infrastructure/terraform
    set SUBSTRATE_OUTPUT (substrate credentials)
+   popd
    set AWS_ACCESS_KEY_ID (echo $SUBSTRATE_OUTPUT | cut -f3 -d" " | cut -f2 -d\" )
    set AWS_SECRET_ACCESS_KEY (echo $SUBSTRATE_OUTPUT | cut -f4 -d" " | cut -f2 -d\" )
    set AWS_SESSION_TOKEN (echo $SUBSTRATE_OUTPUT | cut -f5 -d" " | cut -f2 -d\" )
