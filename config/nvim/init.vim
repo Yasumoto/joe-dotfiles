@@ -264,4 +264,4 @@ set updatetime=500
 autocmd CursorHold * lua vim.diagnostic.get()
 
 " why the heck is this getting overridden
-nmap <silent> <C-Q> :silent noh<CR> :echo "Highlights Cleared! bjoli"<CR>
+nmap <silent> <C-M> :silent noh<CR> :echo "Highlights Cleared! bjoli"<CR>
