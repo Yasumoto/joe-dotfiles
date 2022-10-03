@@ -2,7 +2,7 @@
 
 flatpak install -y flathub re.sonny.Junction
 
-flatpak install flathub de.haeckerfelix.Shortwave
+flatpak install -y flathub de.haeckerfelix.Shortwave
 
 flatpak install -y flathub de.haeckerfelix.Fragments
 
@@ -76,9 +76,9 @@ flatpak install -y flathub com.github.babluboy.bookworm
 flatpak install -y flathub org.gnome.GTG
 
 # https://www.omgubuntu.co.uk/2022/05/paper-is-a-gtk-note-taking-app-for-linux
-flatpak install flathub io.posidon.Paper
+flatpak install -y flathub io.posidon.Paper
 
 flatpak install -y flathub codes.merritt.FeelingFinder
 
 #https://www.omgubuntu.co.uk/2022/07/cider-is-an-open-source-apple-music-client-for-linux-desktops
-flatpak install flathub sh.cider.Cider
+flatpak install -y flathub sh.cider.Cider
