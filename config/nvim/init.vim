@@ -41,7 +41,6 @@ Plug 'folke/tokyonight.nvim', { 'branch': 'main' }
 
 " https://github.com/nvim-neo-tree/neo-tree.nvim
 Plug 'nvim-neo-tree/neo-tree.nvim', { 'branch': 'v2.x' }
-" Plug 'nvim-lua/plenary.nvim' " Already included above
 Plug 'kyazdani42/nvim-web-devicons' " not strictly required, but recommended
 Plug 'MunifTanjim/nui.nvim'
 
@@ -69,6 +68,9 @@ Plug 'dag/vim-fish'
 " https://github.com/numToStr/Comment.nvim
 Plug 'numToStr/Comment.nvim'
 
+" https://github.com/sindrets/diffview.nvim
+Plug 'sindrets/diffview.nvim'
+
 call plug#end()
 
 colorscheme nord
@@ -88,8 +90,6 @@ let g:neo_tree_remove_legacy_commands = 1
 "Kill all the trailing whitespace
 highlight ExtraWhitespace ctermbg=red guibg=red
 match ExtraWhitespace /\s\+$/
-
-
 
 " Set completeopt to have a better completion experience
 " :help completeopt

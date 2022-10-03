@@ -82,3 +82,10 @@ flatpak install -y flathub codes.merritt.FeelingFinder
 
 #https://www.omgubuntu.co.uk/2022/07/cider-is-an-open-source-apple-music-client-for-linux-desktops
 flatpak install -y flathub sh.cider.Cider
+
+# https://gitlab.gnome.org/raggesilver/blackbox
+flatpak install -y flathub com.raggesilver.BlackBox
+
+# https://gitlab.com/azymohliad/watchmate
+flatpak install -y flathub io.gitlab.azymohliad.WatchMate
+

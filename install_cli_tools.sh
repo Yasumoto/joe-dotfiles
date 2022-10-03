@@ -40,6 +40,7 @@ LAZYDOCKER_VERSION=0.18.1 # https://github.com/jesseduffield/lazydocker
 TFSWITCH_VERSION=0.13.1288 # https://github.com/warrensbox/terraform-switcher
 CHEAT_VERSION=4.2.5 # https://github.com/cheat/cheat
 CATP_VERSION=0.2.0 # https://github.com/rapiz1/catp
+VIDDY_VERSION=0.3.6 # https://github.com/sachaos/viddy
 
 RUST_ANALYZER_VERSION="2022-05-23"
 
@@ -396,6 +397,12 @@ install_tool tfswitch X \
     "terraform-switcher_${TFSWITCH_VERSION}_linux_amd64.tar.gz" \
     "tar -xzvf" \
     "tfswitch"
+
+install_tool viddy X \
+    "https://github.com/sachaos/viddy/releases/download/v${VIDDY_VERSION}/viddy_${VIDDY_VERSION}_Linux_x86_64.tar.gz" \
+    "viddy_${VIDDY_VERSION}_Linux_x86_64.tar.gz" \
+    "tar -xzvf" \
+    "viddy"
 
 install_tool cheat X \
     "https://github.com/cheat/cheat/releases/download/${CHEAT_VERSION}/cheat-linux-amd64.gz" \
