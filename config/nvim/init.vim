@@ -264,7 +264,7 @@ EOF
 " 500ms of no cursor movement to trigger CursorHold
 set updatetime=500
 " Show diagnostic popup on cursor hover
-autocmd CursorHold * lua vim.diagnostic.get()
+autocmd CursorHold * lua vim.diagnostic.open_float()
 
 " why the heck is this getting overridden
 nmap <silent> <C-M> :silent noh<CR> :echo "Highlights Cleared! bjoli"<CR>
