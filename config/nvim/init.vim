@@ -210,6 +210,9 @@ nnoremap <silent> g0    <cmd>lua vim.lsp.buf.document_symbol()<CR>
 nnoremap <silent> gW    <cmd>lua vim.lsp.buf.workspace_symbol()<CR>
 nnoremap <silent> gd    <cmd>lua vim.lsp.buf.definition()<CR>
 
+" https://neovim.io/doc/user2/diagnostic.html#vim.diagnostic.open_float()
+nnoremap <silent> W     <cmd>lua vim.diagnostic.open_float()<CR>
+
 " Quick-fix
 nnoremap <silent> ga    <cmd>lua vim.lsp.buf.code_action()<CR>
 
