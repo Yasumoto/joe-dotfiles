@@ -182,6 +182,10 @@ require'lspconfig'.tflint.setup{
   capabilities = capabilities,
 }
 
+require('lspconfig')['tsserver'].setup{
+  capabilities = capabilities,
+}
+
 require('gitsigns').setup {}
 
 require('nvim-web-devicons').setup { default = true; }

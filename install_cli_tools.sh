@@ -438,6 +438,11 @@ if [ "$(which docker-langserver)" = "" ]; then
   npm -g install dockerfile-language-server-nodejs
 fi
 
+if [ "$(which typescript-language-server)" = "" ]; then
+  npm install -g typescript-language-server typescript
+fi
+
+npm -g update
 
 if [ "$(which cargo)" = "" ]; then
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
