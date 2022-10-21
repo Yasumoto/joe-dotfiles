@@ -272,3 +272,5 @@ autocmd CursorHold * lua vim.diagnostic.open_float()
 
 " why the heck is this getting overridden
 nmap <silent> <C-M> :silent noh<CR> :echo "Highlights Cleared! bjoli"<CR>
+
+set mouse=
