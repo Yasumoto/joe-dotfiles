@@ -57,7 +57,8 @@ brew install fish jq curl fortune nmap \
     flake8 clang-format exa fd rg mosh tmux \
     starship zoxide git-delta terraform terraform-docs \
     tfsec tflint kubectl k9s helm minikube bat nvim fzf \
-    n go fontforge markdownlint-cli homebrew/cask/ksdiff
+    n go fontforge markdownlint-cli homebrew/cask/ksdiff \
+    dive gping kubectx aws-vault taskwarrior-tui rustup
 
 # https://github.com/mklement0/n-install
 if [ "$(which n)" = "" ]; then
