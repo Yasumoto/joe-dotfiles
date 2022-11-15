@@ -71,6 +71,9 @@ Plug 'numToStr/Comment.nvim'
 " https://github.com/sindrets/diffview.nvim
 Plug 'sindrets/diffview.nvim'
 
+" https://github.com/keith/swift.vim
+Plug 'keith/swift.vim'
+
 call plug#end()
 
 colorscheme nord
