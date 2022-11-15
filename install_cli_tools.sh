@@ -44,7 +44,7 @@ VIDDY_VERSION=0.3.6 # https://github.com/sachaos/viddy
 
 RUST_ANALYZER_VERSION="2022-05-23"
 
-NEOVIM_VERSION="0.8.0"
+NEOVIM_VERSION="0.8.1"
 
 EDEX_UI_VERSION="2.2.8"
 
@@ -171,6 +171,10 @@ install_tool fzf 🧶️ \
     "https://github.com/junegunn/fzf/releases/download/${FZF_VERSION}/fzf-${FZF_VERSION}-linux_${FZF_ARCH}.tar.gz" \
     "./fzf-${FZF_VERSION}-linux_${FZF_ARCH}.tar.gz" \
     "tar -xzvf"
+
+if [ ! -d "${HOME}/.swiftenv" ]; then
+    git clone https://github.com/kylef/swiftenv.git "${HOME}/.swiftenv"
+fi
 
 
 if [ "$ARCH" = aarch64 ]; then
