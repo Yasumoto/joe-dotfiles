@@ -41,6 +41,7 @@ TFSWITCH_VERSION=0.13.1288 # https://github.com/warrensbox/terraform-switcher
 CHEAT_VERSION=4.2.5 # https://github.com/cheat/cheat
 CATP_VERSION=0.2.0 # https://github.com/rapiz1/catp
 VIDDY_VERSION=0.3.6 # https://github.com/sachaos/viddy
+K6_VERSION=0.41.0 # https://github.com/grafana/k6/releases/tag/v0.41.0
 
 RUST_ANALYZER_VERSION="2022-05-23"
 
@@ -420,6 +421,12 @@ install_tool catp "cat" \
     "https://github.com/rapiz1/catp/releases/download/v${CATP_VERSION}/catp-x86_64-unknown-linux-gnu.zip" \
     "catp-x86_64-unknown-linux-gnu.zip" \
     unzip
+
+install_tool k6 X \
+    "https://github.com/grafana/k6/releases/download/v${K6_VERSION}/k6-v${K6_VERSION}-linux-amd64.tar.gz" \
+    "k6-v${K6_VERSION}-linux-amd64.tar.gz" \
+    "tar -xzvf" \
+    "k6-v0.41.0-linux-amd64/k6"
 
 if [ "$(which gopls)" = "" ]; then
   go install golang.org/x/tools/gopls@latest
