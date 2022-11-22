@@ -23,7 +23,7 @@ if [ -z $SSH_AUTH_SOCK ]
     eval (ssh-agent -c)
 
     if [ (uname) = "Darwin" ];
-        ssh-add -K
+        ssh-add --apple-use-keychain
     else
         ssh-add
     end
