@@ -55,10 +55,13 @@ brew install fish jq curl fortune nmap \
     the_silver_searcher homebrew/cask/ksdiff nghttp2 \
     shellcheck pyenv prometheus pipx neofetch \
     flake8 clang-format exa fd rg mosh tmux \
-    starship zoxide git-delta terraform terraform-docs \
+    starship zoxide git-delta terraform-docs \
     tfsec tflint kubectl k9s helm minikube bat nvim fzf \
     n go fontforge markdownlint-cli homebrew/cask/ksdiff \
-    dive gping kubectx aws-vault taskwarrior-tui rustup
+    dive gping kubectx aws-vault taskwarrior-tui rustup \
+    k6
+
+brew install warrensbox/tap/tfswitch
 
 # https://github.com/mklement0/n-install
 if [ "$(which n)" = "" ]; then
@@ -84,8 +87,9 @@ if [ "$(which gopls)" = "" ]; then
 fi
 
 #https://github.com/tonsky/FiraCode/wiki/Installing
+# But instead actually use the nerd font version
 brew tap homebrew/cask-fonts
-brew install --cask font-fira-code
+brew install --cask font-fira-code-nerd-font
 
 if ! grep fish /etc/shells; then
     sudo bash -c "echo '/opt/homebrew/bin/fish' >> /etc/shells"
@@ -101,6 +105,20 @@ else
     echo "🐟 Already installed oh-my-fish"
 fi
 
+if [ ! -d "${HOME}/.swiftenv" ]; then
+    git clone https://github.com/kylef/swiftenv.git "${HOME}/.swiftenv"
+fi
+
 ./install_fisher_plugins.fish
+
+# Install Vim Plug to manage Neovim plugins
+# https://github.com/junegunn/vim-plug#neovim
+if [ ! -f "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim ]; then
+  sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+fi
+
+mkdir -p "${HOME}/workspace/github.com"
+
+fish -c "clone https://github.com/arcticicestudio/nord-iterm2.git"
 
 echo "🍎 All set!"
