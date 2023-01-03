@@ -70,11 +70,8 @@ fi
 #
 #    echo "🆓 What's your LiberaChat nickserv password?"
 #    read -r LIBERA_NICKSERV_PASSWORD
-#    echo "👣 What's your GIMPNet nickserv password?"
-#    read -r GIMPNET_NICKSERV_PASSWORD
 #
 #    sed -e "s/LIBERA_NICKSERV_PASSWORD/${LIBERA_NICKSERV_PASSWORD}/g" "${SCRIPT_DIRECTORY}/irssi_config_template" | \
-#       sed -e "s/GIMPNET_NICKSERV_PASSWORD/${GIMPNET_NICKSERV_PASSWORD}/g" > \
 #       "${SCRIPT_DIRECTORY}/irssi_config"
 #    rm -rf "${IRSSI_CONFIG_PATH}"
 #    /bin/ln -s "${SCRIPT_DIRECTORY}/irssi_config" "${IRSSI_CONFIG_PATH}"

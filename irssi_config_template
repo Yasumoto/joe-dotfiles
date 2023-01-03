@@ -26,14 +26,6 @@ servers = (
     use_tls = "yes";
     tls_verify = "yes";
     autoconnect = "yes";
-  },
-  {
-    address = "irc.gnome.org";
-    chatnet = "GIMPNet";
-    port = "6697";
-    use_tls = "yes";
-    tls_verify = "yes";
-    autoconnect = "yes";
   }
 );
 
@@ -64,15 +56,6 @@ chatnets = {
     sasl_username = "Yasumoto";
     sasl_password = "LIBERA_NICKSERV_PASSWORD";
   };
-  GIMPNet = {
-    type = "IRC";
-    max_kicks = "1";
-    max_msgs = "1";
-    max_whois = "1";
-    sasl_mechanism = "PLAIN";
-    sasl_username = "Yasumoto";
-    sasl_password = "GIMPNET_NICKSERV_PASSWORD";
-  };
 };
 
 channels = (
@@ -83,7 +66,6 @@ channels = (
   { name = "#linux"; chatnet = "LiberaChat"; autojoin = "yes"; },
   { name = "#python"; chatnet = "LiberaChat"; autojoin = "yes"; },
   { name = "#prometheus"; chatnet = "LiberaChat"; autojoin = "yes"; },
-  { name = "#gnome"; chatnet = "GIMPNet"; autojoin = "yes"; },
 );
 
 aliases = {
