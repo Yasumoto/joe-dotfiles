@@ -6,6 +6,7 @@ AWS_CLI_VERSION="2.5.3"
 AWS_EKSCTL_VERSION="0.55.0"
 
 TERRAFORM_VERSION="1.1.9"
+PACKER_VERSION="1.8.6"
 VAGRANT_VERSION="2.2.19"
 
 TERRAFORM_DOCS_VERSION="0.16.0"
@@ -225,6 +226,11 @@ fi
 install_tool vagrant ✌️ \
     "https://releases.hashicorp.com/vagrant/${VAGRANT_VERSION}/vagrant_${VAGRANT_VERSION}_linux_amd64.zip" \
     "./vagrant_${VAGRANT_VERSION}_linux_amd64.zip" \
+    "unzip"
+
+install_tool packer * \
+    "https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_linux_amd64.zip" \
+    "./packer_${PACKER_VERSION}_linux_amd64.zip" \
     "unzip"
 
 if [ "$(which terraform-docs)" = "" ]; then
