@@ -25,40 +25,23 @@ sudo apt-get update
 
 sudo apt-get upgrade
 
-sudo apt-get install vim fish jq fortune-mod nmap nghttp2-client shellcheck pipenv powerline \
-    neofetch curl fonts-cascadia-code tmux mosh apt-transport-https ca-certificates gnupg \
-    lsb-release gnome-common gawk golang gopls libncursesw5-dev zoxide cmake clang \
-    taskwarrior vit apt-file btop libgtk-4-dev build-essential libssl-dev direnv
+sudo apt install vim curl fish mosh tmux apt-transport-https \
+	ca-certificates gnupg lsb-release gnome-common apt-file build-essential
 
 sudo apt-file update
 
+curl -L https://nixos.org/nix/install | sh -s -- --daemon
 
-if [ "${SHELL}" != "/usr/bin/fish" ]; then
-    echo "🐟 Correcting your default shell"
-    chsh -s /usr/bin/fish
-fi
-
-./_bootstrap_homedir_config_files.sh
-
-if [ ! -d "${HOME}/.local/share/omf" ]; then
-    ./oh-my-fish/bin/install --offline
-else
-    echo "🐟 Already installed oh-my-fish"
-fi
+#if [ "${SHELL}" != "/usr/bin/fish" ]; then
+#    echo "🐟 Correcting your default shell"
+#    chsh -s /usr/bin/fish
+#fi
 
 if uname -r | grep -qi wsl; then
     echo "🪟🪟 You're on WSL!"
     echo "🖼️ Make sure you download the powerline-compatible font at:"
     echo "https://github.com/microsoft/cascadia-code/releases/tag/latest"
 fi
-
-#if command -v dconf > /dev/null; then
-#    PROFILE_ID="$(dconf list /org/gnome/terminal/legacy/profiles:/)"
-#    if [ "${PROFILE_ID}" != "" ]; then
-#        dconf write "/org/gnome/terminal/legacy/profiles:/${PROFILE_ID}font" '"Cascadia Code PL 14"'
-#        dconf write "/org/gnome/terminal/legacy/profiles:/${PROFILE_ID}palette" "['rgb(7,54,66)', 'rgb(220,50,47)', 'rgb(133,153,0)', 'rgb(181,137,0)', 'rgb(38,139,210)', 'rgb(211,54,130)', 'rgb(42,161,152)', 'rgb(238,232,213)', 'rgb(0,43,54)', 'rgb(203,75,22)', 'rgb(88,110,117)', 'rgb(101,123,131)', 'rgb(131,148,150)', 'rgb(108,113,196)', 'rgb(147,161,161)', 'rgb(253,246,227)']"
-#    fi
-#fi
 
 #SCRIPT_DIRECTORY=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 #
@@ -77,25 +60,9 @@ fi
 #    /bin/ln -s "${SCRIPT_DIRECTORY}/irssi_config" "${IRSSI_CONFIG_PATH}"
 #fi
 
-if [ "$(which starship)" = "" ]; then
-  ./install_starship.sh
-fi
-if [ "$(which fisher)" = "" ]; then
-  ./install_fisher.fish
-fi
-./install_fisher_plugins.fish
-
-# Install Vim Plug to manage Neovim plugins
-# https://github.com/junegunn/vim-plug#neovim
-if [ ! -f "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim ]; then
-  sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
-fi
-
-mkdir -p "${HOME}/workspace/github.com"
-
 fish -c "clone https://github.com/arcticicestudio/nord-gnome-terminal.git"
 
-set +u
-echo "You may need to install a better font! See: https://www.nerdfonts.com/font-downloads"
+echo "Manual 1password install required:"
+echo "https://support.1password.com/install-linux/"
 
 echo "🐧 All set!"
