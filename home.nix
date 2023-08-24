@@ -28,6 +28,7 @@
     pkgs.zoxide
     pkgs.starship
     pkgs.vim
+    pkgs.git-lfs
 
     pkgs.awscli2
     pkgs.eksctl
