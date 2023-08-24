@@ -189,7 +189,7 @@
        [ -n $REPO ]
             # This is a GitLab-ism
             set SUBPROJECT (echo $LOCATION | cut -f2 -d: | cut -f3 -d/ | cut -f1 -d.)
-      d
+        end
       end
       
       if [ -n $SUBPROJECT ]
