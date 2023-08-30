@@ -35,6 +35,7 @@
     pkgs.eksctl
     pkgs.vagrant
     pkgs.packer
+    pkgs.vault
 
     pkgs.tfsec
     pkgs.tflint
