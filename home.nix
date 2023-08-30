@@ -187,7 +187,7 @@
           set PROVIDER (echo $LOCATION | cut -f1 -d: | cut -f2 -d\@)
           set OWNER (echo $LOCATION | cut -f2 -d: | cut -f1 -d/)
           set REPO (echo $LOCATION | cut -f2 -d: | cut -f2 -d/ | cut -f1 -d.)
-       [ -n $REPO ]
+        if [ -n $REPO ]
             # This is a GitLab-ism
             set SUBPROJECT (echo $LOCATION | cut -f2 -d: | cut -f3 -d/ | cut -f1 -d.)
         end
