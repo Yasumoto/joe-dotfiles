@@ -269,11 +269,16 @@
     
       if [ -z (which vault) ]
         echo "No vault binary installed!"
-        exit
+        return
+      end
+
+      set KEEPASS_CLI keepass-cli
+      if [ -z (which "$KEEPASS_CLI" ) ]
+        set KEEPASS_CLI flatpak run --branch=stable --arch=x86_64 --command=keepassxc-cli org.keepassxc.KeePassXC
       end
     
-      vault login -non-interactive -method=userpass username=joe.smith \
-          password=(keepassxc-cli show -s -a Password ~/Documents/joe.smith.kdbx Vault)
+      VAULT_ADDR="https://vault.int.n7k.io:443" vault login -non-interactive -method=userpass username=joe.smith \
+          password=( $KEEPASS_CLI  show -s -a Password ~/Documents/joe.smith.kdbx Vault)
       '';
     
   };
