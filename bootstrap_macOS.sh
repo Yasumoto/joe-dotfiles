@@ -44,81 +44,13 @@ defaults write com.apple.Safari SendDoNotTrackHTTPHeader -bool true
 defaults write com.apple.DiskUtility DUDebugMenuEnabled -bool true
 defaults write com.apple.DiskUtility advanced-image-options -bool true
 
-./_bootstrap_homedir_config_files.sh
 
-if ! command -v brew > /dev/null; then
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+if ! command -v nix > /dev/null; then
+  curl -L https://nixos.org/nix/install | /bin/sh
 fi
 
-brew update
-brew install fish jq curl fortune nmap \
-    the_silver_searcher homebrew/cask/ksdiff nghttp2 \
-    shellcheck pyenv prometheus pipx neofetch \
-    flake8 clang-format exa fd rg mosh tmux \
-    starship zoxide git-delta terraform-docs \
-    tfsec tflint kubectl k9s helm minikube bat nvim fzf \
-    n go fontforge markdownlint-cli homebrew/cask/ksdiff \
-    dive gping kubectx aws-vault taskwarrior-tui rustup \
-    k6
-
-brew install warrensbox/tap/tfswitch
-
-# https://github.com/mklement0/n-install
-if [ "$(which n)" = "" ]; then
-  curl -L https://git.io/n-install | bash
-fi
-
-# https://github.com/Microsoft/pyright#command-line
-if [ "$(which pyright)" = "" ]; then
-  npm -g install pyright
-fi
-
-# https://github.com/bash-lsp/bash-language-server#installation
-if [ "$(which bash-language-server)" = "" ]; then
-  npm -g install bash-language-server
-fi
-
-if [ "$(which docker-langserver)" = "" ]; then
-  npm -g install dockerfile-language-server-nodejs
-fi
-
-if [ "$(which gopls)" = "" ]; then
-  go install golang.org/x/tools/gopls@latest
-fi
-
-#https://github.com/tonsky/FiraCode/wiki/Installing
-# But instead actually use the nerd font version
-brew tap homebrew/cask-fonts
-brew install --cask font-fira-code-nerd-font
-
-if ! grep fish /etc/shells; then
-    sudo bash -c "echo '/opt/homebrew/bin/fish' >> /etc/shells"
-fi
-
-if [ "$SHELL" != /opt/homebrew/bin/fish ]; then
-    chsh -s /opt/homebrew/bin/fish
-fi
-
-if [ ! -d "${HOME}/.local/share/omf" ]; then
-    ./oh-my-fish/bin/install --offline
-else
-    echo "🐟 Already installed oh-my-fish"
-fi
-
-if [ ! -d "${HOME}/.swiftenv" ]; then
-    git clone https://github.com/kylef/swiftenv.git "${HOME}/.swiftenv"
-fi
-
-./install_fisher_plugins.fish
-
-# Install Vim Plug to manage Neovim plugins
-# https://github.com/junegunn/vim-plug#neovim
-if [ ! -f "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim ]; then
-  sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
-fi
-
-mkdir -p "${HOME}/workspace/github.com"
-
-fish -c "clone https://github.com/arcticicestudio/nord-iterm2.git"
+mkdir -p "${HOME}/workspace/github.com/arcticicestudio"
+cd "${HOME}/workspace//github.com/arcticicestudio"
+git clone https://github.com/arcticicestudio/nord-iterm2.git
 
 echo "🍎 All set!"

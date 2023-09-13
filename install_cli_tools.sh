@@ -2,15 +2,20 @@
 
 set -eux
 
-mkdir -p "$HOME/.config/home-manager"
-#ln -s ./home.nix "$HOME/.config/home-manager/home.nix" 
+if [ ! -d "$HOME/.config/home-manager" ]; then
+  mkdir -p "$HOME/.config/home-manager"
 
-nix-channel --add https://github.com/nix-community/home-manager/archive/release-23.05.tar.gz home-manager
+  nix-channel --add https://github.com/nix-community/home-manager/archive/release-23.05.tar.gz home-manager
 
-nix-channel --update
-nix-shell '<home-manager>' -A install
+  nix-channel --update
+  nix-shell '<home-manager>' -A install
+fi
 
-. $HOME/.nix-profile/etc/profile.d/hm-session-vars.sh
+if [ -f "$HOME/.nix-profile/etc/profile.d/hm-session-vars.sh" ]; then
+  #TODO(joe): Why the heck did you need to source this?
+  #. $HOME/.nix-profile/etc/profile.d/hm-session-vars.sh
+  echo "Not sourcing hm-session-vars.sh for now"
+fi
 
 mkdir -p ~/workspace/bin
 TEMP_DIR="$(mktemp -d)"

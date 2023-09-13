@@ -23,6 +23,7 @@
     pkgs.fortune
     pkgs.delta
     pkgs.fd
+    pkgs.eza
     pkgs.ripgrep
     pkgs.xclip
     pkgs.zoxide
@@ -41,7 +42,7 @@
     pkgs.tflint
     pkgs.terraform-ls
     pkgs.kubectl
-    pkgs.helm
+    pkgs.kubernetes-helm
     pkgs.minikube
     pkgs.cbonsai
     pkgs.ctop
@@ -173,9 +174,6 @@
 
   programs.fzf.enable = true;
   programs.direnv.enable = true;
-
-  programs.exa.enable = true;
-  programs.exa.enableAliases = true;
 
   programs.fish.enable = true;
 
@@ -495,7 +493,7 @@
   '';
 
   programs.gnome-terminal = {
-    enable = true;
+    enable = pkgs.hostPlatform.isLinux;
     showMenubar = false;
 
     profile.b1dcc9dd-5262-4d8d-a863-c897e6d979b9 = {
