@@ -284,6 +284,7 @@
   };
 
   programs.atuin.enable = true;
+  programs.atuin.flags = ["--disable-up-arrow"];
   programs.bat.enable = true;
   programs.jq.enable = true;
   programs.k9s.enable = true;
