@@ -5,7 +5,7 @@ set -eux
 if [ ! -d "$HOME/.config/home-manager" ]; then
   mkdir -p "$HOME/.config/home-manager"
 
-  nix-channel --add https://github.com/nix-community/home-manager/archive/release-23.05.tar.gz home-manager
+  nix-channel --add https://github.com/nix-community/home-manager/archive/master.tar.gz home-manager
 
   nix-channel --update
   nix-shell '<home-manager>' -A install
@@ -20,8 +20,6 @@ fi
 mkdir -p ~/workspace/bin
 TEMP_DIR="$(mktemp -d)"
 cd "${TEMP_DIR}" || exit
-
-ARCH="$(uname -m)"
 
 install_tool() {
     # The eventual executable name

@@ -3,8 +3,8 @@
 {
   # Home Manager needs a bit of information about you and the paths it should
   # manage.
-  home.username = "joesmith";
-  home.homeDirectory = "/home/joesmith";
+  home.username = "joe";
+  home.homeDirectory = "/home/joe";
 
   # This value determines the Home Manager release that your configuration is
   # compatible with. This helps avoid breakage when a new Home Manager release
@@ -272,7 +272,7 @@
         return
       end
 
-      set KEEPASS_CLI keepass-cli
+      set KEEPASS_CLI keepassxc-cli
       if [ -z (which "$KEEPASS_CLI" ) ]
         set KEEPASS_CLI flatpak run --branch=stable --arch=x86_64 --command=keepassxc-cli org.keepassxc.KeePassXC
       end
@@ -507,7 +507,7 @@
 
       showScrollbar = false;
       transparencyPercent = 5;
-      font = "Cascadia Code PL 14";
+      font = "CaskaydiaCove Nerd Font Mono 14";
       colors = {
         foregroundColor = "#A9B2C3";
         backgroundColor = "#21252B";
