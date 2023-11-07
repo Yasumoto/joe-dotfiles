@@ -26,11 +26,14 @@ sudo apt-get update
 sudo apt-get upgrade
 
 sudo apt install vim curl fish mosh tmux apt-transport-https \
-	ca-certificates gnupg lsb-release gnome-common apt-file build-essential
+	ca-certificates gnupg lsb-release gnome-common apt-file build-essential \
+	gnome-shell-extensions
 
 sudo apt-file update
 
-curl -L https://nixos.org/nix/install | sh -s -- --daemon
+if [ "$(which nix)" = "" ] > /dev/null; then
+  curl -L https://nixos.org/nix/install | sh -s -- --daemon
+fi
 
 #if [ "${SHELL}" != "/usr/bin/fish" ]; then
 #    echo "🐟 Correcting your default shell"
@@ -62,7 +65,14 @@ fi
 
 fish -c "clone https://github.com/arcticicestudio/nord-gnome-terminal.git"
 
+set +x
+echo "************************"
+
 echo "Manual 1password install required:"
 echo "https://support.1password.com/install-linux/"
+echo
+
+echo "https://wiki.gnome.org/action/show/Projects/GnomeShellIntegration/Installation?action=show&redirect=Projects%2FGnomeShellIntegrationForChrome%2FInstallation#Meson_installation"
+echo "https://extensions.gnome.org/extension/779/clipboard-indicator/"
 
 echo "🐧 All set!"
