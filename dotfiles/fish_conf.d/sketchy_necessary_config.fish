@@ -5,6 +5,3 @@ function fish_greeting
     end
     echo
 end
-
-starship init fish | source
-zoxide init fish | source

@@ -33,10 +33,11 @@
     pkgs.vim
     pkgs.git-lfs
     pkgs.pyenv
+    pkgs.gnupg
 
     pkgs.awscli2
     pkgs.eksctl
-    pkgs.vagrant
+    #pkgs.vagrant
     pkgs.packer
     pkgs.vault
 
@@ -172,12 +173,15 @@
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
 
+  programs.fish.enable = true;
+
   fonts.fontconfig.enable = true;
 
   programs.fzf.enable = true;
   programs.direnv.enable = true;
 
-  programs.fish.enable = true;
+  programs.zoxide.enable = true;
+  programs.starship.enable = true;
 
   programs.fish.functions = {
     clone = ''
