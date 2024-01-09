@@ -233,7 +233,7 @@
     '';
 
     rebase_party = ''
-      for filepath in (git status | grep -E 'both (added|modified)' | awk '{print $3}' )
+      for filepath in ( git diff --name-only --diff-filter=U )
           nvim $filepath
           git add $filepath
           git status
