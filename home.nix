@@ -15,6 +15,9 @@
   # release notes.
   home.stateVersion = "23.05"; # Please read the comment before changing.
 
+  # For hashicorp tools
+  nixpkgs.config.allowUnfree = true;
+
   # The home.packages option allows you to install Nix packages into your
   # environment.
   home.packages = [
@@ -59,6 +62,7 @@
     pkgs.cheat
     pkgs.k6
     pkgs.navi
+    pkgs.pv
 
     pkgs.glow
 
@@ -309,10 +313,10 @@
     popup-nvim
     plenary-nvim
     telescope-nvim
-    nvim-treesitter
+    nvim-treesitter.withAllGrammars
     nord-vim
     fzf-vim
-    vim-go
+    #vim-go
     vim-fugitive
     vim-terraform
     vim-protobuf
