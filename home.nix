@@ -305,6 +305,7 @@
     cmp-nvim-lsp-signature-help
     cmp-path
     cmp-buffer
+    copilot-vim
     
     # Adds extra functionality over rust analyzer
     # https://github.com/sharksforarms/vim-rust/blob/82b4b1a/neovim-init-lsp-cmp-rust-tools.vim
