@@ -73,6 +73,7 @@ in
   # services.xserver.libinput.enable = true;
 
   programs.fish.enable = true;
+  programs.mosh.enable = true;
 
   users.users.joe = {
     isNormalUser = true;
@@ -154,6 +155,28 @@ in
     package = config.boot.kernelPackages.nvidiaPackages.stable;
   };
   ##################
+
+  # https://discourse.nixos.org/t/stop-pc-from-sleep/5757/2
+  # Disable the GNOME3/GDM auto-suspend feature that cannot be disabled in GUI!
+  # If no user is logged in, the machine will power down after 20 minutes.
+  systemd.targets.sleep.enable = false;
+  systemd.targets.suspend.enable = false;
+  systemd.targets.hibernate.enable = false;
+  systemd.targets.hybrid-sleep.enable = false;
+  # Also this
+  # https://github.com/NixOS/nixpkgs/issues/100390#issuecomment-1683290689
+  services.xserver.displayManager.gdm.autoSuspend = false;
+  security.polkit.extraConfig = ''
+    polkit.addRule(function(action, subject) {
+        if (action.id == "org.freedesktop.login1.suspend" ||
+            action.id == "org.freedesktop.login1.suspend-multiple-sessions" ||
+            action.id == "org.freedesktop.login1.hibernate" ||
+            action.id == "org.freedesktop.login1.hibernate-multiple-sessions")
+        {
+            return polkit.Result.NO;
+        }
+    });
+  '';
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
