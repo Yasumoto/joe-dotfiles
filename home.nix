@@ -282,11 +282,19 @@
 
       set KEEPASS_CLI keepassxc-cli
       if [ -z (which "$KEEPASS_CLI" ) ]
+        set KEEPASS_CLI /Applications/KeePassXC.app/Contents/MacOS/keepassxc-cli
+      end
+      if [ -z (which "$KEEPASS_CLI" ) ]
         set KEEPASS_CLI flatpak run --branch=stable --arch=x86_64 --command=keepassxc-cli org.keepassxc.KeePassXC
+      end
+
+      set KEEPASS_VAULT ~/Documents/joe.smith.kdbx
+      if [ ! -f "$KEEPASS_VAULT" ]
+        set KEEPASS_VAULT ~/joe.smith.kdbx
       end
     
       VAULT_ADDR="https://vault.int.n7k.io:443" vault login -non-interactive -method=userpass username=joe.smith \
-          password=( $KEEPASS_CLI  show -s -a Password ~/Documents/joe.smith.kdbx Vault)
+          password=( $KEEPASS_CLI  show -s -a Password $KEEPASS_VAULT Vault)
       '';
     
   };
