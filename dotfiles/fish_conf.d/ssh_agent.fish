@@ -10,7 +10,7 @@ for PATHNAME in /tmp/ssh-*/agent.*
         continue
     end
 
-    if [ "(SSH_AUTH_SOCK=$PATHNAME ssh-add -l 2>&1)" != "Could not open a connection to your authentication agent" ];
+    if [ "(SSH_AUTH_SOCK=$PATHNAME ssh-add -l 2>&1)" != "Could not open a connection to your authentication agent" ] && [ "(SSH_AUTH_SOCK=$PATHNAME ssh-add -l 2>&1)" != "Error connecting to agent: Connection refused" ];
         set -gx SSH_AUTH_SOCK $PATHNAME
     else
         rm -f $PATHNAME
