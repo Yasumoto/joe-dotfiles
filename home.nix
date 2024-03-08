@@ -3,8 +3,8 @@
 {
   # Home Manager needs a bit of information about you and the paths it should
   # manage.
-  home.username = "joe";
-  home.homeDirectory = "/home/joe";
+  home.username = if pkgs.stdenv.isDarwin then "joe.smith" else "joe";
+  home.homeDirectory = if pkgs.stdenv.isDarwin then "/Users/joe.smith" else "/home/joe";
 
   # This value determines the Home Manager release that your configuration is
   # compatible with. This helps avoid breakage when a new Home Manager release
