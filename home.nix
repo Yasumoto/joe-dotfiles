@@ -37,12 +37,13 @@
     pkgs.git-lfs
     pkgs.pyenv
     pkgs.gnupg
+    pkgs.nethack
 
     pkgs.awscli2
     pkgs.eksctl
     #pkgs.vagrant
     pkgs.packer
-    pkgs.vault
+    #pkgs.vault
 
     pkgs.tfsec
     pkgs.tflint
