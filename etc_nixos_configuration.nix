@@ -42,6 +42,10 @@ in
   # Enable the GNOME Desktop Environment.
   services.xserver.displayManager.gdm.enable = true;
   services.xserver.desktopManager.gnome.enable = true;
+  services.xserver.desktopManager.gnome.extraGSettingsOverrides = ''
+    [org/gnome/desktop/peripherals/touchpad]
+    natural-scroll=true
+  '';
 
   # Configure keymap in X11
   services.xserver = {
@@ -103,6 +107,9 @@ in
     slack
     junction
   ];
+
+  virtualisation.docker.enable = true;
+  users.extraGroups.docker.members = [ "joe" ];
 
   programs.gnome-terminal.enable = true;
   programs._1password.enable = true;
@@ -192,7 +199,7 @@ in
   services.openssh.enable = true;
 
   # Open ports in the firewall.
-  networking.firewall.allowedTCPPorts = [ 22 ];
+  networking.firewall.allowedTCPPorts = [ 22 3000 ];
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
