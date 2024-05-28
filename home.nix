@@ -294,8 +294,8 @@
         set KEEPASS_VAULT ~/joe.smith.kdbx
       end
     
-      VAULT_ADDR="https://vault.int.n7k.io:443" vault login -non-interactive -method=userpass username=joe.smith \
-          password=( $KEEPASS_CLI  show -s -a Password $KEEPASS_VAULT Vault)
+      set -Ux VAULT_TOKEN (VAULT_ADDR="https://vault.int.n7k.io:443" vault login -token-only -non-interactive -method=userpass username=joe.smith \
+          password=( $KEEPASS_CLI  show -s -a Password $KEEPASS_VAULT Vault) )
       '';
     
   };
