@@ -21,6 +21,7 @@
   # The home.packages option allows you to install Nix packages into your
   # environment.
   home.packages = [
+    pkgs.clang-tools
     pkgs.gcc
 
     pkgs.fish
@@ -466,6 +467,8 @@
         },
       },
     }
+
+    require'lspconfig'.clangd.setup{}
     
     require('gitsigns').setup {}
     
