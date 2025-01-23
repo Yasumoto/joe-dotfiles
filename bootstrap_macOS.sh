@@ -45,9 +45,9 @@ defaults write com.apple.DiskUtility DUDebugMenuEnabled -bool true
 defaults write com.apple.DiskUtility advanced-image-options -bool true
 
 
-if ! command -v nix > /dev/null; then
-  curl -L https://nixos.org/nix/install | /bin/sh
-fi
+#if ! command -v nix > /dev/null; then
+#  curl -L https://nixos.org/nix/install | /bin/sh
+#fi
 
 mkdir -p "${HOME}/workspace/github.com/arcticicestudio"
 cd "${HOME}/workspace//github.com/arcticicestudio"

@@ -1,3 +1,3 @@
-if [ -e /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.fish ]; then
+if [ -e /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.fish ]
   source /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.fish
 end

@@ -26,14 +26,11 @@ sudo apt-get update
 sudo apt-get upgrade
 
 sudo apt install vim curl fish mosh tmux apt-transport-https \
-	ca-certificates gnupg lsb-release gnome-common apt-file build-essential \
-	gnome-shell-extensions
+	ca-certificates gnupg lsb-release apt-file build-essential
+	#gnome-shell-extensions gnome-common gnome-tweaks # if you're on gnome
+
 
 sudo apt-file update
-
-if [ "$(which nix)" = "" ] > /dev/null; then
-  curl -L https://nixos.org/nix/install | sh -s -- --daemon
-fi
 
 #if [ "${SHELL}" != "/usr/bin/fish" ]; then
 #    echo "🐟 Correcting your default shell"
@@ -63,7 +60,7 @@ fi
 #    /bin/ln -s "${SCRIPT_DIRECTORY}/irssi_config" "${IRSSI_CONFIG_PATH}"
 #fi
 
-fish -c "clone https://github.com/arcticicestudio/nord-gnome-terminal.git"
+#fish -c "clone https://github.com/arcticicestudio/nord-gnome-terminal.git"
 
 set +x
 echo "************************"

@@ -40,7 +40,7 @@
     pkgs.gnupg
     pkgs.nethack
 
-    pkgs.awscli2
+    #pkgs.awscli2
     pkgs.eksctl
     #pkgs.vagrant
     pkgs.packer
@@ -97,12 +97,6 @@
 
     pkgs.taskwarrior
     pkgs.vit
-
-    # # It is sometimes useful to fine-tune packages, for example, by applying
-    # # overrides. You can do that directly here, just don't forget the
-    # # parentheses. Maybe you want to install Nerd Fonts with a limited number of
-    # # fonts?
-    (pkgs.nerdfonts.override { fonts = [ "CascadiaCode" ]; })
 
     # # You can also create simple shell scripts directly inside your
     # # configuration. For example, this adds a command 'my-hello' to your
@@ -452,7 +446,7 @@
       capabilities = capabilities,
     }
     
-    require('lspconfig')['tsserver'].setup{
+    require('lspconfig')['ts_ls'].setup{
       capabilities = capabilities,
     }
 
