@@ -16,6 +16,7 @@ enable_config() {
 
 enable_config "${HOME}/.git-completion.bash"
 enable_config "${HOME}/.git-prompt.sh"
+enable_config "${HOME}/.bashrc"
 enable_config "${HOME}/.config/bash/iterm2_shell_integration.bash"
 export GIT_PS1_SHOWDIRTYSTATE='yep'
 

@@ -57,7 +57,6 @@
     pkgs.dive
     pkgs.stern
     pkgs.procs
-    pkgs.dog
     pkgs.gping
     pkgs.docker-compose
     pkgs.viddy
@@ -75,7 +74,7 @@
     pkgs.topgrade
 
     pkgs.rustup
-    
+
     pkgs.nmap
     pkgs.shellcheck
     pkgs.pipenv
@@ -95,7 +94,7 @@
     pkgs.nodePackages.typescript
     pkgs.nil
 
-    pkgs.taskwarrior
+    pkgs.taskwarrior3
     pkgs.vit
 
     # # You can also create simple shell scripts directly inside your
@@ -128,7 +127,7 @@
       recursive = true;
     };
 
-    ".config/fish/conf.d" = {
+    ".config/fish/conf.d/nix" = {
       source = ./dotfiles/fish_conf.d;
       recursive = true;
     };
@@ -165,7 +164,8 @@
   fonts.fontconfig.enable = true;
 
   programs.fzf.enable = true;
-  programs.direnv.enable = true;
+  # Already provided by sw_setup
+  #programs.direnv.enable = true;
 
   programs.zoxide.enable = true;
   programs.starship.enable = true;
@@ -186,26 +186,26 @@
             set SUBPROJECT (echo $LOCATION | cut -f2 -d: | cut -f3 -d/ | cut -f1 -d.)
         end
       end
-      
+
       if [ -n $SUBPROJECT ]
         set FILESYSTEM_LOCATION "$HOME/workspace/$PROVIDER/$OWNER/$SUBPROJECT"
       else
         set FILESYSTEM_LOCATION "$HOME/workspace/$PROVIDER/$OWNER"
       end
-      
+
       #echo $PROVIDER
       #echo $OWNER
       #echo $REPO
       #echo $SUBPROJECT
       #echo $FILESYSTEM_LOCATION
       #return
-      
+
       mkdir -p "$FILESYSTEM_LOCATION"
       git clone "$LOCATION" "$FILESYSTEM_LOCATION/$REPO"
       cd "$FILESYSTEM_LOCATION/$REPO"
     '';
 
-    
+
     fireball = ''
       branch
       git status
@@ -239,7 +239,7 @@
 
     vault_login = ''
       set -e VAULT_TOKEN
-    
+
       if [ -z (which vault) ]
         echo "No vault binary installed!"
         return
@@ -257,11 +257,11 @@
       if [ ! -f "$KEEPASS_VAULT" ]
         set KEEPASS_VAULT ~/joe.smith.kdbx
       end
-    
+
       set -Ux VAULT_TOKEN (VAULT_ADDR="https://vault.int.n7k.io:443" vault login -token-only -non-interactive -method=userpass username=joe.smith \
           password=( $KEEPASS_CLI  show -s -a Password $KEEPASS_VAULT Vault) )
       '';
-    
+
   };
 
   programs.atuin.enable = true;
@@ -279,11 +279,11 @@
     cmp-path
     cmp-buffer
     copilot-vim
-    
+
     # Adds extra functionality over rust analyzer
     # https://github.com/sharksforarms/vim-rust/blob/82b4b1a/neovim-init-lsp-cmp-rust-tools.vim
     rust-tools-nvim
-    
+
     popup-nvim
     plenary-nvim
     telescope-nvim
@@ -297,25 +297,25 @@
     vim-mustache-handlebars
     vim-fish
     vim-nix
-    
+
     # https://github.com/lewis6991/gitsigns.nvim
     gitsigns-nvim
-    
+
     # https://github.com/lukas-reineke/indent-blankline.nvim
     indent-blankline-nvim
-    
+
     # https://github.com/nvim-neo-tree/neo-tree.nvim
     neo-tree-nvim
     nvim-web-devicons
     nui-nvim
-    
+
     # https://github.com/nvim-lualine/lualine.nvim
     lualine-nvim
-    
+
     # https://www.youtube.com/watch?v=-InmtHhk2qM
     # https://github.com/numToStr/Comment.nvim
     comment-nvim
-    
+
     # https://github.com/sindrets/diffview.nvim
     diffview-nvim
   ];
@@ -329,7 +329,7 @@
     autocmd BufRead,BufNewFile *.tfstate,*.tfstate.backup set filetype=json
     let g:terraform_fmt_on_save=1
     let g:terraform_align=1
-    
+
     " Code navigation shortcuts
     " as found in :help lsp
     nnoremap <silent> <c-]> <cmd>lua vim.lsp.buf.definition()<CR>
@@ -341,10 +341,10 @@
     nnoremap <silent> g0    <cmd>lua vim.lsp.buf.document_symbol()<CR>
     nnoremap <silent> gW    <cmd>lua vim.lsp.buf.workspace_symbol()<CR>
     nnoremap <silent> gd    <cmd>lua vim.lsp.buf.definition()<CR>
-    
+
     " https://neovim.io/doc/user2/diagnostic.html#vim.diagnostic.open_float()
     nnoremap <silent> W     <cmd>lua vim.diagnostic.open_float()<CR>
-    
+
     " Quick-fix
     nnoremap <silent> ga    <cmd>lua vim.lsp.buf.code_action()<CR>
 
@@ -355,15 +355,15 @@
     autocmd CursorHold * lua vim.diagnostic.open_float()
 
     colorscheme nord
-    
+
     " why the heck is this getting overridden
     nmap <silent> <C-M> :silent noh<CR> :echo "Highlights Cleared! bjoli"<CR>
-    
+
     set mouse=
   '';
   programs.neovim.extraLuaConfig = ''
     local nvim_lsp = require'lspconfig'
-    
+
     local opts = {
         tools = {
             autoSetHints = true,
@@ -377,44 +377,44 @@
             },
         },
     }
-    
+
     require('rust-tools').setup(opts)
-    
+
     local capabilities = require('cmp_nvim_lsp').default_capabilities(vim.lsp.protocol.make_client_capabilities())
-    
+
     require('lspconfig')['pyright'].setup {
       capabilities = capabilities,
     }
-    
+
     require'lspconfig'.rust_analyzer.setup{}
-    
+
     -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#bashls
     require'lspconfig'.bashls.setup {
       capabilities = capabilities,
     }
-    
+
     -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#dockerls
     require'lspconfig'.dockerls.setup {
       capabilities = capabilities,
     }
-    
+
     -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#gopls
     -- https://github.com/golang/tools/tree/master/gopls
     require'lspconfig'.gopls.setup {
       capabilities = capabilities,
     }
-    
+
     -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#terraformls
     -- https://github.com/hashicorp/terraform-ls
     require'lspconfig'.terraformls.setup {
       capabilities = capabilities,
     }
-    
+
     -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#tflint
     require'lspconfig'.tflint.setup{
       capabilities = capabilities,
     }
-    
+
     require('lspconfig')['ts_ls'].setup{
       capabilities = capabilities,
     }
@@ -432,9 +432,9 @@
     }
 
     require'lspconfig'.clangd.setup{}
-    
+
     require('gitsigns').setup {}
-    
+
     require('nvim-web-devicons').setup { default = true; }
     require("neo-tree").setup { close_if_last_window = true } -- Close Neo-tree if it is the last window left in the tab
     require('Comment').setup()
@@ -453,7 +453,7 @@
           select = true,
         }),
       },
-    
+
       -- Installed sources
       sources = {
         { name = 'nvim_lsp' },
@@ -462,17 +462,17 @@
         { name = 'nvim_lsp_signature_help' }
       },
     })
-    
-    
+
+
     require'nvim-treesitter.configs'.setup {
       -- Modules and its options go here
       highlight = { enable = true },
       incremental_selection = { enable = true },
       textobjects = { enable = true },
     }
-    
+
     require('lualine').setup {}
-    
+
     -- Use LSP as the handler for omnifunc.
     --    See `:help omnifunc` and `:help ins-completion` for more information.
     vim.api.nvim_buf_set_option(0, 'omnifunc', 'v:lua.vim.lsp.omnifunc')

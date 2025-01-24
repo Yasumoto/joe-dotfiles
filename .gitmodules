@@ -4,9 +4,6 @@
 [submodule "vim/bundle/vim-go"]
 	path = vim/bundle/vim-go
 	url = https://github.com/fatih/vim-go.git
-[submodule "oh-my-fish"]
-	path = oh-my-fish
-	url = https://github.com/oh-my-fish/oh-my-fish
 [submodule "tmux"]
 	path = tmux
 	url = https://github.com/gpakosz/.tmux.git
