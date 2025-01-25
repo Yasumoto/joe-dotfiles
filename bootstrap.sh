@@ -26,6 +26,41 @@ git submodule update
 
 if grep -q fedora /etc/os-release; then
 	sudo dnf update
+elif [ "$(uname)" = "Darwin" ]; then
+	# System defaults from
+	# https://github.com/mathiasbynens/dotfiles/blob/master/.macos
+
+	# Disable the sound effects on boot
+	sudo nvram SystemAudioVolume=" "
+
+	# Expand save panel by default
+	defaults write NSGlobalDomain NSNavPanelExpandedStateForSaveMode -bool true
+	defaults write NSGlobalDomain NSNavPanelExpandedStateForSaveMode2 -bool true
+
+	# Disable automatic capitalization as it’s annoying when typing code
+	defaults write NSGlobalDomain NSAutomaticCapitalizationEnabled -bool false
+
+	# Disable smart quotes as they’re annoying when typing code
+	defaults write NSGlobalDomain NSAutomaticQuoteSubstitutionEnabled -bool false
+
+	# Disable auto-correct
+	defaults write NSGlobalDomain NSAutomaticSpellingCorrectionEnabled -bool false
+
+	# Trackpad: enable tap to click for this user and for the login screen
+	defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true
+	defaults -currentHost write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
+	defaults write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
+
+	# Display full POSIX path as Finder window title
+	defaults write com.apple.finder _FXShowPosixPathInTitle -bool true
+
+	# Show the ~/Library folder
+	chflags nohidden ~/Library
+
+	# Enable the debug menu in Disk Utility
+	defaults write com.apple.DiskUtility DUDebugMenuEnabled -bool true
+	defaults write com.apple.DiskUtility advanced-image-options -bool true
+
 else
 	sudo apt-get update
 	sudo apt-get upgrade
@@ -52,7 +87,7 @@ if [ "$(which nix)" != "" ] > /dev/null; then
 	# Home Manager
 	# https://nix-community.github.io/home-manager/index.xhtml#sec-install-standalone
 	if [ "$(which home-manager)" = "" ] > /dev/null; then
-	nix-channel --add https://github.com/nix-community/home-manager/archive/release-25.05.tar.gz home-manager
+	nix-channel --add https://github.com/nix-community/home-manager/archive/release-24.11.tar.gz home-manager
 	nix-channel --update
 
 	nix-shell '<home-manager>' -A install
@@ -89,6 +124,6 @@ echo
 echo "https://wiki.gnome.org/action/show/Projects/GnomeShellIntegration/Installation?action=show&redirect=Projects%2FGnomeShellIntegrationForChrome%2FInstallation#Meson_installation"
 echo "https://extensions.gnome.org/extension/779/clipboard-indicator/"
 
-echo "home-manager -b joe switch -f ~/workspace/github.com/Yasumoto/joe-dotfiles/home.nix"
+echo "home-manager -b gimmehjimmeh switch -f ~/workspace/github.com/Yasumoto/joe-dotfiles/home.nix"
 
-echo "🐧 All set!"
+echo "All set!"

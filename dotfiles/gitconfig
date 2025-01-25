@@ -108,3 +108,7 @@
   ff = only
 [init]
 	defaultBranch = main
+
+# Inserted by nlk_configure_git_and_ssh.sh
+[include]
+        path = /Users/joe.smith/src/sw/ops/nlk_speed_up_git/.gitconfig
