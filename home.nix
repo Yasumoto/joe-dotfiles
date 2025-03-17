@@ -164,8 +164,6 @@
   fonts.fontconfig.enable = true;
 
   programs.fzf.enable = true;
-  # Already provided by sw_setup
-  #programs.direnv.enable = true;
 
   programs.zoxide.enable = true;
   programs.starship.enable = true;
@@ -263,6 +261,11 @@
       '';
 
   };
+  # Already provided by sw_setup, see programs.fish.shellInit
+  #programs.direnv.enable = true;
+  programs.fish.shellInit = '' 
+    direnv hook fish | source
+  '';
 
   programs.atuin.enable = true;
   programs.atuin.flags = ["--disable-up-arrow"];
