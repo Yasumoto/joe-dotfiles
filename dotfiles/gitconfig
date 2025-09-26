@@ -104,6 +104,9 @@
 [includeIf "gitdir:~/src/"]
   path = ~/src/.gitconfig_include
 
+[includeIf "gitdir:~/workspace/github.com/"]
+  path = ~/workspace/github.com/.gitconfig_include
+
 [pull]
   ff = only
 [init]
