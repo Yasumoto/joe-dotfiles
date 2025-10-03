@@ -473,17 +473,19 @@
     require('nvim-web-devicons').setup { default = true; }
     require("neo-tree").setup { close_if_last_window = false }
 
-    -- Auto-open Neo-tree on startup and new tabs, then return focus to editor
+    -- Auto-open Neo-tree on startup and when entering tabs, then return focus to editor
     vim.api.nvim_create_autocmd("VimEnter", {
       callback = function()
         vim.cmd("Neotree show")
         vim.cmd("wincmd p")
       end,
     })
-    vim.api.nvim_create_autocmd("TabNew", {
+    vim.api.nvim_create_autocmd("TabEnter", {
       callback = function()
-        vim.cmd("Neotree show")
-        vim.cmd("wincmd p")
+        if vim.fn.bufwinnr('neo-tree') == -1 then
+          vim.cmd("Neotree show")
+          vim.cmd("wincmd p")
+        end
       end,
     })
     require('Comment').setup()
