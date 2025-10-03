@@ -88,6 +88,7 @@
 
     pkgs.gawk
     pkgs.gopls
+    pkgs.nodejs
     pkgs.nodePackages.bash-language-server
     pkgs.nodePackages.dockerfile-language-server-nodejs
     pkgs.nodePackages.typescript-language-server
@@ -281,18 +282,37 @@
     cmp-nvim-lsp-signature-help
     cmp-path
     cmp-buffer
-    copilot-vim
-
-    # Adds extra functionality over rust analyzer
-    # https://github.com/sharksforarms/vim-rust/blob/82b4b1a/neovim-init-lsp-cmp-rust-tools.vim
-    rust-tools-nvim
+    cmp-cmdline
+    # Modern Lua-based Copilot
+    copilot-lua
+    copilot-cmp
+    # Better Rust LSP integration
+    rustaceanvim
 
     popup-nvim
     plenary-nvim
     telescope-nvim
-    nvim-treesitter.withAllGrammars
+    telescope-fzf-native-nvim
+    (nvim-treesitter.withPlugins (p: with p; [
+      lua
+      rust
+      go
+      python
+      typescript
+      javascript
+      nix
+      terraform
+      bash
+      fish
+      json
+      yaml
+      toml
+      markdown
+      vim
+      c
+      cpp
+    ]))
     nord-vim
-    fzf-vim
     #vim-go
     vim-fugitive
     vim-terraform
@@ -321,6 +341,9 @@
 
     # https://github.com/sindrets/diffview.nvim
     diffview-nvim
+
+    # https://github.com/romgrk/barbar.nvim
+    barbar-nvim
   ];
 
   programs.neovim.extraConfig = ''
@@ -365,31 +388,13 @@
     set mouse=
   '';
   programs.neovim.extraLuaConfig = ''
+    vim.g.lspconfig_deprecated_warning = false
     local nvim_lsp = require'lspconfig'
-
-    local opts = {
-        tools = {
-            autoSetHints = true,
-            runnables = {
-                use_telescope = true
-            },
-            inlay_hints = {
-                show_parameter_hints = true,
-                parameter_hints_prefix = "",
-                other_hints_prefix = "",
-            },
-        },
-    }
-
-    require('rust-tools').setup(opts)
-
-    local capabilities = require('cmp_nvim_lsp').default_capabilities(vim.lsp.protocol.make_client_capabilities())
+    local capabilities = vim.lsp.protocol.make_client_capabilities()
 
     require('lspconfig')['pyright'].setup {
       capabilities = capabilities,
     }
-
-    require'lspconfig'.rust_analyzer.setup{}
 
     -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#bashls
     require'lspconfig'.bashls.setup {
@@ -436,10 +441,51 @@
 
     require'lspconfig'.clangd.setup{}
 
+    require('copilot').setup({
+      panel = {
+        enabled = false,
+      },
+      suggestion = {
+        enabled = false,
+      },
+      filetypes = {
+        ["."] = true,
+      },
+    })
+
+    require('copilot_cmp').setup()
+
+    require('telescope').setup({
+      extensions = {
+        fzf = {
+          fuzzy = true,
+          override_generic_sorter = true,
+          override_file_sorter = true,
+          case_mode = "smart_case",
+        }
+      }
+    })
+
+    require('telescope').load_extension('fzf')
+
     require('gitsigns').setup {}
 
     require('nvim-web-devicons').setup { default = true; }
-    require("neo-tree").setup { close_if_last_window = true } -- Close Neo-tree if it is the last window left in the tab
+    require("neo-tree").setup { close_if_last_window = false }
+
+    -- Auto-open Neo-tree on startup and new tabs, then return focus to editor
+    vim.api.nvim_create_autocmd("VimEnter", {
+      callback = function()
+        vim.cmd("Neotree show")
+        vim.cmd("wincmd p")
+      end,
+    })
+    vim.api.nvim_create_autocmd("TabNew", {
+      callback = function()
+        vim.cmd("Neotree show")
+        vim.cmd("wincmd p")
+      end,
+    })
     require('Comment').setup()
 
     local cmp = require'cmp'
@@ -462,8 +508,23 @@
         { name = 'nvim_lsp' },
         { name = 'path' },
         { name = 'buffer' },
-        { name = 'nvim_lsp_signature_help' }
+        { name = 'nvim_lsp_signature_help' },
+        { name = 'copilot' }
       },
+    })
+
+    cmp.setup.cmdline('/', {
+      sources = {
+        { name = 'buffer' }
+      }
+    })
+
+    cmp.setup.cmdline(':', {
+      sources = cmp.config.sources({
+        { name = 'path' }
+      }, {
+        { name = 'cmdline' }
+      })
     })
 
     vim.g.mapleader = ','
@@ -484,6 +545,51 @@
     }
 
     require('lualine').setup {}
+
+    require('barbar').setup {
+      animation = true,
+      auto_hide = false,
+      clickable = true,
+      icons = {
+        button = "",
+        modified = { button = "●" },
+        filetype = { enabled = true },
+        separator = { left = "▎", right = "" },
+        inactive = { separator = { left = "▎", right = "" } },
+        diagnostics = {
+          [vim.diagnostic.severity.ERROR] = { enabled = true },
+          [vim.diagnostic.severity.WARN] = { enabled = true },
+        },
+      },
+      sidebar_filetypes = {
+        ['neo-tree'] = true,
+      },
+      exclude_ft = { 'neo-tree' },
+      highlight_inactive_file_icons = false,
+      insert_at_end = true,
+      maximum_padding = 1,
+      minimum_padding = 1,
+      semantic_letters = true,
+      letters = 'asdfjkl;ghnmxcvbziowerutyqpASDFJKLGHNMXCVBZIOWERUTYQP',
+    }
+
+    -- Barbar keymaps for tab navigation
+    local map = vim.api.nvim_set_keymap
+    local opts = { noremap = true, silent = true }
+    map('n', '<A-,>', '<Cmd>BufferPrevious<CR>', opts)
+    map('n', '<A-.>', '<Cmd>BufferNext<CR>', opts)
+    map('n', '<A-1>', '<Cmd>BufferGoto 1<CR>', opts)
+    map('n', '<A-2>', '<Cmd>BufferGoto 2<CR>', opts)
+    map('n', '<A-3>', '<Cmd>BufferGoto 3<CR>', opts)
+    map('n', '<A-4>', '<Cmd>BufferGoto 4<CR>', opts)
+    map('n', '<A-5>', '<Cmd>BufferGoto 5<CR>', opts)
+    map('n', '<A-6>', '<Cmd>BufferGoto 6<CR>', opts)
+    map('n', '<A-7>', '<Cmd>BufferGoto 7<CR>', opts)
+    map('n', '<A-8>', '<Cmd>BufferGoto 8<CR>', opts)
+    map('n', '<A-9>', '<Cmd>BufferGoto 9<CR>', opts)
+    map('n', '<A-0>', '<Cmd>BufferLast<CR>', opts)
+    map('n', '<A-c>', '<Cmd>BufferClose<CR>', opts)
+    map('n', '<A-s-c>', '<Cmd>BufferRestore<CR>', opts)
 
     -- Use LSP as the handler for omnifunc.
     --    See `:help omnifunc` and `:help ins-completion` for more information.
