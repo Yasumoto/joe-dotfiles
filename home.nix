@@ -753,6 +753,7 @@
       end,
     })
 
+
     require('copilot').setup({
       panel = {
         enabled = false,
@@ -763,7 +764,7 @@
       filetypes = {
         ["."] = true,
       },
-      node_command = '/home/joe/.nix-profile/bin/node',
+      copilot_node_command = vim.fn.expand("$HOME") .. '/.nix-profile/bin/node',
     })
 
     require('copilot_cmp').setup()
