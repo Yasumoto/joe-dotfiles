@@ -90,10 +90,13 @@
     pkgs.gopls
     pkgs.nodejs
     pkgs.nodePackages.bash-language-server
-    pkgs.nodePackages.dockerfile-language-server-nodejs
+    pkgs.dockerfile-language-server
     pkgs.nodePackages.typescript-language-server
     pkgs.nodePackages.typescript
     pkgs.nil
+
+    pkgs.jdt-language-server
+    pkgs.yaml-language-server
 
     pkgs.taskwarrior3
     pkgs.vit
@@ -349,7 +352,7 @@
   programs.neovim.extraConfig = ''
     " https://mukeshsharma.dev/2022/02/08/neovim-workflow-for-terraform.html
     silent! autocmd! filetypedetect BufRead,BufNewFile *.tf
-    autocmd BufRead,BufNewFile *.hcl set filetype=hcl]])
+    autocmd BufRead,BufNewFile *.hcl set filetype=hcl
     autocmd BufRead,BufNewFile .terraformrc,terraform.rc set filetype=hcl
     autocmd BufRead,BufNewFile *.tf,*.tfvars set filetype=terraform
     autocmd BufRead,BufNewFile *.tfstate,*.tfstate.backup set filetype=json
@@ -388,58 +391,367 @@
     set mouse=
   '';
   programs.neovim.extraLuaConfig = ''
-    vim.g.lspconfig_deprecated_warning = false
-    local nvim_lsp = require'lspconfig'
+    -- ============================================================================
+    -- LSP Configuration (Neovim 0.11 style)
+    -- ============================================================================
+
+    -- Load LSP server configurations (required for vim.lsp.config to work)
+    require('lspconfig')
+
+    -- LSP capabilities - required for nvim-cmp integration and server features
     local capabilities = vim.lsp.protocol.make_client_capabilities()
+    capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
 
-    require('lspconfig')['pyright'].setup {
-      capabilities = capabilities,
-    }
+    -- Common on_attach function for all LSP servers
+    local on_attach = function(client, bufnr)
+      -- Enable completion triggered by <c-x><c-o>
+      vim.bo[bufnr].omnifunc = 'v:lua.vim.lsp.omnifunc'
 
-    -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#bashls
-    require'lspconfig'.bashls.setup {
-      capabilities = capabilities,
-    }
+      -- Buffer local mappings
+      local opts = { buffer = bufnr, noremap = true, silent = true }
 
-    -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#dockerls
-    require'lspconfig'.dockerls.setup {
-      capabilities = capabilities,
-    }
+      -- Navigation
+      vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, opts)
+      vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
+      vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
+      vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, opts)
+      vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, opts)
+      vim.keymap.set('n', '<space>wa', vim.lsp.buf.add_workspace_folder, opts)
+      vim.keymap.set('n', '<space>wr', vim.lsp.buf.remove_workspace_folder, opts)
+      vim.keymap.set('n', '<space>wl', function()
+        print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
+      end, opts)
 
-    -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#gopls
-    -- https://github.com/golang/tools/tree/master/gopls
-    require'lspconfig'.gopls.setup {
-      capabilities = capabilities,
-    }
+      -- Diagnostics
+      vim.keymap.set('n', '<space>e', vim.diagnostic.open_float, opts)
+      vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, opts)
+      vim.keymap.set('n', ']d', vim.diagnostic.goto_next, opts)
+      vim.keymap.set('n', '<space>q', vim.diagnostic.setloclist, opts)
 
-    -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#terraformls
-    -- https://github.com/hashicorp/terraform-ls
-    require'lspconfig'.terraformls.setup {
-      capabilities = capabilities,
-    }
+      -- Code actions and refactoring
+      vim.keymap.set('n', '<space>D', vim.lsp.buf.type_definition, opts)
+      vim.keymap.set('n', '<space>rn', vim.lsp.buf.rename, opts)
+      vim.keymap.set({ 'n', 'v' }, '<space>ca', vim.lsp.buf.code_action, opts)
+      vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
 
-    -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#tflint
-    require'lspconfig'.tflint.setup{
-      capabilities = capabilities,
-    }
+      -- Formatting
+      vim.keymap.set('n', '<space>f', function()
+        vim.lsp.buf.format { async = true }
+      end, opts)
 
-    require('lspconfig')['ts_ls'].setup{
-      capabilities = capabilities,
-    }
+      -- Document highlighting
+      if client.server_capabilities.documentHighlightProvider then
+        vim.api.nvim_create_augroup('lsp_document_highlight', { clear = false })
+        vim.api.nvim_clear_autocmds({ buffer = bufnr, group = 'lsp_document_highlight' })
+        vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
+          group = 'lsp_document_highlight',
+          buffer = bufnr,
+          callback = vim.lsp.buf.document_highlight,
+        })
+        vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
+          group = 'lsp_document_highlight',
+          buffer = bufnr,
+          callback = vim.lsp.buf.clear_references,
+        })
+      end
 
-    require('lspconfig').nil_ls.setup {
-      autostart = true,
+      -- Inlay hints (Neovim 0.10+)
+      if client.server_capabilities.inlayHintProvider then
+        vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
+      end
+    end
+
+    -- Modern root directory detection helper
+    local function get_root_dir(root_files)
+      return vim.fs.root(0, root_files) or vim.fn.getcwd()
+    end
+
+    -- ============================================================================
+    -- LSP Server Configurations
+    -- ============================================================================
+
+    -- Python (pyright)
+    vim.lsp.config('pyright', {
       capabilities = capabilities,
+      on_attach = on_attach,
+      root_dir = get_root_dir({ 'pyproject.toml', 'setup.py', 'setup.cfg', 'requirements.txt', 'Pipfile', '.git' }),
+      settings = {
+        python = {
+          analysis = {
+            autoSearchPaths = true,
+            useLibraryCodeForTypes = true,
+            diagnosticMode = "workspace",
+            typeCheckingMode = "basic",
+          },
+        },
+      },
+    })
+
+    -- Bash
+    vim.lsp.config('bashls', {
+      capabilities = capabilities,
+      on_attach = on_attach,
+      root_dir = get_root_dir({ '.bashrc', '.bash_profile', '.git' }),
+      filetypes = { 'sh', 'bash', 'zsh' },
+    })
+
+    -- Docker
+    vim.lsp.config('dockerls', {
+      capabilities = capabilities,
+      on_attach = on_attach,
+      root_dir = get_root_dir({ 'Dockerfile', 'docker-compose.yml', '.git' }),
+    })
+
+    -- Go
+    vim.lsp.config('gopls', {
+      capabilities = capabilities,
+      on_attach = on_attach,
+      root_dir = get_root_dir({ 'go.work', 'go.mod', '.git' }),
+      settings = {
+        gopls = {
+          analyses = {
+            unusedparams = true,
+            shadow = true,
+            fieldalignment = false,
+          },
+          staticcheck = true,
+          gofumpt = true,
+          usePlaceholders = true,
+          completeUnimported = true,
+        },
+      },
+    })
+
+    -- Terraform
+    vim.lsp.config('terraformls', {
+      capabilities = capabilities,
+      on_attach = on_attach,
+      root_dir = get_root_dir({ '.terraform', '.git' }),
+    })
+
+    -- TFLint
+    vim.lsp.config('tflint', {
+      capabilities = capabilities,
+      on_attach = on_attach,
+      root_dir = get_root_dir({ '.terraform', '.git' }),
+    })
+
+    -- TypeScript/JavaScript
+    vim.lsp.config('ts_ls', {
+      capabilities = capabilities,
+      on_attach = on_attach,
+      root_dir = get_root_dir({ 'package.json', 'tsconfig.json', 'jsconfig.json', '.git' }),
+      init_options = {
+        preferences = {
+          disableSuggestions = true,
+          includeCompletionsForImportStatements = true,
+        },
+      },
+    })
+
+    -- Nix
+    vim.lsp.config('nil_ls', {
+      capabilities = capabilities,
+      on_attach = on_attach,
+      root_dir = get_root_dir({ 'flake.nix', 'shell.nix', '.git' }),
       settings = {
         ['nil'] = {
           formatting = {
             command = { "nixpkgs-fmt" },
           },
+          diagnostics = {
+            ignored = {},
+            excludedFiles = {},
+          },
         },
       },
-    }
+    })
 
-    require'lspconfig'.clangd.setup{}
+    -- C/C++
+    vim.lsp.config('clangd', {
+      capabilities = capabilities,
+      on_attach = on_attach,
+      root_dir = get_root_dir({ 'compile_commands.json', 'Makefile', '.git' }),
+      cmd = { 'clangd', '--background-index', '--clang-tidy', '--completion-style=detailed' },
+    })
+
+    -- Java
+    vim.lsp.config('jdtls', {
+      capabilities = capabilities,
+      on_attach = on_attach,
+      root_dir = get_root_dir({ 'pom.xml', 'build.gradle', 'build.gradle.kts', '.git' }),
+      settings = {
+        java = {
+          configuration = {
+            runtimes = {
+              {
+                name = "JavaSE-11",
+                path = "/usr/lib/jvm/java-11-openjdk-amd64",
+              },
+            },
+          },
+        },
+      },
+    })
+
+    -- Rust
+    vim.lsp.config('rust_analyzer', {
+      capabilities = capabilities,
+      on_attach = on_attach,
+      root_dir = get_root_dir({ 'Cargo.toml', '.git' }),
+      settings = {
+        ['rust-analyzer'] = {
+          diagnostics = {
+            enable = true,
+          },
+          cargo = {
+            allFeatures = true,
+          },
+          procMacro = {
+            enable = true,
+          },
+        },
+      },
+    })
+
+    -- YAML
+    vim.lsp.config('yamlls', {
+      capabilities = capabilities,
+      on_attach = on_attach,
+      root_dir = get_root_dir({ '.git' }),
+      settings = {
+        yaml = {
+      schemas = {
+        -- CI/CD and Workflows
+        ["https://json.schemastore.org/github-workflow.json"] = "/.github/workflows/*",
+        ["https://json.schemastore.org/github-action.json"] = "/.github/action.yml",
+        ["https://gitlab.com/gitlab-org/gitlab-foss/-/raw/master/app/assets/javascripts/editor/schema/ci.json"] = ".gitlab-ci.yml",
+
+        -- Docker and Containerization
+        ["https://raw.githubusercontent.com/compose-spec/compose-go/master/schema/compose-spec.json"] = "docker-compose*.yml",
+        ["https://www.schemastore.org/dockerd.json"] = "daemon.json",
+
+        -- Kubernetes and Helm
+        ["https://www.schemastore.org/chart.json"] = "Chart.yaml",
+        ["https://www.schemastore.org/chart-lock.json"] = "Chart.lock",
+
+        -- Kubernetes Tools
+        ["https://raw.githubusercontent.com/derailed/k9s/master/internal/config/json/schemas/k9s.json"] = "k9s*.yaml",
+        ["https://raw.githubusercontent.com/rancher/k3d/main/pkg/config/config.versions.schema.json"] = "k3d*.yaml",
+
+        -- Node.js
+        ["https://www.schemastore.org/package.json"] = "package.json",
+
+        -- Python
+        ["https://raw.githubusercontent.com/microsoft/pyright/main/packages/vscode-pyright/schemas/pyrightconfig.schema.json"] = "pyrightconfig.json",
+
+        -- Linting and Code Quality
+        ["https://www.schemastore.org/ruff.json"] = ".ruff.toml",
+        ["https://www.schemastore.org/yamllint.json"] = ".yamllint.yml",
+        ["https://raw.githubusercontent.com/streetsidesoftware/cspell/main/packages/cspell-types/cspell.schema.json"] = "cspell.json",
+
+        -- Monitoring
+        ["https://www.schemastore.org/prometheus.json"] = "prometheus.yml",
+        ["https://www.schemastore.org/prometheus.rules.json"] = "*rules.yml",
+
+        -- DevOps and Infrastructure
+        ["https://raw.githubusercontent.com/ansible/ansible-lint/main/src/ansiblelint/schemas/inventory.json"] = "inventory.yml",
+        ["https://raw.githubusercontent.com/ansible/ansible-lint/main/src/ansiblelint/schemas/ansible.json#/$defs/playbook"] = "*playbook*.yml",
+
+        -- Ray (Distributed Computing)
+        ["https://raw.githubusercontent.com/ray-project/ray/master/python/ray/autoscaler/ray-schema.json"] = "ray*.yaml",
+
+        -- Testing
+        ["https://raw.githubusercontent.com/cypress-io/cypress/v9.5.3/cli/schema/cypress.schema.json"] = "cypress.json",
+
+        -- Slack
+        ["https://www.schemastore.org/slack-app-manifest.json"] = "slack-app-manifest.json",
+
+        -- Debian
+        ["https://salsa.debian.org/debian/debian-json-schemas/-/raw/main/schemas/debian-upstream-metadata/debian-upstream-metadata-latest.json"] = "debian/upstream/metadata",
+
+        -- Development Containers
+        ["https://raw.githubusercontent.com/devcontainers/spec/main/schemas/devContainer.schema.json"] = ".devcontainer/devcontainer.json",
+      },
+          validate = true,
+          hover = true,
+          completion = true,
+        },
+      },
+    })
+
+    -- ============================================================================
+    -- Enable LSP Servers with Error Handling
+    -- ============================================================================
+
+    local servers = { 'pyright', 'bashls', 'dockerls', 'gopls', 'terraformls', 'tflint', 'ts_ls', 'nil_ls', 'clangd', 'jdtls', 'rust_analyzer', 'yamlls' }
+
+    local function safe_lsp_enable(server)
+      local success, err = pcall(vim.lsp.enable, server)
+      if not success then
+        vim.notify(string.format('Failed to enable LSP %s: %s', server, err), vim.log.levels.ERROR)
+      end
+    end
+
+    for _, server in ipairs(servers) do
+      safe_lsp_enable(server)
+    end
+
+    -- ============================================================================
+    -- Diagnostic Configuration
+    -- ============================================================================
+
+    vim.diagnostic.config({
+      virtual_text = {
+        prefix = '●',
+        spacing = 4,
+        severity = {
+          min = vim.diagnostic.severity.HINT,
+        },
+      },
+      signs = {
+        text = {
+          [vim.diagnostic.severity.ERROR] = "󰅚 ",
+          [vim.diagnostic.severity.WARN] = "󰀪 ",
+          [vim.diagnostic.severity.HINT] = "󰌶 ",
+          [vim.diagnostic.severity.INFO] = "󰋽 ",
+        },
+      },
+      underline = true,
+      update_in_insert = false,
+      severity_sort = true,
+      float = {
+        border = 'rounded',
+        source = 'always',
+        header = "",
+        prefix = "",
+        focusable = false,
+      },
+    })
+
+    -- ============================================================================
+    -- Workspace Folder Auto-setup
+    -- ============================================================================
+
+    vim.api.nvim_create_autocmd('LspAttach', {
+      callback = function(args)
+        local client = vim.lsp.get_client_by_id(args.data.client_id)
+        if client then
+          local current_dir = vim.fn.getcwd()
+          local workspace_folders = vim.lsp.buf.list_workspace_folders()
+          local already_added = false
+          for _, folder in ipairs(workspace_folders) do
+            if folder == current_dir then
+              already_added = true
+              break
+            end
+          end
+          if not already_added then
+            vim.lsp.buf.add_workspace_folder(current_dir)
+          end
+        end
+      end,
+    })
 
     require('copilot').setup({
       panel = {
@@ -451,6 +763,7 @@
       filetypes = {
         ["."] = true,
       },
+      node_command = '/home/joe/.nix-profile/bin/node',
     })
 
     require('copilot_cmp').setup()
