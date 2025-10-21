@@ -389,6 +389,17 @@
     nmap <silent> <C-M> :silent noh<CR> :echo "Highlights Cleared! bjoli"<CR>
 
     set mouse=
+
+    highlight ExtraWhitespace guibg=#ff0000
+
+    autocmd BufWinEnter * match ExtraWhitespace /\s\+$/
+
+    autocmd InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$/
+
+    autocmd InsertLeave * match ExtraWhitespace /\s\+$/
+
+    autocmd BufWinLeave * call clearmatches()
+
   '';
   programs.neovim.extraLuaConfig = ''
     -- ============================================================================

@@ -5,3 +5,4 @@
 /config/
 /config/fish/fish_variables
 .terraform
+.CLAUDE.local.md
