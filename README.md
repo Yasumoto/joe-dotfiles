@@ -22,9 +22,9 @@ cd ~/workspace/github.com/Yasumoto
 git clone git@github.com:Yasumoto/joe-dotfiles.git
 
 cd ./joe-dotfiles
-./bootstrap_linux.sh
 
-./install_cli_tools.sh
+nix run home-manager/release-25.05 -- switch -b 2025_12_10_joe -f /var/home/joe/workspace/github.com/Yasumoto/joe-dotfiles/home.nix
+
 ```
 
 ### Grub Themes

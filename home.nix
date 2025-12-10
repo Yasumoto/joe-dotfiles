@@ -112,7 +112,7 @@
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
   # plain files is through 'home.file'.
   home.file = {
-    ".config/nix/nix.conf".text = "experimental-features = nix-command flakes";
+    #".config/nix/nix.conf".text = "experimental-features = nix-command flakes";
 
     ".bash_profile".source = dotfiles/bash_profile;
     ".git-completion.bash".source = dotfiles/git-completion.bash;
