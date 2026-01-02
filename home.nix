@@ -345,6 +345,9 @@
     # https://github.com/sindrets/diffview.nvim
     diffview-nvim
 
+    # https://github.com/ThePrimeagen/harpoon
+    harpoon
+
     # https://github.com/romgrk/barbar.nvim
     barbar-nvim
   ];
@@ -822,6 +825,19 @@
       end,
     })
     require('Comment').setup()
+
+    require("harpoon").setup()
+
+    -- Harpoon keymaps
+    vim.keymap.set("n", "<leader>a", require("harpoon.mark").add_file, { desc = "Harpoon add file" })
+    vim.keymap.set("n", "<C-e>", require("harpoon.ui").toggle_quick_menu, { desc = "Harpoon quick menu" })
+    vim.keymap.set("n", "<C-h>", function() require("harpoon.ui").nav_file(1) end, { desc = "Harpoon nav to file 1" })
+    vim.keymap.set("n", "<C-j>", function() require("harpoon.ui").nav_file(2) end, { desc = "Harpoon nav to file 2" })
+    vim.keymap.set("n", "<C-k>", function() require("harpoon.ui").nav_file(3) end, { desc = "Harpoon nav to file 3" })
+    vim.keymap.set("n", "<C-l>", function() require("harpoon.ui").nav_file(4) end, { desc = "Harpoon nav to file 4" })
+
+    -- Telescope harpoon extension
+    require("telescope").load_extension('harpoon')
 
     local cmp = require'cmp'
     cmp.setup({
