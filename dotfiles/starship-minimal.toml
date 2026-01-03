@@ -1,0 +1,62 @@
+# Minimal starship config for SSH/mobile terminals (Termius, etc.)
+# Avoids Nerd Font icons and complex Unicode that cause rendering issues
+# This config is auto-selected when SSH_TTY is set
+
+"$schema" = 'https://starship.rs/config-schema.json'
+
+format = "$directory$git_branch$git_status$character"
+
+[character]
+success_symbol = "[>](green)"
+error_symbol = "[>](red)"
+
+[directory]
+truncation_length = 3
+truncation_symbol = ".../"
+style = "blue bold"
+
+[git_branch]
+symbol = ""
+format = "[$branch]($style) "
+style = "purple"
+
+[git_status]
+format = '([$all_status$ahead_behind]($style) )'
+style = "yellow"
+
+# Disable modules that use Nerd Font icons or complex Unicode
+[kubernetes]
+disabled = true
+
+[time]
+disabled = true
+
+[golang]
+disabled = true
+
+[php]
+disabled = true
+
+[nodejs]
+disabled = true
+
+[rust]
+disabled = true
+
+[python]
+disabled = true
+
+[java]
+disabled = true
+
+[docker_context]
+disabled = true
+
+[aws]
+disabled = true
+
+[gcloud]
+disabled = true
+
+[azure]
+disabled = true

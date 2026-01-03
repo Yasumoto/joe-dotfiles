@@ -18,6 +18,11 @@
     '';
 
     interactiveShellInit = ''
+      # Use minimal starship config for SSH/mobile sessions (fixes Termius rendering)
+      if set -q SSH_TTY
+        set -gx STARSHIP_CONFIG "$HOME/.config/starship-minimal.toml"
+      end
+
       if command -v fortune > /dev/null
         echo
         fortune

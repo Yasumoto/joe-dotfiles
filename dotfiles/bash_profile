@@ -5,7 +5,8 @@ export HISTSIZE=5000
 export HISTFILESIZE=5000
 export LC_CTYPE=en_US.UTF-8
 export CLICOLOR=1
-export TERM=xterm-256color
+# TERM is set by the terminal/tmux - don't override (causes conflicts with Termius/iOS)
+# export TERM=xterm-256color
 
 PS1='\[\e[34;1m\]\t \[\e[33;1m\][\h \[\e[37;1m\]\W\[\e[33;1m\]] \[\e[31;1m\]\$ \[\e[0m\]'
 

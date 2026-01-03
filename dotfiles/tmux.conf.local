@@ -404,3 +404,40 @@ tmux_conf_update_plugins_on_reload=true
 #
 # "$@"
 # # /!\ do not remove the previous line
+
+
+# -- terminal overrides --------------------------------------------------------
+# Fix escape sequence issues and enable modern terminal features
+
+# True color support for various terminals
+set -ga terminal-overrides ",xterm-256color:Tc"
+set -ga terminal-overrides ",*256col*:Tc"
+set -ga terminal-overrides ",alacritty:Tc"
+
+# Cursor shape support (for neovim mode indicators)
+set -ga terminal-overrides ",*:Ss=\\E[%p1%d q:Se=\\E[2 q"
+
+# Undercurl support (for neovim diagnostics)
+set -ga terminal-overrides ",*:Smulx=\\E[4::%p1%dm"
+set -ga terminal-overrides ",*:Setulc=\\E[58::2::%p1%{65536}%/%d::%p1%{256}%/%{255}%&%d::%p1%{255}%&%d%;m"
+
+
+# -- mobile-friendly mode (for Termius/iOS) ------------------------------------
+# Uncomment these lines when using terminals with limited Unicode support.
+# These replace Unicode symbols with ASCII equivalents to fix:
+#   - Status line wrapping/corruption
+#   - Prompt misalignment
+#   - Characters showing as boxes
+
+# ASCII-safe status content (no Unicode symbols)
+#tmux_conf_theme_status_left=" [#S] | up#{?uptime_d, #{uptime_d}d,}#{?uptime_h, #{uptime_h}h,}#{?uptime_m, #{uptime_m}m,} "
+#tmux_conf_theme_status_right=" #{prefix}#{mouse}#{pairing}#{synchronized}#{?battery_percentage, #{battery_percentage},} | %R | %d %b | #{username}#{root} | #{hostname} "
+#tmux_conf_theme_terminal_title="#h [#S] #I #W"
+
+# ASCII-safe indicators
+#tmux_conf_theme_pairing="="
+#tmux_conf_theme_prefix="^"
+#tmux_conf_theme_mouse="m"
+#tmux_conf_theme_synchronized="*"
+#tmux_conf_battery_status_charging="+"
+#tmux_conf_battery_status_discharging="-"

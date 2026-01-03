@@ -85,6 +85,7 @@
     ".tmux.conf.local".source = ./dotfiles/tmux.conf.local;
     ".tmux.conf".source = ./tmux/.tmux.conf;
     ".config/starship.toml".source = ./dotfiles/starship.toml;
+    ".config/starship-minimal.toml".source = ./dotfiles/starship-minimal.toml;
   };
 
   home.sessionPath = [
