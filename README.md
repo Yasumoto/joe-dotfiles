@@ -1,30 +1,31 @@
 🚀 joe-dotfiles
 ===============
 
-A collection of basic dot files
+A collection of basic dot files managed via [home-manager](https://github.com/nix-community/home-manager).
 
-## 🍎 macOS
-
-Run `./bootstrap_macOS.sh`, which will also call `./bootstrap_homedir_config_files.sh`
-
-## 🐧 Ubuntu
 
 ```sh
-sudo apt install git xclip
-ssh-keygen -t ed25519 -C "yasumoto+$(hostname)"
+curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
+
+# sudo apt install git xclip
+ssh-keygen -t ed25519 -C "yasumoto7+$(hostname)@gmail.com"
 cat ~/.ssh/id_ed25519.pub | xclip -sel clip
-firefox https://github.com/settings/ssh/new
-echo "🔐 Update your SSH key"
-read
+
 
 mkdir -p ~/workspace/github.com/Yasumoto
 cd ~/workspace/github.com/Yasumoto
 git clone git@github.com:Yasumoto/joe-dotfiles.git
+cd joe-dotfiles
 
-cd ./joe-dotfiles
+git submodule update --init
 
-nix run home-manager/release-25.05 -- switch -b 2025_12_10_joe -f /var/home/joe/workspace/github.com/Yasumoto/joe-dotfiles/home.nix
+nix run home-manager/release-25.05 -- switch -b joe_backup -f ~/workspace/github.com/Yasumoto/joe-dotfiles/home.nix
+```
 
+### 🐧 Linux Extras
+
+```sh
+./install_flatpaks.sh
 ```
 
 ### Grub Themes

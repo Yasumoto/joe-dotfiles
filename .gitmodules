@@ -1,9 +1,3 @@
-[submodule "vim/bundle/scss-syntax"]
-	path = vim/bundle/scss-syntax
-	url = https://github.com/cakebaker/scss-syntax.vim.git
-[submodule "vim/bundle/vim-go"]
-	path = vim/bundle/vim-go
-	url = https://github.com/fatih/vim-go.git
 [submodule "tmux"]
 	path = tmux
 	url = https://github.com/gpakosz/.tmux.git

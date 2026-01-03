@@ -1,0 +1,540 @@
+-- ============================================================================
+-- LSP Configuration (Neovim 0.11 style)
+-- ============================================================================
+
+-- Load LSP server configurations (required for vim.lsp.config to work)
+require('lspconfig')
+
+-- LSP capabilities - required for nvim-cmp integration and server features
+local capabilities = vim.lsp.protocol.make_client_capabilities()
+capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
+
+-- Common on_attach function for all LSP servers
+local on_attach = function(client, bufnr)
+  -- Enable completion triggered by <c-x><c-o>
+  vim.bo[bufnr].omnifunc = 'v:lua.vim.lsp.omnifunc'
+
+  -- Buffer local mappings
+  local opts = { buffer = bufnr, noremap = true, silent = true }
+
+  -- Navigation
+  vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, opts)
+  vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
+  vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
+  vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, opts)
+  vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, opts)
+  vim.keymap.set('n', '<space>wa', vim.lsp.buf.add_workspace_folder, opts)
+  vim.keymap.set('n', '<space>wr', vim.lsp.buf.remove_workspace_folder, opts)
+  vim.keymap.set('n', '<space>wl', function()
+    print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
+  end, opts)
+
+  -- Diagnostics
+  vim.keymap.set('n', '<space>e', vim.diagnostic.open_float, opts)
+  vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, opts)
+  vim.keymap.set('n', ']d', vim.diagnostic.goto_next, opts)
+  vim.keymap.set('n', '<space>q', vim.diagnostic.setloclist, opts)
+
+  -- Code actions and refactoring
+  vim.keymap.set('n', '<space>D', vim.lsp.buf.type_definition, opts)
+  vim.keymap.set('n', '<space>rn', vim.lsp.buf.rename, opts)
+  vim.keymap.set({ 'n', 'v' }, '<space>ca', vim.lsp.buf.code_action, opts)
+  vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
+
+  -- Formatting
+  vim.keymap.set('n', '<space>f', function()
+    vim.lsp.buf.format { async = true }
+  end, opts)
+
+  -- Document highlighting
+  if client.server_capabilities.documentHighlightProvider then
+    vim.api.nvim_create_augroup('lsp_document_highlight', { clear = false })
+    vim.api.nvim_clear_autocmds({ buffer = bufnr, group = 'lsp_document_highlight' })
+    vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
+      group = 'lsp_document_highlight',
+      buffer = bufnr,
+      callback = function()
+        local clients = vim.lsp.get_clients({ bufnr = 0 })
+        for _, client in ipairs(clients) do
+          if client.server_capabilities.documentHighlightProvider then
+            vim.lsp.buf.document_highlight()
+            return
+          end
+        end
+      end,
+    })
+    vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
+      group = 'lsp_document_highlight',
+      buffer = bufnr,
+      callback = vim.lsp.buf.clear_references,
+    })
+  end
+
+  -- Inlay hints (Neovim 0.10+)
+  if client.server_capabilities.inlayHintProvider then
+    vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
+  end
+end
+
+-- Modern root directory detection helper
+local function get_root_dir(root_files)
+  return vim.fs.root(0, root_files) or vim.fn.getcwd()
+end
+
+-- ============================================================================
+-- LSP Server Configurations
+-- ============================================================================
+
+-- Python (pyright)
+vim.lsp.config('pyright', {
+  capabilities = capabilities,
+  on_attach = on_attach,
+  root_dir = get_root_dir({ 'pyproject.toml', 'setup.py', 'setup.cfg', 'requirements.txt', 'Pipfile', '.git' }),
+  settings = {
+    python = {
+      analysis = {
+        autoSearchPaths = true,
+        useLibraryCodeForTypes = true,
+        diagnosticMode = "workspace",
+        typeCheckingMode = "basic",
+      },
+    },
+  },
+})
+
+-- Bash
+vim.lsp.config('bashls', {
+  capabilities = capabilities,
+  on_attach = on_attach,
+  root_dir = get_root_dir({ '.bashrc', '.bash_profile', '.git' }),
+  filetypes = { 'sh', 'bash', 'zsh' },
+})
+
+-- Docker
+vim.lsp.config('dockerls', {
+  capabilities = capabilities,
+  on_attach = on_attach,
+  root_dir = get_root_dir({ 'Dockerfile', 'docker-compose.yml', '.git' }),
+})
+
+-- Go
+vim.lsp.config('gopls', {
+  capabilities = capabilities,
+  on_attach = on_attach,
+  root_dir = get_root_dir({ 'go.work', 'go.mod', '.git' }),
+  settings = {
+    gopls = {
+      analyses = {
+        unusedparams = true,
+        shadow = true,
+        fieldalignment = false,
+      },
+      staticcheck = true,
+      gofumpt = true,
+      usePlaceholders = true,
+      completeUnimported = true,
+    },
+  },
+})
+
+-- Terraform
+vim.lsp.config('terraformls', {
+  capabilities = capabilities,
+  on_attach = on_attach,
+  root_dir = get_root_dir({ '.terraform', '.git' }),
+})
+
+-- TFLint
+vim.lsp.config('tflint', {
+  capabilities = capabilities,
+  on_attach = on_attach,
+  root_dir = get_root_dir({ '.terraform', '.git' }),
+})
+
+-- TypeScript/JavaScript
+vim.lsp.config('ts_ls', {
+  capabilities = capabilities,
+  on_attach = on_attach,
+  root_dir = get_root_dir({ 'package.json', 'tsconfig.json', 'jsconfig.json', '.git' }),
+  init_options = {
+    preferences = {
+      disableSuggestions = true,
+      includeCompletionsForImportStatements = true,
+    },
+  },
+})
+
+-- Nix
+vim.lsp.config('nil_ls', {
+  capabilities = capabilities,
+  on_attach = on_attach,
+  root_dir = get_root_dir({ 'flake.nix', 'shell.nix', '.git' }),
+  settings = {
+    ['nil'] = {
+      formatting = {
+        command = { "nixpkgs-fmt" },
+      },
+      diagnostics = {
+        ignored = {},
+        excludedFiles = {},
+      },
+    },
+  },
+})
+
+-- C/C++
+vim.lsp.config('clangd', {
+  capabilities = capabilities,
+  on_attach = on_attach,
+  root_dir = get_root_dir({ 'compile_commands.json', 'Makefile', '.git' }),
+  cmd = { 'clangd', '--background-index', '--clang-tidy', '--completion-style=detailed' },
+})
+
+-- Java
+vim.lsp.config('jdtls', {
+  capabilities = capabilities,
+  on_attach = on_attach,
+  root_dir = get_root_dir({ 'pom.xml', 'build.gradle', 'build.gradle.kts', '.git' }),
+  settings = {
+    java = {
+      configuration = {
+        runtimes = {
+          {
+            name = "JavaSE-11",
+            path = "/usr/lib/jvm/java-11-openjdk-amd64",
+          },
+        },
+      },
+    },
+  },
+})
+
+-- Rust
+vim.lsp.config('rust_analyzer', {
+  capabilities = capabilities,
+  on_attach = on_attach,
+  root_dir = get_root_dir({ 'Cargo.toml', '.git' }),
+  settings = {
+    ['rust-analyzer'] = {
+      diagnostics = {
+        enable = true,
+      },
+      cargo = {
+        allFeatures = true,
+      },
+      procMacro = {
+        enable = true,
+      },
+    },
+  },
+})
+
+-- YAML
+vim.lsp.config('yamlls', {
+  capabilities = capabilities,
+  on_attach = on_attach,
+  root_dir = get_root_dir({ '.git' }),
+  settings = {
+    yaml = {
+  schemas = {
+    -- CI/CD and Workflows
+    ["https://json.schemastore.org/github-workflow.json"] = "/.github/workflows/*",
+    ["https://json.schemastore.org/github-action.json"] = "/.github/action.yml",
+    ["https://gitlab.com/gitlab-org/gitlab-foss/-/raw/master/app/assets/javascripts/editor/schema/ci.json"] = ".gitlab-ci.yml",
+
+    -- Docker and Containerization
+    ["https://raw.githubusercontent.com/compose-spec/compose-go/master/schema/compose-spec.json"] = "docker-compose*.yml",
+    ["https://www.schemastore.org/dockerd.json"] = "daemon.json",
+
+    -- Kubernetes and Helm
+    ["https://www.schemastore.org/chart.json"] = "Chart.yaml",
+    ["https://www.schemastore.org/chart-lock.json"] = "Chart.lock",
+
+    -- Kubernetes Tools
+    ["https://raw.githubusercontent.com/derailed/k9s/master/internal/config/json/schemas/k9s.json"] = "k9s*.yaml",
+    ["https://raw.githubusercontent.com/rancher/k3d/main/pkg/config/config.versions.schema.json"] = "k3d*.yaml",
+
+    -- Node.js
+    ["https://www.schemastore.org/package.json"] = "package.json",
+
+    -- Python
+    ["https://raw.githubusercontent.com/microsoft/pyright/main/packages/vscode-pyright/schemas/pyrightconfig.schema.json"] = "pyrightconfig.json",
+
+    -- Linting and Code Quality
+    ["https://www.schemastore.org/ruff.json"] = ".ruff.toml",
+    ["https://www.schemastore.org/yamllint.json"] = ".yamllint.yml",
+    ["https://raw.githubusercontent.com/streetsidesoftware/cspell/main/packages/cspell-types/cspell.schema.json"] = "cspell.json",
+
+    -- Monitoring
+    ["https://www.schemastore.org/prometheus.json"] = "prometheus.yml",
+    ["https://www.schemastore.org/prometheus.rules.json"] = "*rules.yml",
+
+    -- DevOps and Infrastructure
+    ["https://raw.githubusercontent.com/ansible/ansible-lint/main/src/ansiblelint/schemas/inventory.json"] = "inventory.yml",
+    ["https://raw.githubusercontent.com/ansible/ansible-lint/main/src/ansiblelint/schemas/ansible.json#/$defs/playbook"] = "*playbook*.yml",
+
+    -- Ray (Distributed Computing)
+    ["https://raw.githubusercontent.com/ray-project/ray/master/python/ray/autoscaler/ray-schema.json"] = "ray*.yaml",
+
+    -- Testing
+    ["https://raw.githubusercontent.com/cypress-io/cypress/v9.5.3/cli/schema/cypress.schema.json"] = "cypress.json",
+
+    -- Slack
+    ["https://www.schemastore.org/slack-app-manifest.json"] = "slack-app-manifest.json",
+
+    -- Debian
+    ["https://salsa.debian.org/debian/debian-json-schemas/-/raw/main/schemas/debian-upstream-metadata/debian-upstream-metadata-latest.json"] = "debian/upstream/metadata",
+
+    -- Development Containers
+    ["https://raw.githubusercontent.com/devcontainers/spec/main/schemas/devContainer.schema.json"] = ".devcontainer/devcontainer.json",
+  },
+      validate = true,
+      hover = true,
+      completion = true,
+    },
+  },
+})
+
+-- ============================================================================
+-- Enable LSP Servers with Error Handling
+-- ============================================================================
+
+local servers = { 'pyright', 'bashls', 'dockerls', 'gopls', 'terraformls', 'tflint', 'ts_ls', 'nil_ls', 'clangd', 'jdtls', 'rust_analyzer', 'yamlls' }
+
+local function safe_lsp_enable(server)
+  local success, err = pcall(vim.lsp.enable, server)
+  if not success then
+    vim.notify(string.format('Failed to enable LSP %s: %s', server, err), vim.log.levels.ERROR)
+  end
+end
+
+for _, server in ipairs(servers) do
+  safe_lsp_enable(server)
+end
+
+-- ============================================================================
+-- Diagnostic Configuration
+-- ============================================================================
+
+vim.diagnostic.config({
+  virtual_text = {
+    prefix = '●',
+    spacing = 4,
+    severity = {
+      min = vim.diagnostic.severity.HINT,
+    },
+  },
+  signs = {
+    text = {
+      [vim.diagnostic.severity.ERROR] = "󰅚 ",
+      [vim.diagnostic.severity.WARN] = "󰀪 ",
+      [vim.diagnostic.severity.HINT] = "󰌶 ",
+      [vim.diagnostic.severity.INFO] = "󰋽 ",
+    },
+  },
+  underline = true,
+  update_in_insert = false,
+  severity_sort = true,
+  float = {
+    border = 'rounded',
+    source = 'always',
+    header = "",
+    prefix = "",
+    focusable = false,
+  },
+})
+
+-- ============================================================================
+-- Workspace Folder Auto-setup
+-- ============================================================================
+
+vim.api.nvim_create_autocmd('LspAttach', {
+  callback = function(args)
+    local client = vim.lsp.get_client_by_id(args.data.client_id)
+    if client then
+      local current_dir = vim.fn.getcwd()
+      local workspace_folders = vim.lsp.buf.list_workspace_folders()
+      local already_added = false
+      for _, folder in ipairs(workspace_folders) do
+        if folder == current_dir then
+          already_added = true
+          break
+        end
+      end
+      if not already_added then
+        vim.lsp.buf.add_workspace_folder(current_dir)
+      end
+    end
+  end,
+})
+
+
+require('copilot').setup({
+  panel = {
+    enabled = false,
+  },
+  suggestion = {
+    enabled = false,
+  },
+  filetypes = {
+    ["."] = true,
+  },
+  copilot_node_command = vim.fn.expand("$HOME") .. '/.nix-profile/bin/node',
+})
+
+require('copilot_cmp').setup()
+
+require('telescope').setup({
+  extensions = {
+    fzf = {
+      fuzzy = true,
+      override_generic_sorter = true,
+      override_file_sorter = true,
+      case_mode = "smart_case",
+    }
+  }
+})
+
+require('telescope').load_extension('fzf')
+
+require('gitsigns').setup {}
+
+require('nvim-web-devicons').setup { default = true; }
+require("neo-tree").setup { close_if_last_window = false }
+
+-- Auto-open Neo-tree on startup and when entering tabs, then return focus to editor
+vim.api.nvim_create_autocmd("VimEnter", {
+  callback = function()
+    vim.cmd("Neotree show")
+    vim.cmd("wincmd p")
+  end,
+})
+vim.api.nvim_create_autocmd("TabEnter", {
+  callback = function()
+    if vim.fn.bufwinnr('neo-tree') == -1 then
+      vim.cmd("Neotree show")
+      vim.cmd("wincmd p")
+    end
+  end,
+})
+require('Comment').setup()
+
+require("harpoon").setup()
+
+-- Harpoon keymaps
+vim.keymap.set("n", "<leader>a", require("harpoon.mark").add_file, { desc = "Harpoon add file" })
+vim.keymap.set("n", "<C-e>", require("harpoon.ui").toggle_quick_menu, { desc = "Harpoon quick menu" })
+vim.keymap.set("n", "<C-h>", function() require("harpoon.ui").nav_file(1) end, { desc = "Harpoon nav to file 1" })
+vim.keymap.set("n", "<C-j>", function() require("harpoon.ui").nav_file(2) end, { desc = "Harpoon nav to file 2" })
+vim.keymap.set("n", "<C-k>", function() require("harpoon.ui").nav_file(3) end, { desc = "Harpoon nav to file 3" })
+vim.keymap.set("n", "<C-l>", function() require("harpoon.ui").nav_file(4) end, { desc = "Harpoon nav to file 4" })
+
+-- Telescope harpoon extension
+require("telescope").load_extension('harpoon')
+
+local cmp = require'cmp'
+cmp.setup({
+  mapping = {
+    ['<C-p>'] = cmp.mapping.select_prev_item(),
+    ['<C-n>'] = cmp.mapping.select_next_item(),
+    ['<C-d>'] = cmp.mapping.scroll_docs(-4),
+    ['<C-f>'] = cmp.mapping.scroll_docs(4),
+    ['<C-Space>'] = cmp.mapping.complete(),
+    ['<C-e>'] = cmp.mapping.close(),
+    ['<CR>'] = cmp.mapping.confirm({
+      behavior = cmp.ConfirmBehavior.Insert,
+      select = true,
+    }),
+  },
+
+  -- Installed sources
+  sources = {
+    { name = 'nvim_lsp' },
+    { name = 'path' },
+    { name = 'buffer' },
+    { name = 'nvim_lsp_signature_help' },
+    { name = 'copilot' }
+  },
+})
+
+cmp.setup.cmdline('/', {
+  sources = {
+    { name = 'buffer' }
+  }
+})
+
+cmp.setup.cmdline(':', {
+  sources = cmp.config.sources({
+    { name = 'path' }
+  }, {
+    { name = 'cmdline' }
+  })
+})
+
+vim.g.mapleader = ','
+
+-- Telescope keybindings
+local builtin = require('telescope.builtin')
+vim.keymap.set('n', '<leader>ff', builtin.find_files, { desc = 'Telescope find files' })
+vim.keymap.set('n', '<leader>fg', builtin.live_grep, { desc = 'Telescope live grep' })
+vim.keymap.set('n', '<leader>fb', builtin.buffers, { desc = 'Telescope buffers' })
+vim.keymap.set('n', '<leader>fh', builtin.help_tags, { desc = 'Telescope help tags' })
+
+
+require'nvim-treesitter.configs'.setup {
+  -- Modules and its options go here
+  highlight = { enable = true },
+  incremental_selection = { enable = true },
+  textobjects = { enable = true },
+}
+
+require('lualine').setup {}
+
+require('barbar').setup {
+  animation = true,
+  auto_hide = false,
+  clickable = true,
+  icons = {
+    button = "",
+    modified = { button = "●" },
+    filetype = { enabled = true },
+    separator = { left = "▎", right = "" },
+    inactive = { separator = { left = "▎", right = "" } },
+    diagnostics = {
+      [vim.diagnostic.severity.ERROR] = { enabled = true },
+      [vim.diagnostic.severity.WARN] = { enabled = true },
+    },
+  },
+  sidebar_filetypes = {
+    ['neo-tree'] = true,
+  },
+  exclude_ft = { 'neo-tree' },
+  highlight_inactive_file_icons = false,
+  insert_at_end = true,
+  maximum_padding = 1,
+  minimum_padding = 1,
+  semantic_letters = true,
+  letters = 'asdfjkl;ghnmxcvbziowerutyqpASDFJKLGHNMXCVBZIOWERUTYQP',
+}
+
+-- Barbar keymaps for tab navigation
+local map = vim.api.nvim_set_keymap
+local opts = { noremap = true, silent = true }
+map('n', '<A-,>', '<Cmd>BufferPrevious<CR>', opts)
+map('n', '<A-.>', '<Cmd>BufferNext<CR>', opts)
+map('n', '<A-1>', '<Cmd>BufferGoto 1<CR>', opts)
+map('n', '<A-2>', '<Cmd>BufferGoto 2<CR>', opts)
+map('n', '<A-3>', '<Cmd>BufferGoto 3<CR>', opts)
+map('n', '<A-4>', '<Cmd>BufferGoto 4<CR>', opts)
+map('n', '<A-5>', '<Cmd>BufferGoto 5<CR>', opts)
+map('n', '<A-6>', '<Cmd>BufferGoto 6<CR>', opts)
+map('n', '<A-7>', '<Cmd>BufferGoto 7<CR>', opts)
+map('n', '<A-8>', '<Cmd>BufferGoto 8<CR>', opts)
+map('n', '<A-9>', '<Cmd>BufferGoto 9<CR>', opts)
+map('n', '<A-0>', '<Cmd>BufferLast<CR>', opts)
+map('n', '<A-c>', '<Cmd>BufferClose<CR>', opts)
+map('n', '<A-s-c>', '<Cmd>BufferRestore<CR>', opts)
+
+-- Use LSP as the handler for omnifunc.
+--    See `:help omnifunc` and `:help ins-completion` for more information.
+vim.api.nvim_buf_set_option(0, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
