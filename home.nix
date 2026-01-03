@@ -129,6 +129,13 @@ in
   };
 
   programs.bat.enable = true;
+  programs.gh = {
+    enable = true;
+    settings = {
+      git_protocol = "https";
+      editor = "";
+    };
+  };
   programs.jq.enable = true;
   programs.k9s.enable = true;
 
