@@ -153,6 +153,8 @@
       diffview-nvim
       harpoon
       barbar-nvim
+      which-key-nvim
+      trouble-nvim
     ];
 
     extraConfig = ''
@@ -164,20 +166,14 @@
       let g:terraform_fmt_on_save=1
       let g:terraform_align=1
 
-      nnoremap <silent> <c-]> <cmd>lua vim.lsp.buf.definition()<CR>
-      nnoremap <silent> K     <cmd>lua vim.lsp.buf.hover()<CR>
-      nnoremap <silent> gD    <cmd>lua vim.lsp.buf.implementation()<CR>
-      nnoremap <silent> <c-k> <cmd>lua vim.lsp.buf.signature_help()<CR>
+      " Unique keymaps not defined in Lua on_attach
       nnoremap <silent> 1gD   <cmd>lua vim.lsp.buf.type_definition()<CR>
-      nnoremap <silent> gr    <cmd>lua vim.lsp.buf.references()<CR>
       nnoremap <silent> g0    <cmd>lua vim.lsp.buf.document_symbol()<CR>
       nnoremap <silent> gW    <cmd>lua vim.lsp.buf.workspace_symbol()<CR>
-      nnoremap <silent> gd    <cmd>lua vim.lsp.buf.definition()<CR>
       nnoremap <silent> W     <cmd>lua vim.diagnostic.open_float()<CR>
       nnoremap <silent> ga    <cmd>lua vim.lsp.buf.code_action()<CR>
 
       set updatetime=500
-      autocmd CursorHold * lua vim.diagnostic.open_float()
 
       colorscheme nord
       nmap <silent> <C-M> :silent noh<CR> :echo "Highlights Cleared!"<CR>

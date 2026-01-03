@@ -23,16 +23,6 @@
         fortune
       end
       echo
-
-      function __tfswitch_on_cd --on-variable PWD
-        if command -v tfswitch > /dev/null
-          if count *.tf > /dev/null 2>&1
-            if grep -q "required_version" *.tf 2>/dev/null
-              command tfswitch -b ~/workspace/bin/terraform 2>/dev/null
-            end
-          end
-        end
-      end
     '';
 
     functions = {
@@ -65,8 +55,7 @@
       fireball = ''
         git status
         git reset --hard HEAD
-        git status
-        git status | grep '/' | tr -d '\t' | grep -v modified | xargs rm -r 2>/dev/null
+        git clean -fd
         git status
       '';
 
@@ -82,11 +71,15 @@
       '';
 
       shipped = ''
-        set BRANCH (git branch | grep \* | awk '{print $2}')
-        echo "Deleting $BRANCH"
-        git checkout master
+        set BRANCH (git branch --show-current)
+        set DEFAULT_BRANCH (git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
+        if test -z "$DEFAULT_BRANCH"
+          set DEFAULT_BRANCH master
+        end
+        echo "Deleting $BRANCH, switching to $DEFAULT_BRANCH"
+        git checkout $DEFAULT_BRANCH
         git branch -D $BRANCH
-        git pull origin master
+        git pull origin $DEFAULT_BRANCH
       '';
 
       update_submodules = "git submodule foreach git pull origin master";
@@ -112,8 +105,8 @@
           set KEEPASS_VAULT ~/joe.smith.kdbx
         end
 
-        set -Ux VAULT_TOKEN (VAULT_ADDR="https://vault.int.n7k.io:443" vault login -token-only -non-interactive -method=userpass username=joe.smith \
-          password=($KEEPASS_CLI show -s -a Password $KEEPASS_VAULT Vault))
+        set -Ux VAULT_TOKEN (eval $KEEPASS_CLI show -s -a Password $KEEPASS_VAULT Vault | \
+          VAULT_ADDR="https://vault.int.n7k.io:443" vault login -token-only -non-interactive -method=userpass username=joe.smith password=-)
       '';
     };
   };

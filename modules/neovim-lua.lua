@@ -1,4 +1,22 @@
 -- ============================================================================
+-- Essential Settings
+-- ============================================================================
+
+vim.opt.number = true           -- Line numbers
+vim.opt.relativenumber = true   -- Relative line numbers
+vim.opt.scrolloff = 8           -- Keep 8 lines visible above/below cursor
+vim.opt.sidescrolloff = 8       -- Keep 8 columns visible
+vim.opt.signcolumn = 'yes'      -- Always show sign column
+vim.opt.undofile = true         -- Persistent undo
+vim.opt.splitright = true       -- Vertical splits open right
+vim.opt.splitbelow = true       -- Horizontal splits open below
+vim.opt.ignorecase = true       -- Case insensitive search
+vim.opt.smartcase = true        -- Unless uppercase used
+vim.opt.termguicolors = true    -- True color support
+vim.opt.cursorline = true       -- Highlight current line
+vim.opt.clipboard = 'unnamedplus'  -- System clipboard integration
+
+-- ============================================================================
 -- LSP Configuration (Neovim 0.11 style)
 -- ============================================================================
 
@@ -198,36 +216,16 @@ vim.lsp.config('jdtls', {
   settings = {
     java = {
       configuration = {
-        runtimes = {
-          {
-            name = "JavaSE-11",
-            path = "/usr/lib/jvm/java-11-openjdk-amd64",
-          },
-        },
+        -- Use JAVA_HOME if set, otherwise empty (jdtls will use system default)
+        runtimes = vim.env.JAVA_HOME and {
+          { name = "JavaSE-21", path = vim.env.JAVA_HOME },
+        } or {},
       },
     },
   },
 })
 
--- Rust
-vim.lsp.config('rust_analyzer', {
-  capabilities = capabilities,
-  on_attach = on_attach,
-  root_dir = get_root_dir({ 'Cargo.toml', '.git' }),
-  settings = {
-    ['rust-analyzer'] = {
-      diagnostics = {
-        enable = true,
-      },
-      cargo = {
-        allFeatures = true,
-      },
-      procMacro = {
-        enable = true,
-      },
-    },
-  },
-})
+-- Rust: handled by rustaceanvim plugin (don't configure rust_analyzer manually)
 
 -- YAML
 vim.lsp.config('yamlls', {
@@ -299,7 +297,7 @@ vim.lsp.config('yamlls', {
 -- Enable LSP Servers with Error Handling
 -- ============================================================================
 
-local servers = { 'pyright', 'bashls', 'dockerls', 'gopls', 'terraformls', 'tflint', 'ts_ls', 'nil_ls', 'clangd', 'jdtls', 'rust_analyzer', 'yamlls' }
+local servers = { 'pyright', 'bashls', 'dockerls', 'gopls', 'terraformls', 'tflint', 'ts_ls', 'nil_ls', 'clangd', 'jdtls', 'yamlls' }
 
 local function safe_lsp_enable(server)
   local success, err = pcall(vim.lsp.enable, server)
@@ -379,7 +377,7 @@ require('copilot').setup({
   filetypes = {
     ["."] = true,
   },
-  copilot_node_command = vim.fn.expand("$HOME") .. '/.nix-profile/bin/node',
+  copilot_node_command = vim.fn.exepath('node') ~= '' and vim.fn.exepath('node') or (vim.fn.expand("$HOME") .. '/.nix-profile/bin/node'),
 })
 
 require('copilot_cmp').setup()
@@ -423,11 +421,11 @@ require("harpoon").setup()
 
 -- Harpoon keymaps
 vim.keymap.set("n", "<leader>a", require("harpoon.mark").add_file, { desc = "Harpoon add file" })
-vim.keymap.set("n", "<C-e>", require("harpoon.ui").toggle_quick_menu, { desc = "Harpoon quick menu" })
-vim.keymap.set("n", "<C-h>", function() require("harpoon.ui").nav_file(1) end, { desc = "Harpoon nav to file 1" })
-vim.keymap.set("n", "<C-j>", function() require("harpoon.ui").nav_file(2) end, { desc = "Harpoon nav to file 2" })
-vim.keymap.set("n", "<C-k>", function() require("harpoon.ui").nav_file(3) end, { desc = "Harpoon nav to file 3" })
-vim.keymap.set("n", "<C-l>", function() require("harpoon.ui").nav_file(4) end, { desc = "Harpoon nav to file 4" })
+vim.keymap.set("n", "<leader>e", require("harpoon.ui").toggle_quick_menu, { desc = "Harpoon quick menu" })
+vim.keymap.set("n", "<leader>1", function() require("harpoon.ui").nav_file(1) end, { desc = "Harpoon nav to file 1" })
+vim.keymap.set("n", "<leader>2", function() require("harpoon.ui").nav_file(2) end, { desc = "Harpoon nav to file 2" })
+vim.keymap.set("n", "<leader>3", function() require("harpoon.ui").nav_file(3) end, { desc = "Harpoon nav to file 3" })
+vim.keymap.set("n", "<leader>4", function() require("harpoon.ui").nav_file(4) end, { desc = "Harpoon nav to file 4" })
 
 -- Telescope harpoon extension
 require("telescope").load_extension('harpoon')
@@ -450,10 +448,10 @@ cmp.setup({
   -- Installed sources
   sources = {
     { name = 'nvim_lsp' },
+    { name = 'copilot' },
     { name = 'path' },
     { name = 'buffer' },
     { name = 'nvim_lsp_signature_help' },
-    { name = 'copilot' }
   },
 })
 
@@ -471,8 +469,6 @@ cmp.setup.cmdline(':', {
   })
 })
 
-vim.g.mapleader = ','
-
 -- Telescope keybindings
 local builtin = require('telescope.builtin')
 vim.keymap.set('n', '<leader>ff', builtin.find_files, { desc = 'Telescope find files' })
@@ -489,6 +485,15 @@ require'nvim-treesitter.configs'.setup {
 }
 
 require('lualine').setup {}
+
+-- which-key: shows available keybindings when you press leader
+require('which-key').setup {}
+
+-- trouble: better diagnostics list UI
+require('trouble').setup {}
+vim.keymap.set("n", "<leader>xx", "<cmd>Trouble diagnostics toggle<cr>", { desc = "Diagnostics (Trouble)" })
+vim.keymap.set("n", "<leader>xX", "<cmd>Trouble diagnostics toggle filter.buf=0<cr>", { desc = "Buffer Diagnostics (Trouble)" })
+vim.keymap.set("n", "<leader>xq", "<cmd>Trouble qflist toggle<cr>", { desc = "Quickfix List (Trouble)" })
 
 require('barbar').setup {
   animation = true,
@@ -534,7 +539,3 @@ map('n', '<A-9>', '<Cmd>BufferGoto 9<CR>', opts)
 map('n', '<A-0>', '<Cmd>BufferLast<CR>', opts)
 map('n', '<A-c>', '<Cmd>BufferClose<CR>', opts)
 map('n', '<A-s-c>', '<Cmd>BufferRestore<CR>', opts)
-
--- Use LSP as the handler for omnifunc.
---    See `:help omnifunc` and `:help ins-completion` for more information.
-vim.api.nvim_buf_set_option(0, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
