@@ -35,6 +35,8 @@
       github.user = "Yasumoto";
       apply.whitespace = "fix";
 
+      credential."https://git.int.n7k.io".helper = "store";
+
       color = {
         ui = "auto";
         branch = {

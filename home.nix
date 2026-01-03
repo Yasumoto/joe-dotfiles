@@ -115,6 +115,12 @@ in
     "/opt/homebrew/bin"
   ];
 
+  # Disable broken SSH_ASKPASS on BlueFin (points to non-existent gnome-ssh-askpass)
+  home.sessionVariables = lib.mkIf pkgs.stdenv.isLinux {
+    SSH_ASKPASS = "";
+    SUDO_ASKPASS = "";
+  };
+
   programs.home-manager.enable = true;
   fonts.fontconfig.enable = true;
   programs.fzf.enable = true;
