@@ -1,13 +1,30 @@
 { config, pkgs, lib, ... }:
 
+let
+  username =
+    if pkgs.stdenv.isLinux then
+      "joe"
+    else if pkgs.stdenv.isDarwin then
+      (if builtins.pathExists /Users/joe.smith/src then "joe.smith" else "joe")
+    else
+      "joe";
+
+  homeDirectory =
+    if pkgs.stdenv.isLinux then
+      "/home/joe"
+    else if pkgs.stdenv.isDarwin then
+      "/Users/${username}"
+    else
+      "/home/joe";
+in
 {
   imports = [
     ./modules/fish.nix
     ./modules/git.nix
   ];
 
-  home.username = if pkgs.stdenv.isDarwin then "joe.smith" else "joe";
-  home.homeDirectory = if pkgs.stdenv.isDarwin then "/Users/joe.smith" else "/home/joe";
+  home.username = username;
+  home.homeDirectory = homeDirectory;
   home.stateVersion = "23.05";
 
   nixpkgs.config.allowUnfree = true;
@@ -59,6 +76,7 @@
     nodejs
     gawk
     curl
+    go
     pyright
     gopls
     nodePackages.bash-language-server
@@ -91,7 +109,7 @@
   home.sessionPath = [
     "$HOME/.local/bin"
     "$HOME/.cargo/bin"
-    "$HOME/workspace/go/bin"
+    "$HOME/go/bin"
     "$HOME/workspace/bin"
   ] ++ lib.optionals pkgs.stdenv.isDarwin [
     "/opt/homebrew/bin"

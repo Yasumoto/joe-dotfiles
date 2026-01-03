@@ -7,11 +7,6 @@
     shellInit = ''
       direnv hook fish | source
 
-      if test -d "$HOME/go"
-        set -gx GOPATH "$HOME/go"
-        fish_add_path "$GOPATH/bin"
-      end
-
       if test -d "$HOME/src/sw/ops/bin/cache"
         fish_add_path "$HOME/src/sw/ops/bin/cache"
       end
