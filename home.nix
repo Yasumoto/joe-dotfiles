@@ -69,6 +69,7 @@ in
     btop
     neofetch
     git-lfs
+    glab
     pyenv
     rustup
     pipenv
@@ -80,7 +81,7 @@ in
     pyright
     gopls
     nodePackages.bash-language-server
-    dockerfile-language-server-nodejs
+    dockerfile-language-server
     nodePackages.typescript-language-server
     nodePackages.typescript
     nil
@@ -90,7 +91,6 @@ in
     tmux
     mosh
     taskwarrior3
-    vit
     nethack
   ] ++ lib.optionals pkgs.stdenv.isLinux [
     xclip
