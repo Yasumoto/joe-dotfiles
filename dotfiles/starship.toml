@@ -109,9 +109,6 @@ format = 'via [$symbol]($style)'
 [fennel]
 format = 'via [$symbol]($style)'
 
-[gleam]
-format = 'via [$symbol]($style)'
-
 [gradle]
 format = 'via [$symbol]($style)'
 
@@ -157,9 +154,6 @@ format = 'via [$symbol]($style)'
 [python]
 format = 'via [$symbol]($style)'
 
-[quarto]
-format = 'via [$symbol]($style)'
-
 [raku]
 format = 'via [$symbol]($style)'
 
@@ -173,9 +167,6 @@ format = 'via [$symbol]($style)'
 format = 'via [$symbol]($style)'
 
 [solidity]
-format = 'via [$symbol]($style)'
-
-[typst]
 format = 'via [$symbol]($style)'
 
 [swift]

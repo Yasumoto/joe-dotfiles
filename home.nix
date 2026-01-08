@@ -114,9 +114,8 @@ in
     "$HOME/.cargo/bin"
     "$HOME/go/bin"
     "$HOME/workspace/bin"
-  ] ++ lib.optionals pkgs.stdenv.isDarwin [
-    "/opt/homebrew/bin"
-  ];
+    "$HOME/src/sw/ops/bin/cache"
+  ] ++ (if pkgs.stdenv.isDarwin then [ "/opt/homebrew/bin" ] else []);
 
   # Disable broken SSH_ASKPASS on BlueFin (points to non-existent gnome-ssh-askpass)
   home.sessionVariables = lib.mkIf pkgs.stdenv.isLinux {
@@ -136,7 +135,8 @@ in
   };
 
   programs.home-manager.enable = true;
-  fonts.fontconfig.enable = true;
+
+  fonts.fontconfig.enable = !pkgs.stdenv.isDarwin;
   programs.fzf.enable = true;
   programs.zoxide.enable = true;
   programs.starship.enable = true;
@@ -236,7 +236,7 @@ in
   };
 
   programs.gnome-terminal = {
-    enable = pkgs.stdenv.isLinux;
+    enable = !pkgs.stdenv.isDarwin && pkgs.hostPlatform.isLinux;
     showMenubar = false;
     profile.b1dcc9dd-5262-4d8d-a863-c897e6d979b9 = {
       audibleBell = false;

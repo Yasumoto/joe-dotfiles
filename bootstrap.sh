@@ -31,7 +31,7 @@ elif [ "$(uname)" = "Darwin" ]; then
 	# https://github.com/mathiasbynens/dotfiles/blob/master/.macos
 
 	# Disable the sound effects on boot
-	sudo nvram SystemAudioVolume=" "
+	#sudo nvram SystemAudioVolume=" "
 
 	# Expand save panel by default
 	defaults write NSGlobalDomain NSNavPanelExpandedStateForSaveMode -bool true
