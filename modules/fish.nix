@@ -10,6 +10,11 @@
       if test -d "$HOME/src/sw/ops/bin/cache"
         fish_add_path "$HOME/src/sw/ops/bin/cache"
       end
+
+      # Set SSH_AUTH_SOCK for home-manager's ssh-agent service
+      if test -z "$SSH_AUTH_SOCK"
+        set -gx SSH_AUTH_SOCK "$XDG_RUNTIME_DIR/ssh-agent"
+      end
     '';
 
     interactiveShellInit = ''

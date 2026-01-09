@@ -397,6 +397,17 @@ require('telescope').load_extension('fzf')
 
 require('gitsigns').setup {}
 
+require('ibl').setup {
+  indent = {
+    char = '▏',
+  },
+  scope = {
+    enabled = true,
+    show_start = true,
+    show_end = false,
+  },
+}
+
 require('nvim-web-devicons').setup { default = true; }
 require("neo-tree").setup { close_if_last_window = false }
 
@@ -477,7 +488,7 @@ vim.keymap.set('n', '<leader>fb', builtin.buffers, { desc = 'Telescope buffers' 
 vim.keymap.set('n', '<leader>fh', builtin.help_tags, { desc = 'Telescope help tags' })
 
 
-require'nvim-treesitter.configs'.setup {
+require'nvim-treesitter'.setup {
   -- Modules and its options go here
   highlight = { enable = true },
   incremental_selection = { enable = true },
@@ -494,6 +505,13 @@ require('trouble').setup {}
 vim.keymap.set("n", "<leader>xx", "<cmd>Trouble diagnostics toggle<cr>", { desc = "Diagnostics (Trouble)" })
 vim.keymap.set("n", "<leader>xX", "<cmd>Trouble diagnostics toggle filter.buf=0<cr>", { desc = "Buffer Diagnostics (Trouble)" })
 vim.keymap.set("n", "<leader>xq", "<cmd>Trouble qflist toggle<cr>", { desc = "Quickfix List (Trouble)" })
+
+-- diffview: better git diff UI
+require('diffview').setup {}
+vim.keymap.set("n", "<leader>dv", "<cmd>DiffviewOpen<cr>", { desc = "Open Diffview" })
+vim.keymap.set("n", "<leader>dc", "<cmd>DiffviewClose<cr>", { desc = "Close Diffview" })
+vim.keymap.set("n", "<leader>dh", "<cmd>DiffviewFileHistory<cr>", { desc = "File History" })
+vim.keymap.set("n", "<leader>df", "<cmd>DiffviewFileHistory %<cr>", { desc = "Current File History" })
 
 require('barbar').setup {
   animation = true,
