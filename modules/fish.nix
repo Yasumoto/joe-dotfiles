@@ -7,6 +7,11 @@
     shellInit = ''
       direnv hook fish | source
 
+      # Initialize fnm (Fast Node Manager)
+      if command -v fnm > /dev/null
+        fnm env --use-on-cd --shell fish | source
+      end
+
       if test -d "$HOME/src/sw/ops/bin/cache"
         fish_add_path "$HOME/src/sw/ops/bin/cache"
       end
