@@ -107,7 +107,12 @@
           set KEEPASS_CLI /Applications/KeePassXC.app/Contents/MacOS/keepassxc-cli
         end
         if not command -v "$KEEPASS_CLI" > /dev/null
-          set KEEPASS_CLI "flatpak run --branch=stable --arch=x86_64 --command=keepassxc-cli org.keepassxc.KeePassXC"
+          if command -v flatpak > /dev/null; and flatpak list | grep -q org.keepassxc.KeePassXC
+            set KEEPASS_CLI "flatpak run --branch=stable --arch=x86_64 --command=keepassxc-cli org.keepassxc.KeePassXC"
+          else
+            echo "No keepassxc-cli binary found! Install keepassxc-cli or the org.keepassxc.KeePassXC flatpak."
+            return 1
+          end
         end
 
         set KEEPASS_VAULT ~/Documents/joe.smith.kdbx
@@ -115,7 +120,7 @@
           set KEEPASS_VAULT ~/joe.smith.kdbx
         end
 
-        set -Ux VAULT_TOKEN (eval $KEEPASS_CLI show -s -a Password $KEEPASS_VAULT Vault | \
+        set -Ux VAULT_TOKEN (eval $KEEPASS_CLI show -s -a Password $KEEPASS_VAULT Vault | tr -d '\n' | \
           VAULT_ADDR="https://vault.int.n7k.io:443" vault login -token-only -non-interactive -method=userpass username=joe.smith password=-)
       '';
     };

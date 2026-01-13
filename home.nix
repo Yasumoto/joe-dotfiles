@@ -46,6 +46,7 @@ in
     gnupg
     eksctl
     packer
+    vault
     tfsec
     tflint
     terraform-ls
