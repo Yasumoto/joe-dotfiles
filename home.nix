@@ -50,6 +50,8 @@ let
     tfsec
     tflint
     terraform-ls
+    prek
+    alejandra
     kubectl
     kubernetes-helm
     minikube
@@ -130,6 +132,14 @@ let
         echo "Installing Node.js LTS via fnm..."
         PATH="${pkgs.fnm}/bin:$PATH" FNM_DIR="$FNM_DIR" ${pkgs.fnm}/bin/fnm install --lts
         PATH="${pkgs.fnm}/bin:$PATH" FNM_DIR="$FNM_DIR" ${pkgs.fnm}/bin/fnm default lts-latest
+      fi
+    '';
+    prekSetup = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      REPO_DIR="${config.home.homeDirectory}/workspace/github.com/Yasumoto/joe-dotfiles"
+      if [ -d "$REPO_DIR" ] && [ -f "$REPO_DIR/.pre-commit-config.yaml" ]; then
+        echo "Setting up prek in dotfiles repo..."
+        cd "$REPO_DIR"
+        ${pkgs.prek}/bin/prek install --install-hooks || true
       fi
     '';
   };

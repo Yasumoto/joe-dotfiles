@@ -1,0 +1,49 @@
+repos:
+  # Built-in hooks (fast, no external deps)
+  - repo: builtin
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+
+  # Shell
+  - repo: builtin
+    hooks:
+      - id: shellcheck
+        files: \.sh$
+
+  # Nix (nixfmt-rfc-style + linting)
+  - repo: https://github.com/nix-community/nixpkgs-fmt
+    rev: v1.3.0
+    hooks:
+      - id: nixfmt
+        entry: nixfmt
+        files: \.nix$
+        additional_dependencies: ["nixfmt-rfc-style"]
+
+  - repo: https://github.com/nerdypepper/statix
+    rev: v0.5.8
+    hooks:
+      - id: statix
+
+  # Terraform (auto-fix enabled)
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.96.1
+    hooks:
+      - id: terraform_fmt
+      - id: terraform_tflint
+
+  # TOML
+  - repo: https://github.com/tamasfe/taplo
+    rev: 0.9.3
+    hooks:
+      - id: taplo-fmt
+
+  # Lua
+  - repo: https://github.com/JohnnyMorganz/StyLua
+    rev: v2.0.1
+    hooks:
+      - id: stylua
