@@ -43,26 +43,45 @@ tmux_conf_new_session_prompt=false
 # RGB 24-bit colour support (tmux >= 2.2), possible values are:
 #  - true
 #  - false (default)
-tmux_conf_24b_colour=false
+tmux_conf_24b_colour=true
 
-# default theme
-tmux_conf_theme_colour_1="#080808"    # dark gray
-tmux_conf_theme_colour_2="#303030"    # gray
-tmux_conf_theme_colour_3="#8a8a8a"    # light gray
-tmux_conf_theme_colour_4="#00afff"    # light blue
-tmux_conf_theme_colour_5="#ffff00"    # yellow
-tmux_conf_theme_colour_6="#080808"    # dark gray
-tmux_conf_theme_colour_7="#e4e4e4"    # white
-tmux_conf_theme_colour_8="#080808"    # dark gray
-tmux_conf_theme_colour_9="#ffff00"    # yellow
-tmux_conf_theme_colour_10="#ff00af"   # pink
-tmux_conf_theme_colour_11="#5fff00"   # green
-tmux_conf_theme_colour_12="#8a8a8a"   # light gray
-tmux_conf_theme_colour_13="#e4e4e4"   # white
-tmux_conf_theme_colour_14="#080808"   # dark gray
-tmux_conf_theme_colour_15="#080808"   # dark gray
-tmux_conf_theme_colour_16="#d70000"   # red
-tmux_conf_theme_colour_17="#e4e4e4"   # white
+# Nord theme (https://www.nordtheme.com/ - matches nvim/gnome-terminal)
+tmux_conf_theme_colour_1="#2E3440"    # nord0 bg
+tmux_conf_theme_colour_2="#3B4252"    # nord1
+tmux_conf_theme_colour_3="#D8DEE9"    # nord4 fg
+tmux_conf_theme_colour_4="#81A1C1"    # nord8 blue accent
+tmux_conf_theme_colour_5="#8FBCBB"    # nord7 cyan accent
+tmux_conf_theme_colour_6="#2E3440"    # nord0
+tmux_conf_theme_colour_7="#ECEFF4"    # nord6 bright fg
+tmux_conf_theme_colour_8="#3B4252"    # nord1
+tmux_conf_theme_colour_9="#A3BE8C"    # nord14 green
+tmux_conf_theme_colour_10="#81A1C1"   # nord8 blue
+tmux_conf_theme_colour_11="#EBCB8B"   # nord13 yellow
+tmux_conf_theme_colour_12="#D8DEE9"   # nord4
+tmux_conf_theme_colour_13="#ECEFF4"   # nord6
+tmux_conf_theme_colour_14="#4C566A"   # nord3
+tmux_conf_theme_colour_15="#2E3440"   # nord0
+tmux_conf_theme_colour_16="#BF616A"   # nord11 red
+tmux_conf_theme_colour_17="#ECEFF4"   # nord6
+
+# default theme (original)
+#tmux_conf_theme_colour_1="#080808"    # dark gray
+#tmux_conf_theme_colour_2="#303030"    # gray
+#tmux_conf_theme_colour_3="#8a8a8a"    # light gray
+#tmux_conf_theme_colour_4="#00afff"    # light blue
+#tmux_conf_theme_colour_5="#ffff00"    # yellow
+#tmux_conf_theme_colour_6="#080808"    # dark gray
+#tmux_conf_theme_colour_7="#e4e4e4"    # white
+#tmux_conf_theme_colour_8="#080808"    # dark gray
+#tmux_conf_theme_colour_9="#ffff00"    # yellow
+#tmux_conf_theme_colour_10="#ff00af"   # pink
+#tmux_conf_theme_colour_11="#5fff00"   # green
+#tmux_conf_theme_colour_12="#8a8a8a"   # light gray
+#tmux_conf_theme_colour_13="#e4e4e4"   # white
+#tmux_conf_theme_colour_14="#080808"   # dark gray
+#tmux_conf_theme_colour_15="#080808"   # dark gray
+#tmux_conf_theme_colour_16="#d70000"   # red
+#tmux_conf_theme_colour_17="#e4e4e4"   # white
 
 # default theme (ansi)
 #tmux_conf_theme_colour_1="colour0"
@@ -90,10 +109,10 @@ tmux_conf_theme_window_bg="default"
 # highlight focused pane (tmux >= 2.1), possible values are:
 #   - true
 #   - false (default)
-tmux_conf_theme_highlight_focused_pane=false
+tmux_conf_theme_highlight_focused_pane=true
 
 # focused pane colours:
-tmux_conf_theme_focused_pane_bg="$tmux_conf_theme_colour_2"
+tmux_conf_theme_focused_pane_bg="default"
 
 # pane border style, possible values are:
 #   - thin (default)
@@ -102,7 +121,7 @@ tmux_conf_theme_pane_border_style=thin
 
 # pane borders colours:
 tmux_conf_theme_pane_border="$tmux_conf_theme_colour_2"
-tmux_conf_theme_pane_active_border="$tmux_conf_theme_colour_4"
+tmux_conf_theme_pane_active_border="#5E81AC"
 
 # pane indicator colours (when you hit <prefix> + q)
 tmux_conf_theme_pane_indicator="$tmux_conf_theme_colour_4"
@@ -231,13 +250,13 @@ tmux_conf_theme_status_right=" #{prefix}#{mouse}#{pairing}#{synchronized}#{?batt
 
 # status left style
 tmux_conf_theme_status_left_fg="$tmux_conf_theme_colour_6,$tmux_conf_theme_colour_7,$tmux_conf_theme_colour_8"
-tmux_conf_theme_status_left_bg="$tmux_conf_theme_colour_9,$tmux_conf_theme_colour_10,$tmux_conf_theme_colour_11"
+tmux_conf_theme_status_left_bg="$tmux_conf_theme_colour_9,$tmux_conf_theme_colour_10,$tmux_conf_theme_colour_1"
 tmux_conf_theme_status_left_attr="bold,none,none"
 
 # status right style
-tmux_conf_theme_status_right_fg="$tmux_conf_theme_colour_12,$tmux_conf_theme_colour_13,$tmux_conf_theme_colour_14"
-tmux_conf_theme_status_right_bg="$tmux_conf_theme_colour_15,$tmux_conf_theme_colour_16,$tmux_conf_theme_colour_17"
-tmux_conf_theme_status_right_attr="none,none,bold"
+tmux_conf_theme_status_right_fg="$tmux_conf_theme_colour_4,$tmux_conf_theme_colour_1,$tmux_conf_theme_colour_1"
+tmux_conf_theme_status_right_bg="$tmux_conf_theme_colour_1,#5E81AC,#88C0D0"
+tmux_conf_theme_status_right_attr="none,bold,bold"
 
 # pairing indicator
 tmux_conf_theme_pairing="⚇"                 # U+2687
@@ -284,21 +303,22 @@ tmux_conf_battery_bar_length="auto"
 #   - gradient (default)
 #   - heat
 #   - "colour_full_fg,colour_empty_fg,colour_bg"
-tmux_conf_battery_bar_palette="gradient"
+# Note: lowercase hex required for gradient() function to work correctly
+tmux_conf_battery_bar_palette="gradient(#bf616a,#d08770,#ebcb8b,#a3be8c)"
 #tmux_conf_battery_bar_palette="#d70000,#e4e4e4,#000000"   # red, white, black
 
 # battery hbar palette, possible values are:
 #   - gradient (default)
 #   - heat
 #   - "colour_low,colour_half,colour_full"
-tmux_conf_battery_hbar_palette="gradient"
+tmux_conf_battery_hbar_palette="#BF616A,#EBCB8B,#A3BE8C"
 #tmux_conf_battery_hbar_palette="#d70000,#ff5f00,#5fff00"  # red, orange, green
 
 # battery vbar palette, possible values are:
 #   - gradient (default)
 #   - heat
 #   - "colour_low,colour_half,colour_full"
-tmux_conf_battery_vbar_palette="gradient"
+tmux_conf_battery_vbar_palette="#BF616A,#EBCB8B,#A3BE8C"
 #tmux_conf_battery_vbar_palette="#d70000,#ff5f00,#5fff00"  # red, orange, green
 
 # symbols used to indicate whether battery is charging or discharging
@@ -320,7 +340,7 @@ tmux_conf_theme_clock_style="24"
 #   - false (default)
 # on macOS, this requires installing reattach-to-user-namespace, see README.md
 # on Linux, this requires xsel or xclip
-tmux_conf_copy_to_os_clipboard=false
+tmux_conf_copy_to_os_clipboard=true
 
 
 # -- user customizations -------------------------------------------------------
@@ -336,6 +356,9 @@ tmux_conf_copy_to_os_clipboard=false
 #   really you should export VISUAL or EDITOR environment variable, see manual
 #set -g status-keys vi
 set -g mode-keys vi
+
+# Nord theme fix: pin hostname section to right edge
+set -g status-right-style "bg=#88C0D0" #!important
 
 # replace C-b by C-a instead of using both prefixes
 # set -gu prefix2
@@ -373,9 +396,20 @@ tmux_conf_update_plugins_on_reload=true
 # visit https://github.com/tmux-plugins for available plugins
 #set -g @plugin 'tmux-plugins/tmux-copycat'
 #set -g @plugin 'tmux-plugins/tmux-cpu'
-#set -g @plugin 'tmux-plugins/tmux-resurrect'
-#set -g @plugin 'tmux-plugins/tmux-continuum'
-#set -g @continuum-restore 'on'
+set -g @plugin 'tmux-plugins/tmux-resurrect'
+set -g @plugin 'tmux-plugins/tmux-continuum'
+set -g @continuum-restore 'on'
+set -g @continuum-save-interval '15'
+
+set -g @plugin 'tmux-plugins/tmux-yank'
+set -g @plugin 'tmux-plugins/tmux-copycat'
+set -g @plugin 'tmux-plugins/tmux-prefix-highlight'
+
+# Prefix-highlight Nord colors
+set -g @prefix_highlight_bg "#8FBCBB"
+set -g @prefix_highlight_fg "#2E3440"
+set -g @prefix_highlight_show_copy_mode 'on'
+set -g @prefix_highlight_copy_mode_attr 'fg=#2E3440,bg=#8FBCBB'
 
 
 # -- custom variables ----------------------------------------------------------

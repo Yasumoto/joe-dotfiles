@@ -4,9 +4,6 @@
   programs.git = {
     enable = true;
 
-    userName = "Joe Smith";
-    userEmail = "yasumoto7@gmail.com";
-
     includes = [
       {
         condition = "gitdir:~/src/";
@@ -16,22 +13,19 @@
       }
     ];
 
-    aliases = {
-      l = "log --pretty=oneline -n 20 --graph";
-      s = "status -s";
-    };
-
-    delta = {
-      enable = true;
-      options = {
-        features = "decorations";
-        navigate = true;
-      };
-    };
-
     lfs.enable = true;
 
-    extraConfig = {
+    settings = {
+      user = {
+        name = "Joe Smith";
+        email = "yasumoto7@gmail.com";
+      };
+
+      alias = {
+        l = "log --pretty=oneline -n 20 --graph";
+        s = "status -s";
+      };
+
       github.user = "Yasumoto";
       apply.whitespace = "fix";
 
@@ -75,5 +69,14 @@
       "*.swp" "*.swo"
       "node_modules" "npm-debug.log"
     ];
+  };
+
+  programs.delta = {
+    enable = true;
+    enableGitIntegration = true;
+    options = {
+      features = "decorations";
+      navigate = true;
+    };
   };
 }

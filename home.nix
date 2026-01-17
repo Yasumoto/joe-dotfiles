@@ -75,7 +75,7 @@ in
     rustup
     pipenv
     shellcheck
-    nodejs
+    fnm
     gawk
     curl
     go
@@ -109,6 +109,7 @@ in
 
   home.sessionPath = [
     "$HOME/.local/bin"
+    "$HOME/.local/share/fnm/aliases/default/bin"
     "$HOME/.cargo/bin"
     "$HOME/go/bin"
     "$HOME/workspace/bin"
@@ -120,6 +121,17 @@ in
   home.sessionVariables = lib.mkIf pkgs.stdenv.isLinux {
     SSH_ASKPASS = "";
     SUDO_ASKPASS = "";
+  };
+
+  home.activation = {
+    installFnmLts = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      FNM_DIR="${config.home.homeDirectory}/.local/share/fnm"
+      if [ ! -d "$FNM_DIR/aliases/default" ]; then
+        echo "Installing Node.js LTS via fnm..."
+        PATH="${pkgs.fnm}/bin:$PATH" FNM_DIR="$FNM_DIR" ${pkgs.fnm}/bin/fnm install --lts
+        PATH="${pkgs.fnm}/bin:$PATH" FNM_DIR="$FNM_DIR" ${pkgs.fnm}/bin/fnm default lts-latest
+      fi
+    '';
   };
 
   programs.home-manager.enable = true;
