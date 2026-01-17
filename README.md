@@ -19,7 +19,7 @@ cd joe-dotfiles
 
 git submodule update --init
 
-nix run home-manager/release-25.05 -- switch -b joe_backup -f ~/workspace/github.com/Yasumoto/joe-dotfiles/home.nix
+nix run home-manager/release-25.11 -- switch -b (date +%Y_%m_%d_%H:%m:%S_gimmeh) -f ~/workspace/github.com/Yasumoto/joe-dotfiles/home.nix
 ```
 
 ### 🐧 Linux Extras
