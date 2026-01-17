@@ -29,7 +29,9 @@
       github.user = "Yasumoto";
       apply.whitespace = "fix";
 
-      credential."https://git.int.n7k.io".helper = "store";
+      credential = {
+        helper = if pkgs.stdenv.isDarwin then "osxkeychain" else "manager-core";
+      };
 
       color = {
         ui = "auto";

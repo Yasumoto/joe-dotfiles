@@ -96,6 +96,7 @@ in
   ] ++ lib.optionals pkgs.stdenv.isLinux [
     xclip
     powerline
+    git-credential-manager
   ];
 
   home.file = {
