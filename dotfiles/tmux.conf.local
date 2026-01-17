@@ -246,7 +246,7 @@ tmux_conf_theme_right_separator_sub="|"
 #     - #{username}
 #     - #{username_ssh}
 tmux_conf_theme_status_left=" ❐ #S | ↑#{?uptime_y, #{uptime_y}y,}#{?uptime_d, #{uptime_d}d,}#{?uptime_h, #{uptime_h}h,}#{?uptime_m, #{uptime_m}m,} "
-tmux_conf_theme_status_right=" #{prefix}#{mouse}#{pairing}#{synchronized}#{?battery_status,#{battery_status},}#{?battery_bar, #{battery_bar},}#{?battery_percentage, #{battery_percentage},} , %R , %d %b | #{username}#{root} | #{hostname} "
+tmux_conf_theme_status_right=" #{prefix}#{mouse}#{pairing}#{synchronized}#{?battery_status,#{battery_status},}#{?battery_bar, #{battery_bar},}#{?battery_percentage, #{battery_percentage},} , %R , %d %b | #{username}#{root} | #{hostname_style}#{hostname} "
 
 # status left style
 tmux_conf_theme_status_left_fg="$tmux_conf_theme_colour_6,$tmux_conf_theme_colour_7,$tmux_conf_theme_colour_8"
@@ -437,6 +437,25 @@ set -g @prefix_highlight_copy_mode_attr 'fg=#2E3440,bg=#8FBCBB'
 #
 # online() {
 #   ping -c 1 1.1.1.1 >/dev/null 2>&1 && printf '✔' || printf '✘'
+# }
+#
+# hostname_style() {
+#   pane_pid=$(tmux display -p '#{pane_pid}' 2>/dev/null || echo "")
+#   pane_tty=$(tmux display -p '#{b:pane_tty}' 2>/dev/null || echo "")
+#   h=$(cut -c3- "$TMUX_CONF" | sh -s _hostname "$pane_pid" "$pane_tty" false false '#h' 2>/dev/null || hostname 2>/dev/null || echo "unknown")
+#   h=${h%%.*}
+#   [ -z "$h" ] && h="unknown"
+#   hash=$(printf '%s' "$h" | cksum | cut -d ' ' -f 1)
+#   case $((hash % 8)) in
+#     0) printf '#[fg=#ECEFF4,bg=#2E3440]' ;;
+#     1) printf '#[fg=#ECEFF4,bg=#3B4252]' ;;
+#     2) printf '#[fg=#ECEFF4,bg=#434C5E]' ;;
+#     3) printf '#[fg=#ECEFF4,bg=#4C566A]' ;;
+#     4) printf '#[fg=#2E3440,bg=#8FBCBB]' ;;
+#     5) printf '#[fg=#2E3440,bg=#A3BE8C]' ;;
+#     6) printf '#[fg=#2E3440,bg=#88C0D0]' ;;
+#     7) printf '#[fg=#2E3440,bg=#EBCB8B]' ;;
+#   esac
 # }
 #
 # "$@"
