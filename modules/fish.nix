@@ -1,4 +1,9 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 {
   programs.fish = {
@@ -102,26 +107,48 @@
           return 1
         end
 
-        set KEEPASS_CLI keepassxc-cli
-        if not command -v "$KEEPASS_CLI" > /dev/null
-          set KEEPASS_CLI /Applications/KeePassXC.app/Contents/MacOS/keepassxc-cli
+        # Allow override via environment variables
+        set -q VAULT_ADDR; or set -l VAULT_ADDR "https://vault.int.n7k.io:443"
+        set -q VAULT_USER; or set -l VAULT_USER "joe.smith"
+
+        # Detect KeePassXC CLI - use Fish arrays instead of eval for safety
+        set KEEPASS_CMD keepassxc-cli
+        if not command -v "$KEEPASS_CMD" > /dev/null
+          set KEEPASS_CMD /Applications/KeePassXC.app/Contents/MacOS/keepassxc-cli
         end
-        if not command -v "$KEEPASS_CLI" > /dev/null
+        if not command -v "$KEEPASS_CMD" > /dev/null
           if command -v flatpak > /dev/null; and flatpak list | grep -q org.keepassxc.KeePassXC
-            set KEEPASS_CLI "flatpak run --branch=stable --arch=x86_64 --command=keepassxc-cli org.keepassxc.KeePassXC"
+            # Fish array - safe from command injection
+            set KEEPASS_CMD flatpak run --branch=stable --arch=x86_64 --command=keepassxc-cli org.keepassxc.KeePassXC
           else
             echo "No keepassxc-cli binary found! Install keepassxc-cli or the org.keepassxc.KeePassXC flatpak."
             return 1
           end
         end
 
-        set KEEPASS_VAULT ~/Documents/joe.smith.kdbx
+        # Locate KeePass database
+        set KEEPASS_VAULT ~/Documents/$VAULT_USER.kdbx
         if not test -f "$KEEPASS_VAULT"
-          set KEEPASS_VAULT ~/joe.smith.kdbx
+          set KEEPASS_VAULT ~/$VAULT_USER.kdbx
         end
 
-        set -Ux VAULT_TOKEN (eval $KEEPASS_CLI show -s -a Password $KEEPASS_VAULT Vault | tr -d '\n' | \
-          VAULT_ADDR="https://vault.int.n7k.io:443" vault login -token-only -non-interactive -method=userpass username=joe.smith password=-)
+        # Validate database exists and is readable
+        if not test -r "$KEEPASS_VAULT"
+          echo "KeePass database not found or not readable: $KEEPASS_VAULT"
+          return 1
+        end
+
+        # Retrieve token with proper error handling
+        set token_result ($KEEPASS_CMD show -s -a Password $KEEPASS_VAULT Vault | tr -d '\n' | \
+          VAULT_ADDR="$VAULT_ADDR" vault login -token-only -non-interactive -method=userpass username=$VAULT_USER password=-)
+
+        if test $status -ne 0; or test -z "$token_result"
+          echo "Vault login failed"
+          return 1
+        end
+
+        set -Ux VAULT_TOKEN $token_result
+        echo "Vault login successful"
       '';
     };
   };

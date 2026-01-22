@@ -1,4 +1,9 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 {
   programs.git = {
@@ -29,9 +34,18 @@
       github.user = "Yasumoto";
       apply.whitespace = "fix";
 
-      credential = {
-        helper = if pkgs.stdenv.isDarwin then "osxkeychain" else "manager-core";
-      };
+      credential = lib.mkMerge [
+        {
+          helper =
+            if pkgs.stdenv.isDarwin then
+              "osxkeychain"
+            else
+              "${pkgs.git-credential-manager}/bin/git-credential-manager";
+        }
+        (lib.mkIf pkgs.stdenv.isLinux {
+          credentialStore = "secretservice";
+        })
+      ];
 
       color = {
         ui = "auto";
@@ -63,13 +77,35 @@
     };
 
     ignores = [
-      "*.com" "*.class" "*.dll" "*.exe" "*.o" "*.so"
-      "*.7z" "*.dmg" "*.gz" "*.iso" "*.jar" "*.rar" "*.tar" "*.zip"
-      "*.log" "*.sql" "*.sqlite"
-      ".DS_Store" ".DS_Store?" "._*" ".Spotlight-V100" ".Trashes"
-      "Icon?" "ehthumbs.db" "Thumbs.db"
-      "*.swp" "*.swo"
-      "node_modules" "npm-debug.log"
+      "*.com"
+      "*.class"
+      "*.dll"
+      "*.exe"
+      "*.o"
+      "*.so"
+      "*.7z"
+      "*.dmg"
+      "*.gz"
+      "*.iso"
+      "*.jar"
+      "*.rar"
+      "*.tar"
+      "*.zip"
+      "*.log"
+      "*.sql"
+      "*.sqlite"
+      ".DS_Store"
+      ".DS_Store?"
+      "._*"
+      ".Spotlight-V100"
+      ".Trashes"
+      "Icon?"
+      "ehthumbs.db"
+      "Thumbs.db"
+      "*.swp"
+      "*.swo"
+      "node_modules"
+      "npm-debug.log"
     ];
   };
 

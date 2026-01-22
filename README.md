@@ -17,9 +17,8 @@ cd ~/workspace/github.com/Yasumoto
 git clone git@github.com:Yasumoto/joe-dotfiles.git
 cd joe-dotfiles
 
-git submodule update --init
-
-nix run home-manager/release-25.11 -- switch -b (date +%Y_%m_%d_%H:%m:%S_gimmeh) -f ~/workspace/github.com/Yasumoto/joe-dotfiles/home.nix
+nix run home-manager/release-25.11 -- switch --flake ~/workspace/github.com/Yasumoto/joe-dotfiles#joe
+prek install
 ```
 
 ### 🐧 Linux Extras
@@ -66,29 +65,11 @@ https://fonts.google.com/specimen/Rye?category=Display&preview.size=32&preview.t
      -fn Rye Regular -fs 32
 ```
 
-## Tmux Plugins
+## tmux
 
-This repo uses [gpakosz/.tmux](https://github.com/gpakosz/.tmux) submodule for tmux config.
+This repo uses [gpakosz/.tmux](https://github.com/gpakosz/.tmux) config tracked in `dotfiles/.tmux.conf`.
 
-**Enabled Plugins:**
-- [tmux-resurrect](https://github.com/tmux-plugins/tmux-resurrect): Save/restore tmux environment.
-- [tmux-continuum](https://github.com/tmux-plugins/tmux-continuum): Auto-save every 15 minutes, auto-restore on tmux start.
-- [tmux-yank](https://github.com/tmux-plugins/tmux-yank): System clipboard yank (vi motions, xclip/wl-copy).
-- [tmux-copycat](https://github.com/tmux-plugins/tmux-copycat): Fuzzy URLs/paths/logs (Ctrl-u → yank).
-- [tmux-prefix-highlight](https://github.com/tmux-plugins/tmux-prefix-highlight): Status bar glows on &lt;prefix&gt; press.
-
-**Key bindings:**
-- Install/Update plugins: `&lt;prefix&gt; + I`
-- Save: `&lt;prefix&gt; + Ctrl-s`
-- Restore: `&lt;prefix&gt; + Ctrl-r`
-- Reload tmux config: `&lt;prefix&gt; + r`
-
-**Setup:**
-1. `nix run home-manager/release-25.05 -- switch -b joe_backup -f ./home.nix`
-2. `tmux kill-server 2>/dev/null || true`
-3. `tmux new-session`
-4. `&lt;prefix&gt; + I` to install plugins (if missing).
-5. `&lt;prefix&gt; + r` to reload.
-
-**Prefix:** Default `Ctrl-b`, secondary `Ctrl-a`.
-
+**To update from upstream:**
+```sh
+curl -fsSL https://raw.githubusercontent.com/gpakosz/.tmux/master/.tmux.conf > dotfiles/.tmux.conf
+```

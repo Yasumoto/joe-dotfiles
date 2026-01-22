@@ -40,4 +40,3 @@ flatpak install -y flathub codes.merritt.FeelingFinder
 
 # https://gitlab.com/azymohliad/watchmate
 #flatpak install -y flathub io.gitlab.azymohliad.WatchMate
-

@@ -1,6 +1,7 @@
 repos:
-  # Built-in hooks (fast, no external deps)
-  - repo: builtin
+  # File checks (using pre-commit-hooks)
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -9,41 +10,55 @@ repos:
       - id: check-toml
       - id: check-json
 
-  # Shell
-  - repo: builtin
+  # Shell linting
+  - repo: local
     hooks:
       - id: shellcheck
-        files: \.sh$
+        name: ShellCheck
+        entry: shellcheck
+        language: system
+        types: [shell]
 
-  # Nix (nixfmt-rfc-style + linting)
-  - repo: https://github.com/nix-community/nixpkgs-fmt
-    rev: v1.3.0
+  # Nix formatting and linting
+  - repo: local
     hooks:
       - id: nixfmt
+        name: nixfmt
         entry: nixfmt
+        language: system
         files: \.nix$
-        additional_dependencies: ["nixfmt-rfc-style"]
 
-  - repo: https://github.com/nerdypepper/statix
-    rev: v0.5.8
-    hooks:
       - id: statix
+        name: statix check
+        entry: statix check
+        language: system
+        files: \.nix$
+        pass_filenames: false
 
-  # Terraform (auto-fix enabled)
-  - repo: https://github.com/antonbabenko/pre-commit-terraform
-    rev: v1.96.1
+  # Terraform
+  - repo: local
     hooks:
-      - id: terraform_fmt
-      - id: terraform_tflint
+      - id: terraform-fmt
+        name: Terraform fmt
+        entry: bash -c 'command -v terraform >/dev/null 2>&1 && terraform fmt || true'
+        language: system
+        files: \.tf$
+        pass_filenames: false
 
-  # TOML
-  - repo: https://github.com/tamasfe/taplo
-    rev: 0.9.3
+  # TOML formatting
+  - repo: local
     hooks:
-      - id: taplo-fmt
+      - id: taplo
+        name: taplo format
+        entry: taplo format
+        language: system
+        types: [toml]
 
-  # Lua
-  - repo: https://github.com/JohnnyMorganz/StyLua
-    rev: v2.0.1
+  # Lua formatting
+  - repo: local
     hooks:
       - id: stylua
+        name: stylua
+        entry: stylua
+        language: system
+        types: [lua]

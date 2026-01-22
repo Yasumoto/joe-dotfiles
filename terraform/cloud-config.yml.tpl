@@ -38,4 +38,3 @@ packages:
   - mosh
   - docker-ce
   - docker-ce-cli
-

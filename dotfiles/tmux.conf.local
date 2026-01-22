@@ -463,6 +463,7 @@ set -g @prefix_highlight_copy_mode_attr 'fg=#2E3440,bg=#8FBCBB'
 
 
 # -- terminal overrides --------------------------------------------------------
+
 # Fix escape sequence issues and enable modern terminal features
 
 # True color support for various terminals

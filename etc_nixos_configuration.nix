@@ -3,21 +3,26 @@ let
   home-manager = builtins.fetchTarball "https://github.com/nix-community/home-manager/archive/release-25.05.tar.gz";
 in
 {
-  imports =
-    [ # Include the results of the hardware scan.
-      ./hardware-configuration.nix
-      (import "${home-manager}/nixos")
-      #(import "/home/joe/workspace/github.com/Yasumoto/joe-dotfiles/home.nix")
-    ];
+  imports = [
+    # Include the results of the hardware scan.
+    ./hardware-configuration.nix
+    (import "${home-manager}/nixos")
+    #(import "/home/joe/workspace/github.com/Yasumoto/joe-dotfiles/home.nix")
+  ];
 
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  networking.hostName = "joe-thelio";
-
-  # Enable networking
-  networking.networkmanager.enable = true;
+  networking = {
+    hostName = "joe-thelio";
+    # Enable networking
+    networkmanager.enable = true;
+    firewall.allowedTCPPorts = [
+      22
+      3000
+    ];
+  };
 
   # Set your time zone.
   time.timeZone = "America/Los_Angeles";
@@ -36,53 +41,85 @@ in
     LC_TIME = "en_US.UTF-8";
   };
 
-  # Enable the X11 windowing system.
-  services.xserver.enable = true;
+  services = {
+    # Enable the X11 windowing system.
+    xserver = {
+      enable = true;
 
-  # Enable the GNOME Desktop Environment.
-  services.xserver.displayManager.gdm.enable = true;
-  services.xserver.desktopManager.gnome.enable = true;
-  services.xserver.desktopManager.gnome.extraGSettingsOverrides = ''
-    [org/gnome/desktop/peripherals/touchpad]
-    natural-scroll=true
-  '';
+      # Enable the GNOME Desktop Environment.
+      displayManager.gdm = {
+        enable = true;
+        # Disable the GNOME3/GDM auto-suspend feature that cannot be disabled in GUI!
+        # Also this https://github.com/NixOS/nixpkgs/issues/100390#issuecomment-1683290689
+        autoSuspend = false;
+      };
 
-  # Configure keymap in X11
-  services.xserver.xkb = {
-    layout = "us";
-    variant = "";
+      desktopManager.gnome = {
+        enable = true;
+        extraGSettingsOverrides = ''
+          [org/gnome/desktop/peripherals/touchpad]
+          natural-scroll=true
+        '';
+      };
+
+      # Configure keymap in X11
+      xkb = {
+        layout = "us";
+        variant = "";
+      };
+
+      # Load nvidia driver for Xorg and Wayland
+      videoDrivers = [ "nvidia" ];
+    };
+
+    # Enable CUPS to print documents.
+    printing.enable = true;
+
+    # Enable sound with pipewire.
+    pipewire = {
+      enable = true;
+      alsa.enable = true;
+      alsa.support32Bit = true;
+      pulse.enable = true;
+      # If you want to use JACK applications, uncomment this
+      #jack.enable = true;
+
+      # use the example session manager (no others are packaged yet so this is enabled by default,
+      # no need to redefine it in your config for now)
+      #media-session.enable = true;
+    };
+
+    # Enable the OpenSSH daemon.
+    openssh.enable = true;
   };
-
-  # Enable CUPS to print documents.
-  services.printing.enable = true;
 
   # Enable sound with pipewire.
   sound.enable = true;
-  hardware.pulseaudio.enable = false;
   security.rtkit.enable = true;
-  services.pipewire = {
-    enable = true;
-    alsa.enable = true;
-    alsa.support32Bit = true;
-    pulse.enable = true;
-    # If you want to use JACK applications, uncomment this
-    #jack.enable = true;
-
-    # use the example session manager (no others are packaged yet so this is enabled by default,
-    # no need to redefine it in your config for now)
-    #media-session.enable = true;
-  };
 
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
 
-  programs.fish.enable = true;
-  programs.mosh.enable = true;
+  programs = {
+    fish.enable = true;
+    mosh.enable = true;
+    gnome-terminal.enable = true;
+    _1password.enable = true;
+    _1password-gui = {
+      enable = true;
+      # Certain features, including CLI integration and system authentication support,
+      # require enabling PolKit integration on some desktop environments (e.g. Plasma).
+      polkitPolicyOwners = [ "joe" ];
+    };
+  };
 
   users.users.joe = {
     isNormalUser = true;
     description = "Joe Smith";
-    extraGroups = [ "networkmanager" "wheel" ];
+    extraGroups = [
+      "networkmanager"
+      "wheel"
+    ];
     shell = pkgs.fish;
     packages = with pkgs; [
       firefox
@@ -111,68 +148,58 @@ in
   virtualisation.docker.enable = true;
   users.extraGroups.docker.members = [ "joe" ];
 
-  programs.gnome-terminal.enable = true;
-  programs._1password.enable = true;
-  programs._1password-gui = {
-    enable = true;
-    # Certain features, including CLI integration and system authentication support,
-    # require enabling PolKit integration on some desktop environments (e.g. Plasma).
-    polkitPolicyOwners = [ "joe" ];
-  };
-
   #################
   # Boldly enabling nvidia support
   # https://nixos.wiki/wiki/Nvidia
-  #
-  # Enable OpenGL
-  hardware.opengl = {
-    enable = true;
-    driSupport = true;
-    driSupport32Bit = true;
-  };
+  hardware = {
+    pulseaudio.enable = false;
 
-  # Load nvidia driver for Xorg and Wayland
-  services.xserver.videoDrivers = ["nvidia"];
+    # Enable OpenGL
+    opengl = {
+      enable = true;
+      driSupport = true;
+      driSupport32Bit = true;
+    };
 
-  hardware.nvidia = {
+    nvidia = {
+      # Modesetting is required.
+      modesetting.enable = true;
 
-    # Modesetting is required.
-    modesetting.enable = true;
+      # Nvidia power management. Experimental, and can cause sleep/suspend to fail.
+      powerManagement.enable = false;
+      # Fine-grained power management. Turns off GPU when not in use.
+      # Experimental and only works on modern Nvidia GPUs (Turing or newer).
+      powerManagement.finegrained = false;
 
-    # Nvidia power management. Experimental, and can cause sleep/suspend to fail.
-    powerManagement.enable = false;
-    # Fine-grained power management. Turns off GPU when not in use.
-    # Experimental and only works on modern Nvidia GPUs (Turing or newer).
-    powerManagement.finegrained = false;
+      # Use the NVidia open source kernel module (not to be confused with the
+      # independent third-party "nouveau" open source driver).
+      # Support is limited to the Turing and later architectures. Full list of
+      # supported GPUs is at:
+      # https://github.com/NVIDIA/open-gpu-kernel-modules#compatible-gpus
+      # Only available from driver 515.43.04+
+      # Currently alpha-quality/buggy, so false is currently the recommended setting.
+      open = false;
 
-    # Use the NVidia open source kernel module (not to be confused with the
-    # independent third-party "nouveau" open source driver).
-    # Support is limited to the Turing and later architectures. Full list of 
-    # supported GPUs is at: 
-    # https://github.com/NVIDIA/open-gpu-kernel-modules#compatible-gpus 
-    # Only available from driver 515.43.04+
-    # Currently alpha-quality/buggy, so false is currently the recommended setting.
-    open = false;
+      # Enable the Nvidia settings menu,
+      # accessible via `nvidia-settings`.
+      nvidiaSettings = true;
 
-    # Enable the Nvidia settings menu,
-	# accessible via `nvidia-settings`.
-    nvidiaSettings = true;
-
-    # Optionally, you may need to select the appropriate driver version for your specific GPU.
-    package = config.boot.kernelPackages.nvidiaPackages.stable;
+      # Optionally, you may need to select the appropriate driver version for your specific GPU.
+      package = config.boot.kernelPackages.nvidiaPackages.stable;
+    };
   };
   ##################
 
   # https://discourse.nixos.org/t/stop-pc-from-sleep/5757/2
   # Disable the GNOME3/GDM auto-suspend feature that cannot be disabled in GUI!
   # If no user is logged in, the machine will power down after 20 minutes.
-  systemd.targets.sleep.enable = false;
-  systemd.targets.suspend.enable = false;
-  systemd.targets.hibernate.enable = false;
-  systemd.targets.hybrid-sleep.enable = false;
-  # Also this
-  # https://github.com/NixOS/nixpkgs/issues/100390#issuecomment-1683290689
-  services.xserver.displayManager.gdm.autoSuspend = false;
+  systemd.targets = {
+    sleep.enable = false;
+    suspend.enable = false;
+    hibernate.enable = false;
+    hybrid-sleep.enable = false;
+  };
+
   security.polkit.extraConfig = ''
     polkit.addRule(function(action, subject) {
         if (action.id == "org.freedesktop.login1.suspend" ||
@@ -194,12 +221,6 @@ in
   # };
 
   # List services that you want to enable:
-
-  # Enable the OpenSSH daemon.
-  services.openssh.enable = true;
-
-  # Open ports in the firewall.
-  networking.firewall.allowedTCPPorts = [ 22 3000 ];
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;

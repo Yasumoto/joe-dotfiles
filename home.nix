@@ -1,4 +1,9 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 let
    username =
@@ -23,248 +28,289 @@ let
     ./modules/git.nix
   ];
 
-  home.username = username;
-  home.homeDirectory = homeDirectory;
-  home.stateVersion = "23.05";
+  home = {
+    inherit username homeDirectory;
+    stateVersion = "23.05";
 
-  nixpkgs.config.allowUnfree = true;
+    packages =
+      with pkgs;
+      [
+        awscli2
+        clang-tools
+        gcc
+        htop
+        fortune
+        delta
+        fd
+        eza
+        ripgrep
+        zoxide
+        starship
+        vim
+        gnupg
+        eksctl
+        packer
+        vault
+        tfsec
+        tflint
+        terraform-ls
+        prek # v0.2.30 or later needed for builtin hooks
+        alejandra
+        nixfmt-rfc-style
+        statix
+        taplo
+        stylua
+        kubectl
+        kubernetes-helm
+        minikube
+        stern
+        ctop
+        dive
+        docker-compose
+        k6
+        procs
+        gping
+        viddy
+        cheat
+        navi
+        pv
+        glow
+        cbonsai
+        topgrade
+        btop
+        neofetch
+        git-lfs
+        glab
+        pyenv
+        rustup
+        pipenv
+        shellcheck
+        fnm
+        gawk
+        curl
+        go
+        pyright
+        gopls
+        nodePackages.bash-language-server
+        dockerfile-language-server
+        nodePackages.typescript-language-server
+        nodePackages.typescript
+        nil
+        jdt-language-server
+        yaml-language-server
+        cascadia-code
+        tmux
+        mosh
+        taskwarrior3
+        nethack
+      ]
+      ++ lib.optionals pkgs.stdenv.isLinux [
+        xclip
+        powerline
+        git-credential-manager
+      ];
 
-  home.packages = with pkgs; [
-    awscli2
-    clang-tools
-    gcc
-    fish
-    htop
-    fortune
-    delta
-    fd
-    eza
-    ripgrep
-    zoxide
-    starship
-    vim
-    gnupg
-    eksctl
-    packer
-    vault
-    tfsec
-    tflint
-    terraform-ls
-    prek
-    alejandra
-    kubectl
-    kubernetes-helm
-    minikube
-    stern
-    ctop
-    dive
-    docker-compose
-    k6
-    procs
-    gping
-    viddy
-    cheat
-    navi
-    pv
-    glow
-    cbonsai
-    topgrade
-    btop
-    neofetch
-    git-lfs
-    glab
-    pyenv
-    rustup
-    pipenv
-    shellcheck
-    fnm
-    gawk
-    curl
-    go
-    pyright
-    gopls
-    nodePackages.bash-language-server
-    dockerfile-language-server
-    nodePackages.typescript-language-server
-    nodePackages.typescript
-    nil
-    jdt-language-server
-    yaml-language-server
-    cascadia-code
-    tmux
-    mosh
-    taskwarrior3
-    nethack
-  ] ++ lib.optionals pkgs.stdenv.isLinux [
-    xclip
-    powerline
-    git-credential-manager
-  ];
-
-  home.file = {
-    ".bash_profile".source = ./dotfiles/bash_profile;
-    ".vimrc".source = ./dotfiles/vimrc;
-    ".tmux.conf.local".source = ./dotfiles/tmux.conf.local;
-    ".tmux.conf".source = ./tmux/.tmux.conf;
-    ".config/starship.toml".source = ./dotfiles/starship.toml;
-    ".config/starship-minimal.toml".source = ./dotfiles/starship-minimal.toml;
-  };
-
-  home.sessionPath = [
-    "$HOME/.local/bin"
-    "$HOME/.local/share/fnm/aliases/default/bin"
-    "$HOME/.cargo/bin"
-    "$HOME/go/bin"
-    "$HOME/workspace/bin"
-    "$HOME/src/sw/ops/bin/cache"
-  ] ++ (if pkgs.stdenv.isDarwin then [ "/opt/homebrew/bin" ] else []);
-
-  # Disable broken SSH_ASKPASS on BlueFin (points to non-existent gnome-ssh-askpass)
-  home.sessionVariables = lib.mkIf pkgs.stdenv.isLinux {
-    SSH_ASKPASS = "";
-    SUDO_ASKPASS = "";
-  };
-
-  home.activation = {
-    installFnmLts = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-      FNM_DIR="${config.home.homeDirectory}/.local/share/fnm"
-      if [ ! -d "$FNM_DIR/aliases/default" ]; then
-        echo "Installing Node.js LTS via fnm..."
-        PATH="${pkgs.fnm}/bin:$PATH" FNM_DIR="$FNM_DIR" ${pkgs.fnm}/bin/fnm install --lts
-        PATH="${pkgs.fnm}/bin:$PATH" FNM_DIR="$FNM_DIR" ${pkgs.fnm}/bin/fnm default lts-latest
-      fi
-    '';
-    prekSetup = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-      REPO_DIR="${config.home.homeDirectory}/workspace/github.com/Yasumoto/joe-dotfiles"
-      if [ -d "$REPO_DIR" ] && [ -f "$REPO_DIR/.pre-commit-config.yaml" ]; then
-        echo "Setting up prek in dotfiles repo..."
-        cd "$REPO_DIR"
-        ${pkgs.prek}/bin/prek install --install-hooks || true
-      fi
-    '';
-  };
-
-  programs.home-manager.enable = true;
-
-  fonts.fontconfig.enable = !pkgs.stdenv.isDarwin;
-  programs.fzf.enable = true;
-  programs.zoxide.enable = true;
-  programs.starship.enable = true;
-  programs.direnv.enable = true;
-  programs.direnv.nix-direnv.enable = true;
-
-  programs.atuin = {
-    enable = true;
-    flags = [ "--disable-up-arrow" ];
-  };
-
-  programs.bat.enable = true;
-  programs.gh = {
-    enable = true;
-    settings = {
-      git_protocol = "https";
-      editor = "";
+    file = {
+      ".bash_profile".source = ./dotfiles/bash_profile;
+      ".vimrc".source = ./dotfiles/vimrc;
+      ".tmux.conf.local".source = ./dotfiles/tmux.conf.local;
+      ".tmux.conf".source = ./dotfiles/.tmux.conf;
+      ".config/starship.toml".source = ./dotfiles/starship.toml;
+      ".config/starship-minimal.toml".source = ./dotfiles/starship-minimal.toml;
     };
-  };
-  programs.jq.enable = true;
-  programs.k9s.enable = true;
 
-  services.ssh-agent.enable = pkgs.stdenv.isLinux;
-
-  programs.neovim = {
-    enable = true;
-    defaultEditor = true;
-    plugins = with pkgs.vimPlugins; [
-      nvim-lspconfig
-      nvim-cmp
-      cmp-nvim-lsp
-      cmp-nvim-lsp-signature-help
-      cmp-path
-      cmp-buffer
-      cmp-cmdline
-      copilot-lua
-      copilot-cmp
-      rustaceanvim
-      popup-nvim
-      plenary-nvim
-      telescope-nvim
-      telescope-fzf-native-nvim
-      (nvim-treesitter.withPlugins (p: with p; [
-        lua rust go python typescript javascript nix terraform bash fish json yaml toml markdown vim c cpp
-      ]))
-      nord-vim
-      vim-fugitive
-      vim-terraform
-      vim-protobuf
-      vim-mustache-handlebars
-      vim-fish
-      vim-nix
-      gitsigns-nvim
-      indent-blankline-nvim
-      neo-tree-nvim
-      nvim-web-devicons
-      nui-nvim
-      lualine-nvim
-      comment-nvim
-      diffview-nvim
-      harpoon
-      barbar-nvim
-      which-key-nvim
-      trouble-nvim
+    sessionPath = [
+      "$HOME/.local/bin"
+      "$HOME/.local/share/fnm/aliases/default/bin"
+      "$HOME/.cargo/bin"
+      "$HOME/go/bin"
+      "$HOME/workspace/bin"
+      "$HOME/src/sw/ops/bin/cache"
+    ]
+    ++ lib.optionals pkgs.stdenv.isDarwin [
+      "/opt/homebrew/bin"
     ];
 
-    extraConfig = ''
-      silent! autocmd! filetypedetect BufRead,BufNewFile *.tf
-      autocmd BufRead,BufNewFile *.hcl set filetype=hcl
-      autocmd BufRead,BufNewFile .terraformrc,terraform.rc set filetype=hcl
-      autocmd BufRead,BufNewFile *.tf,*.tfvars set filetype=terraform
-      autocmd BufRead,BufNewFile *.tfstate,*.tfstate.backup set filetype=json
-      let g:terraform_fmt_on_save=1
-      let g:terraform_align=1
+    # Disable broken SSH_ASKPASS on BlueFin (points to non-existent gnome-ssh-askpass)
+    sessionVariables = lib.mkIf pkgs.stdenv.isLinux {
+      SSH_ASKPASS = "";
+      SUDO_ASKPASS = "";
+    };
 
-      " Unique keymaps not defined in Lua on_attach
-      nnoremap <silent> 1gD   <cmd>lua vim.lsp.buf.type_definition()<CR>
-      nnoremap <silent> g0    <cmd>lua vim.lsp.buf.document_symbol()<CR>
-      nnoremap <silent> gW    <cmd>lua vim.lsp.buf.workspace_symbol()<CR>
-      nnoremap <silent> W     <cmd>lua vim.diagnostic.open_float()<CR>
-      nnoremap <silent> ga    <cmd>lua vim.lsp.buf.code_action()<CR>
-
-      set updatetime=500
-
-      colorscheme nord
-      nmap <silent> <C-M> :silent noh<CR> :echo "Highlights Cleared!"<CR>
-      set mouse=
-
-      highlight ExtraWhitespace guibg=#ff0000
-      autocmd BufWinEnter * match ExtraWhitespace /\s\+$/
-      autocmd InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$/
-      autocmd InsertLeave * match ExtraWhitespace /\s\+$/
-      autocmd BufWinLeave * call clearmatches()
-    '';
-
-    extraLuaConfig = builtins.readFile ./modules/neovim-lua.lua;
+    activation = {
+      installFnmLts = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        FNM_DIR="${config.home.homeDirectory}/.local/share/fnm"
+        if [ ! -d "$FNM_DIR/aliases/default" ]; then
+          echo "Installing Node.js LTS via fnm..."
+          PATH="${pkgs.fnm}/bin:$PATH" FNM_DIR="$FNM_DIR" ${pkgs.fnm}/bin/fnm install --lts
+          PATH="${pkgs.fnm}/bin:$PATH" FNM_DIR="$FNM_DIR" ${pkgs.fnm}/bin/fnm default lts-latest
+        fi
+      '';
+      prekSetup = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        REPO_DIR="${config.home.homeDirectory}/workspace/github.com/Yasumoto/joe-dotfiles"
+        if [ -d "$REPO_DIR" ] && [ -f "$REPO_DIR/.pre-commit-config.yaml" ]; then
+          echo "Setting up prek in dotfiles repo..."
+          cd "$REPO_DIR"
+          PATH="${pkgs.git}/bin:$PATH" ${pkgs.prek}/bin/prek install --install-hooks
+        fi
+      '';
+    };
   };
 
-  programs.gnome-terminal = {
-    enable = !pkgs.stdenv.isDarwin && pkgs.hostPlatform.isLinux;
-    showMenubar = false;
-    profile.b1dcc9dd-5262-4d8d-a863-c897e6d979b9 = {
-      audibleBell = false;
-      default = true;
-      visibleName = "Nord";
-      showScrollbar = false;
-      transparencyPercent = 5;
-      font = "CaskaydiaCove Nerd Font Mono 14";
-      colors = {
-        foregroundColor = "#A9B2C3";
-        backgroundColor = "#21252B";
-        boldColor = "#D2DDF2";
-        palette = [
-          "#21252B" "#B85960" "#98C379" "#C4A469"
-          "#61AFEF" "#B57EDC" "#56B6C2" "#A9B2C3"
-          "#5F6672" "#FF7A85" "#C6FF9E" "#FFD588"
-          "#67BAFF" "#D192FF" "#71EFFF" "#DDE8FF"
-        ];
+  fonts.fontconfig.enable = !pkgs.stdenv.isDarwin;
+  services.ssh-agent.enable = pkgs.stdenv.isLinux;
+
+  programs = {
+    home-manager.enable = true;
+    fzf.enable = true;
+    zoxide.enable = true;
+    starship.enable = true;
+    direnv = {
+      enable = true;
+      nix-direnv.enable = true;
+    };
+
+    atuin = {
+      enable = true;
+      flags = [ "--disable-up-arrow" ];
+    };
+
+    bat.enable = true;
+    gh = {
+      enable = true;
+      settings = {
+        git_protocol = "https";
+        editor = "";
+      };
+    };
+    jq.enable = true;
+    k9s.enable = true;
+
+    neovim = {
+      enable = true;
+      defaultEditor = true;
+      plugins = with pkgs.vimPlugins; [
+        nvim-lspconfig
+        nvim-cmp
+        cmp-nvim-lsp
+        cmp-nvim-lsp-signature-help
+        cmp-path
+        cmp-buffer
+        cmp-cmdline
+        copilot-lua
+        copilot-cmp
+        rustaceanvim
+        popup-nvim
+        plenary-nvim
+        telescope-nvim
+        telescope-fzf-native-nvim
+        (nvim-treesitter.withPlugins (
+          p: with p; [
+            lua
+            rust
+            go
+            python
+            typescript
+            javascript
+            nix
+            terraform
+            bash
+            fish
+            json
+            yaml
+            toml
+            markdown
+            vim
+            c
+            cpp
+          ]
+        ))
+        nord-vim
+        vim-fugitive
+        vim-terraform
+        vim-protobuf
+        vim-mustache-handlebars
+        vim-fish
+        vim-nix
+        gitsigns-nvim
+        indent-blankline-nvim
+        neo-tree-nvim
+        nvim-web-devicons
+        nui-nvim
+        lualine-nvim
+        comment-nvim
+        diffview-nvim
+        harpoon
+        barbar-nvim
+        which-key-nvim
+        trouble-nvim
+      ];
+
+      extraConfig = ''
+        silent! autocmd! filetypedetect BufRead,BufNewFile *.tf
+        autocmd BufRead,BufNewFile *.hcl set filetype=hcl
+        autocmd BufRead,BufNewFile .terraformrc,terraform.rc set filetype=hcl
+        autocmd BufRead,BufNewFile *.tf,*.tfvars set filetype=terraform
+        autocmd BufRead,BufNewFile *.tfstate,*.tfstate.backup set filetype=json
+        let g:terraform_fmt_on_save=1
+        let g:terraform_align=1
+
+        " Unique keymaps not defined in Lua on_attach
+        nnoremap <silent> 1gD   <cmd>lua vim.lsp.buf.type_definition()<CR>
+        nnoremap <silent> g0    <cmd>lua vim.lsp.buf.document_symbol()<CR>
+        nnoremap <silent> gW    <cmd>lua vim.lsp.buf.workspace_symbol()<CR>
+        nnoremap <silent> W     <cmd>lua vim.diagnostic.open_float()<CR>
+        nnoremap <silent> ga    <cmd>lua vim.lsp.buf.code_action()<CR>
+
+        set updatetime=500
+
+        colorscheme nord
+        nmap <silent> <C-M> :silent noh<CR> :echo "Highlights Cleared!"<CR>
+        set mouse=
+
+        highlight ExtraWhitespace guibg=#ff0000
+        autocmd BufWinEnter * match ExtraWhitespace /\s\+$/
+        autocmd InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$/
+        autocmd InsertLeave * match ExtraWhitespace /\s\+$/
+        autocmd BufWinLeave * call clearmatches()
+      '';
+
+      extraLuaConfig = builtins.readFile ./modules/neovim-lua.lua;
+    };
+
+    gnome-terminal = {
+      enable = pkgs.stdenv.isLinux;
+      showMenubar = false;
+      profile.b1dcc9dd-5262-4d8d-a863-c897e6d979b9 = {
+        audibleBell = false;
+        default = true;
+        visibleName = "Nord";
+        showScrollbar = false;
+        transparencyPercent = 5;
+        font = "CaskaydiaCove Nerd Font Mono 14";
+        colors = {
+          foregroundColor = "#A9B2C3";
+          backgroundColor = "#21252B";
+          boldColor = "#D2DDF2";
+          palette = [
+            "#21252B"
+            "#B85960"
+            "#98C379"
+            "#C4A469"
+            "#61AFEF"
+            "#B57EDC"
+            "#56B6C2"
+            "#A9B2C3"
+            "#5F6672"
+            "#FF7A85"
+            "#C6FF9E"
+            "#FFD588"
+            "#67BAFF"
+            "#D192FF"
+            "#71EFFF"
+            "#DDE8FF"
+          ];
+        };
       };
     };
   };
