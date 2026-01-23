@@ -169,6 +169,19 @@ in
       nix-direnv.enable = true;
     };
 
+    ssh = {
+      enable = true;
+      enableDefaultConfig = false;
+      matchBlocks."*" = {
+        extraOptions = {
+          # Ignore unknown SSH options like GSSAPIAuthentication (Kerberos)
+          "IgnoreUnknown" = "GSSAPIAuthentication";
+          # Work-specific SSH config (silently ignored if file doesn't exist)
+          "Include" = "${homeDirectory}/src/sw/ops/nlk_speed_up_git/ssh.config";
+        };
+      };
+    };
+
     atuin = {
       enable = true;
       flags = [ "--disable-up-arrow" ];
