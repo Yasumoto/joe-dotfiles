@@ -6,22 +6,22 @@
 }:
 
 let
-   username =
-     if pkgs.stdenv.isLinux then
-       "joe"
-     else if pkgs.stdenv.isDarwin then
-       (if builtins.pathExists /Users/joe.smith/src then "joe.smith" else "joe")
-     else
-       "joe";
+  username =
+    if pkgs.stdenv.isLinux then
+      "joe"
+    else if pkgs.stdenv.isDarwin then
+      (if builtins.pathExists /Users/joe.smith/src then "joe.smith" else "joe")
+    else
+      "joe";
 
-   homeDirectory =
-     if pkgs.stdenv.isLinux then
-       "/home/joe"
-     else if pkgs.stdenv.isDarwin then
-       "/Users/${username}"
-     else
-       "/home/joe";
- in
+  homeDirectory =
+    if pkgs.stdenv.isLinux then
+      "/home/joe"
+    else if pkgs.stdenv.isDarwin then
+      "/Users/${username}"
+    else
+      "/home/joe";
+in
 {
   imports = [
     ./modules/fish.nix
@@ -158,7 +158,6 @@ let
   };
 
   fonts.fontconfig.enable = !pkgs.stdenv.isDarwin;
-  services.ssh-agent.enable = pkgs.stdenv.isLinux;
 
   programs = {
     home-manager.enable = true;
