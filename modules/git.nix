@@ -75,11 +75,8 @@
       pull.ff = "only";
       init.defaultBranch = "main";
 
-      # Use glab for GitLab credential management (like gh does for GitHub)
-      "credential \"https://git.int.n7k.io\"".helper = [
-        "" # Clear default helper for this host
-        "${pkgs.glab}/bin/glab auth git-credential"
-      ];
+      # Tell GCM this is a GitLab instance (avoids runtime config writes)
+      "credential \"https://git.int.n7k.io\"".provider = "gitlab";
     };
 
     ignores = [
