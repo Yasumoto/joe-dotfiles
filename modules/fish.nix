@@ -102,47 +102,83 @@
       '';
 
       whipped = ''
-        # For worktrees: create new branch from origin/master, delete old branch, rename directory
+        # For worktrees: either destroy completely (no args) or recycle for new branch (with suffix)
         if test (count $argv) -eq 0
-          echo "Usage: whipped <branch-suffix>"
-          echo "Example: whipped fix-login → creates joe-YYYY-MM-DD-fix-login"
-          return 1
+          # === CLEANUP MODE: destroy worktree completely ===
+
+          # Safety: verify we're in a worktree, not the main repo
+          set GIT_DIR (git rev-parse --git-dir 2>/dev/null)
+          if not string match -q "*.git/worktrees/*" "$GIT_DIR"
+            echo "Error: Not in a git worktree. This command only works in worktrees."
+            echo "Use 'shipped' instead if you're in the main repo."
+            return 1
+          end
+
+          set BRANCH (git branch --show-current)
+          set WORKTREE_DIR (pwd)
+          set MAIN_REPO "$HOME/src/sw"
+
+          # Confirmation prompt
+          echo "This will destroy:"
+          echo "  Worktree: $WORKTREE_DIR"
+          echo "  Branch:   $BRANCH"
+          echo ""
+          read -l -P "Proceed? [y/N] " confirm
+          if test "$confirm" != "y" -a "$confirm" != "Y"
+            echo "Aborted."
+            return 0
+          end
+
+          # Navigate to main repo first (required before removing worktree)
+          cd $MAIN_REPO
+
+          # Remove the worktree (--force handles uncommitted changes)
+          if not git worktree remove --force "$WORKTREE_DIR"
+            echo "Error: Failed to remove worktree"
+            return 1
+          end
+
+          # Delete the local branch
+          git branch -D $BRANCH
+
+          echo "Done! Worktree and branch cleaned up."
+        else
+          # === RECYCLE MODE: create new branch from origin/master, delete old branch, rename directory ===
+          set SUFFIX $argv[1]
+          set OLD_BRANCH (git branch --show-current)
+          set DEFAULT_BRANCH (git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
+          if test -z "$DEFAULT_BRANCH"
+            set DEFAULT_BRANCH master
+          end
+
+          # Build new branch name: joe-YYYY-MM-DD-suffix
+          set DATE_STR (date +%Y-%m-%d)
+          set NEW_BRANCH "joe-$DATE_STR-$SUFFIX"
+
+          echo "Fetching origin/$DEFAULT_BRANCH..."
+          git fetch origin $DEFAULT_BRANCH
+
+          echo "Creating branch $NEW_BRANCH from origin/$DEFAULT_BRANCH..."
+          git checkout -B $NEW_BRANCH origin/$DEFAULT_BRANCH
+
+          echo "Deleting old branch $OLD_BRANCH..."
+          git branch -D $OLD_BRANCH
+
+          # Rename worktree directory
+          set OLD_DIR (pwd)
+          set PARENT_DIR (dirname $OLD_DIR)
+          set NEW_DIR "$PARENT_DIR/$NEW_BRANCH"
+
+          if test "$OLD_DIR" != "$NEW_DIR"
+            echo "Renaming worktree directory..."
+            cd $PARENT_DIR
+            mv (basename $OLD_DIR) $NEW_BRANCH
+            cd $NEW_DIR
+            echo "Moved to $NEW_DIR"
+          end
+
+          echo "Done! Now on $NEW_BRANCH"
         end
-
-        set SUFFIX $argv[1]
-        set OLD_BRANCH (git branch --show-current)
-        set DEFAULT_BRANCH (git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
-        if test -z "$DEFAULT_BRANCH"
-          set DEFAULT_BRANCH master
-        end
-
-        # Build new branch name: joe-YYYY-MM-DD-suffix
-        set DATE_STR (date +%Y-%m-%d)
-        set NEW_BRANCH "joe-$DATE_STR-$SUFFIX"
-
-        echo "Fetching origin/$DEFAULT_BRANCH..."
-        git fetch origin $DEFAULT_BRANCH
-
-        echo "Creating branch $NEW_BRANCH from origin/$DEFAULT_BRANCH..."
-        git checkout -B $NEW_BRANCH origin/$DEFAULT_BRANCH
-
-        echo "Deleting old branch $OLD_BRANCH..."
-        git branch -D $OLD_BRANCH
-
-        # Rename worktree directory
-        set OLD_DIR (pwd)
-        set PARENT_DIR (dirname $OLD_DIR)
-        set NEW_DIR "$PARENT_DIR/$NEW_BRANCH"
-
-        if test "$OLD_DIR" != "$NEW_DIR"
-          echo "Renaming worktree directory..."
-          cd $PARENT_DIR
-          mv (basename $OLD_DIR) $NEW_BRANCH
-          cd $NEW_DIR
-          echo "Moved to $NEW_DIR"
-        end
-
-        echo "Done! Now on $NEW_BRANCH"
       '';
 
       update_submodules = "git submodule foreach git pull origin master";
