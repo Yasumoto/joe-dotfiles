@@ -171,8 +171,19 @@
 
           if test "$OLD_DIR" != "$NEW_DIR"
             echo "Renaming worktree directory..."
-            cd $PARENT_DIR
-            mv (basename $OLD_DIR) $NEW_BRANCH
+
+            # Get the main repository path
+            set MAIN_REPO (git rev-parse --path-format=absolute --git-common-dir | sed 's@/\.git$@@')
+
+            # Navigate to main repo to run worktree move
+            cd $MAIN_REPO
+
+            # Use git worktree move instead of mv so git tracks the change
+            if not git worktree move "$OLD_DIR" "$NEW_DIR"
+              echo "Error: Failed to move worktree"
+              return 1
+            end
+
             cd $NEW_DIR
             echo "Moved to $NEW_DIR"
           end
