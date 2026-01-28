@@ -271,6 +271,12 @@
           echo "Moved to $NEW_DIR"
         end
 
+        # Allow direnv if .envrc exists
+        if test -f .envrc
+          direnv allow
+          echo "Ran direnv allow"
+        end
+
         echo "Done! Now on $NEW_BRANCH"
       '';
 
