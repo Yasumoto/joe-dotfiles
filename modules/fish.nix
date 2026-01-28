@@ -102,21 +102,85 @@
       '';
 
       whipped = ''
-        # For worktrees: either destroy completely (no args) or recycle for new branch (with suffix)
-        if test (count $argv) -eq 0
-          # === CLEANUP MODE: destroy worktree completely ===
+        # Constants
+        set MAIN_REPO "$HOME/src/sw"
+        set MASTER_WORKTREE "$HOME/src/master"
+        set WORKTREE_PARENT "$HOME/src"
 
+        # Get current directory and git info
+        set CURRENT_DIR (pwd)
+        set GIT_DIR (git rev-parse --git-dir 2>/dev/null)
+
+        # Determine if we're in the master worktree
+        set IN_MASTER_WORKTREE 0
+        if test "$CURRENT_DIR" = "$MASTER_WORKTREE"
+          set IN_MASTER_WORKTREE 1
+        end
+
+        # Validate suffix if provided (prevent command injection)
+        if test (count $argv) -gt 0
+          set SUFFIX $argv[1]
+          if not string match -qr '^[a-zA-Z0-9_-]+$' "$SUFFIX"
+            echo "Error: Suffix must contain only letters, numbers, hyphens, and underscores"
+            return 1
+          end
+        end
+
+        # === CASE 1: In master worktree, no args - prompt for suffix ===
+        if test $IN_MASTER_WORKTREE -eq 1 -a (count $argv) -eq 0
+          echo "You're in the master worktree. Please provide a suffix for the new worktree."
+          read -l -P "Suffix: " suffix_input
+          if test -z "$suffix_input"
+            echo "Aborted."
+            return 0
+          end
+          # Recursive call with suffix
+          whipped $suffix_input
+          return $status
+        end
+
+        # === CASE 2: In master worktree, with suffix - create new worktree ===
+        if test $IN_MASTER_WORKTREE -eq 1 -a (count $argv) -gt 0
+          set SUFFIX $argv[1]
+          set DATE_STR (date +%Y-%m-%d)
+          set NEW_BRANCH "joe-$DATE_STR-$SUFFIX"
+          set NEW_WORKTREE "$WORKTREE_PARENT/$NEW_BRANCH"
+
+          echo "Pulling origin/master in master worktree..."
+          if not git pull origin master
+            echo "Error: Failed to pull origin/master"
+            return 1
+          end
+
+          echo "Creating new worktree at $NEW_WORKTREE with branch $NEW_BRANCH..."
+          if not git worktree add -b $NEW_BRANCH "$NEW_WORKTREE" origin/master
+            echo "Error: Failed to create worktree"
+            return 1
+          end
+
+          cd $NEW_WORKTREE
+          echo "Done! Now in $NEW_WORKTREE on $NEW_BRANCH"
+          return 0
+        end
+
+        # === CASE 3: Not in master worktree, no args - CLEANUP MODE ===
+        if test (count $argv) -eq 0
           # Safety: verify we're in a worktree, not the main repo
-          set GIT_DIR (git rev-parse --git-dir 2>/dev/null)
           if not string match -q "*.git/worktrees/*" "$GIT_DIR"
             echo "Error: Not in a git worktree. This command only works in worktrees."
             echo "Use 'shipped' instead if you're in the main repo."
             return 1
           end
 
+          # Safety: never destroy the master worktree
+          if test "$CURRENT_DIR" = "$MASTER_WORKTREE"
+            echo "Error: Cannot destroy the master worktree at $MASTER_WORKTREE"
+            echo "This worktree is intended to be persistent."
+            return 1
+          end
+
           set BRANCH (git branch --show-current)
           set WORKTREE_DIR (pwd)
-          set MAIN_REPO "$HOME/src/sw"
 
           # Confirmation prompt
           echo "This will destroy:"
@@ -142,54 +206,72 @@
           git branch -D $BRANCH
 
           echo "Done! Worktree and branch cleaned up."
-        else
-          # === RECYCLE MODE: create new branch from origin/master, delete old branch, rename directory ===
-          set SUFFIX $argv[1]
-          set OLD_BRANCH (git branch --show-current)
-          set DEFAULT_BRANCH (git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
-          if test -z "$DEFAULT_BRANCH"
-            set DEFAULT_BRANCH master
-          end
-
-          # Build new branch name: joe-YYYY-MM-DD-suffix
-          set DATE_STR (date +%Y-%m-%d)
-          set NEW_BRANCH "joe-$DATE_STR-$SUFFIX"
-
-          echo "Fetching origin/$DEFAULT_BRANCH..."
-          git fetch origin $DEFAULT_BRANCH
-
-          echo "Creating branch $NEW_BRANCH from origin/$DEFAULT_BRANCH..."
-          git checkout -B $NEW_BRANCH origin/$DEFAULT_BRANCH
-
-          echo "Deleting old branch $OLD_BRANCH..."
-          git branch -D $OLD_BRANCH
-
-          # Rename worktree directory
-          set OLD_DIR (pwd)
-          set PARENT_DIR (dirname $OLD_DIR)
-          set NEW_DIR "$PARENT_DIR/$NEW_BRANCH"
-
-          if test "$OLD_DIR" != "$NEW_DIR"
-            echo "Renaming worktree directory..."
-
-            # Get the main repository path
-            set MAIN_REPO (git rev-parse --path-format=absolute --git-common-dir | sed 's@/\.git$@@')
-
-            # Navigate to main repo to run worktree move
-            cd $MAIN_REPO
-
-            # Use git worktree move instead of mv so git tracks the change
-            if not git worktree move "$OLD_DIR" "$NEW_DIR"
-              echo "Error: Failed to move worktree"
-              return 1
-            end
-
-            cd $NEW_DIR
-            echo "Moved to $NEW_DIR"
-          end
-
-          echo "Done! Now on $NEW_BRANCH"
+          return 0
         end
+
+        # === CASE 4: Not in master worktree, with suffix - RECYCLE MODE ===
+        set SUFFIX $argv[1]
+        set OLD_BRANCH (git branch --show-current)
+        set DATE_STR (date +%Y-%m-%d)
+        set NEW_BRANCH "joe-$DATE_STR-$SUFFIX"
+
+        # Ensure master worktree exists
+        if not test -d "$MASTER_WORKTREE"
+          echo "Master worktree not found. Creating it at $MASTER_WORKTREE..."
+          cd $MAIN_REPO
+          if not git worktree add "$MASTER_WORKTREE" master
+            echo "Error: Failed to create master worktree"
+            return 1
+          end
+        end
+
+        # Pull origin/master in the master worktree
+        echo "Updating master worktree..."
+        cd $MASTER_WORKTREE
+        if not git pull origin master
+          echo "Error: Failed to pull origin/master in master worktree"
+          cd $CURRENT_DIR
+          return 1
+        end
+
+        # Return to original worktree
+        cd $CURRENT_DIR
+
+        # Create new branch from origin/master
+        echo "Creating branch $NEW_BRANCH from origin/master..."
+        if not git checkout -B $NEW_BRANCH origin/master
+          echo "Error: Failed to create new branch"
+          return 1
+        end
+
+        # Delete old branch
+        echo "Deleting old branch $OLD_BRANCH..."
+        git branch -D $OLD_BRANCH
+
+        # Rename worktree directory
+        set OLD_DIR (pwd)
+        set NEW_DIR "$WORKTREE_PARENT/$NEW_BRANCH"
+
+        if test "$OLD_DIR" != "$NEW_DIR"
+          echo "Renaming worktree directory..."
+
+          # Get the main repository path
+          set REPO_PATH (git rev-parse --path-format=absolute --git-common-dir | sed 's@/\.git$@@')
+
+          # Navigate to main repo to run worktree move
+          cd $REPO_PATH
+
+          # Use git worktree move instead of mv so git tracks the change
+          if not git worktree move "$OLD_DIR" "$NEW_DIR"
+            echo "Error: Failed to move worktree"
+            return 1
+          end
+
+          cd $NEW_DIR
+          echo "Moved to $NEW_DIR"
+        end
+
+        echo "Done! Now on $NEW_BRANCH"
       '';
 
       update_submodules = "git submodule foreach git pull origin master";
