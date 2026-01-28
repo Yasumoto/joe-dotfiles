@@ -13,20 +13,21 @@
     { nixpkgs, home-manager, ... }:
     let
       mkHomeConfiguration =
-        system:
+        system: username:
         home-manager.lib.homeManagerConfiguration {
           pkgs = import nixpkgs {
             inherit system;
             config.allowUnfree = true;
           };
+          extraSpecialArgs = { inherit username; };
           modules = [ ./home.nix ];
         };
     in
     {
       homeConfigurations = {
-        "linux" = mkHomeConfiguration "x86_64-linux";
-        "joe" = mkHomeConfiguration "aarch64-darwin";
-        "joe.smith" = mkHomeConfiguration "aarch64-darwin";
+        "linux" = mkHomeConfiguration "x86_64-linux" "joe";
+        "joe" = mkHomeConfiguration "aarch64-darwin" "joe";
+        "joe.smith" = mkHomeConfiguration "aarch64-darwin" "joe.smith";
       };
     };
 }
