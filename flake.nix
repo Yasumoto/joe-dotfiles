@@ -12,16 +12,21 @@
   outputs =
     { nixpkgs, home-manager, ... }:
     let
-      system = "x86_64-linux";
-      pkgs = import nixpkgs {
-        inherit system;
-        config.allowUnfree = true;
-      };
+      mkHomeConfiguration =
+        system:
+        home-manager.lib.homeManagerConfiguration {
+          pkgs = import nixpkgs {
+            inherit system;
+            config.allowUnfree = true;
+          };
+          modules = [ ./home.nix ];
+        };
     in
     {
-      homeConfigurations."joe" = home-manager.lib.homeManagerConfiguration {
-        inherit pkgs;
-        modules = [ ./home.nix ];
+      homeConfigurations = {
+        "linux" = mkHomeConfiguration "x86_64-linux";
+        "joe" = mkHomeConfiguration "aarch64-darwin";
+        "joe.smith" = mkHomeConfiguration "aarch64-darwin";
       };
     };
 }

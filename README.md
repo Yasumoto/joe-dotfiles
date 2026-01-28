@@ -17,7 +17,16 @@ cd ~/workspace/github.com/Yasumoto
 git clone git@github.com:Yasumoto/joe-dotfiles.git
 cd joe-dotfiles
 
+# Choose the appropriate configuration for your system:
+# Linux:
+nix run home-manager/release-25.11 -- switch --flake ~/workspace/github.com/Yasumoto/joe-dotfiles#linux
+
+# macOS (personal):
 nix run home-manager/release-25.11 -- switch --flake ~/workspace/github.com/Yasumoto/joe-dotfiles#joe
+
+# macOS (corp):
+nix run home-manager/release-25.11 -- switch --flake ~/workspace/github.com/Yasumoto/joe-dotfiles#joe.smith
+
 prek install
 ```
 
