@@ -171,6 +171,11 @@ in
           "IgnoreUnknown" = "GSSAPIAuthentication";
           # Work-specific SSH config (silently ignored if file doesn't exist)
           "Include" = "${homeDirectory}/src/sw/ops/nlk_speed_up_git/ssh.config";
+        }
+        // lib.optionalAttrs pkgs.stdenv.isDarwin {
+          # macOS keychain integration
+          "UseKeychain" = "yes";
+          "AddKeysToAgent" = "yes";
         };
       };
     };

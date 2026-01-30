@@ -29,6 +29,30 @@
           set -gx SSH_AUTH_SOCK "$XDG_RUNTIME_DIR/ssh-agent"
         end
       end
+
+      # macOS SSH agent - store socket info for reuse across shells
+      if test (uname) = "Darwin"
+        set -l ssh_env_file "$HOME/.ssh/agent.env.fish"
+
+        # Try to load existing agent info
+        if test -f "$ssh_env_file"
+          source "$ssh_env_file"
+        end
+
+        # Check if agent is still running and socket is valid
+        # ssh-add -l returns: 0 (has keys), 1 (no keys but working), 2 (can't connect)
+        if not test -S "$SSH_AUTH_SOCK"
+          # Socket doesn't exist, start new agent (filter out echo line)
+          ssh-agent -c | grep -v '^echo' | tee "$ssh_env_file" | source
+        else
+          ssh-add -l > /dev/null 2>&1
+          set -l ssh_status $status
+          if test $ssh_status -eq 2
+            # Can't connect to agent, start new one (filter out echo line)
+            ssh-agent -c | grep -v '^echo' | tee "$ssh_env_file" | source
+          end
+        end
+      end
     '';
 
     interactiveShellInit = ''
