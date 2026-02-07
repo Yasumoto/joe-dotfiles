@@ -110,6 +110,9 @@ in
       ".tmux.conf".source = ./dotfiles/.tmux.conf;
       ".config/starship.toml".source = ./dotfiles/starship.toml;
       ".config/starship-minimal.toml".source = ./dotfiles/starship-minimal.toml;
+      ".claude/CLAUDE.md".source = ./dotfiles/claude/CLAUDE.md;
+      ".claude/skills/commit-push-open-mr/SKILL.md".source =
+        ./dotfiles/claude/skills/commit-push-open-mr/SKILL.md;
     };
 
     sessionPath = [
