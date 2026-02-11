@@ -14,6 +14,55 @@ let
       "/Users/${username}"
     else
       "/home/${username}";
+
+  # Claude Code sound hooks
+  hooksDir = "${homeDirectory}/.claude/hooks";
+  soundsDir = "${hooksDir}/sounds";
+  hookCmd = sound: "sh ${hooksDir}/play-sound.sh ${soundsDir}/${sound}";
+  claudeHooksConfig = builtins.toJSON {
+    hooks = {
+      SessionStart = [
+        {
+          hooks = [
+            {
+              type = "command";
+              command = hookCmd "PeonReady1.ogg";
+            }
+          ];
+        }
+      ];
+      UserPromptSubmit = [
+        {
+          hooks = [
+            {
+              type = "command";
+              command = hookCmd "PeonYes3.ogg";
+            }
+          ];
+        }
+      ];
+      Notification = [
+        {
+          hooks = [
+            {
+              type = "command";
+              command = hookCmd "PeonWhat3.ogg";
+            }
+          ];
+        }
+      ];
+      Stop = [
+        {
+          hooks = [
+            {
+              type = "command";
+              command = hookCmd "PeonBuildingComplete1.ogg";
+            }
+          ];
+        }
+      ];
+    };
+  };
 in
 {
   imports = [
@@ -101,6 +150,7 @@ in
         xclip
         powerline
         git-credential-manager
+        pipewire # Provides pw-play for audio playback (Claude Code hooks)
       ];
 
     file = {
@@ -113,6 +163,12 @@ in
       ".claude/CLAUDE.md".source = ./dotfiles/claude/CLAUDE.md;
       ".claude/skills/commit-push-open-mr/SKILL.md".source =
         ./dotfiles/claude/skills/commit-push-open-mr/SKILL.md;
+      ".claude/hooks/play-sound.sh".source = ./dotfiles/claude/hooks/play-sound.sh;
+      ".claude/hooks/sounds/PeonReady1.ogg".source = ./dotfiles/claude/hooks/sounds/PeonReady1.ogg;
+      ".claude/hooks/sounds/PeonYes3.ogg".source = ./dotfiles/claude/hooks/sounds/PeonYes3.ogg;
+      ".claude/hooks/sounds/PeonWhat3.ogg".source = ./dotfiles/claude/hooks/sounds/PeonWhat3.ogg;
+      ".claude/hooks/sounds/PeonBuildingComplete1.ogg".source =
+        ./dotfiles/claude/hooks/sounds/PeonBuildingComplete1.ogg;
     };
 
     sessionPath = [
@@ -140,6 +196,17 @@ in
           echo "Installing Node.js LTS via fnm..."
           PATH="${pkgs.fnm}/bin:$PATH" FNM_DIR="$FNM_DIR" ${pkgs.fnm}/bin/fnm install --lts
           PATH="${pkgs.fnm}/bin:$PATH" FNM_DIR="$FNM_DIR" ${pkgs.fnm}/bin/fnm default lts-latest
+        fi
+      '';
+      claudeHooksSetup = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        SETTINGS="${homeDirectory}/.claude/settings.json"
+        HOOKS_JSON='${claudeHooksConfig}'
+
+        mkdir -p "$(dirname "$SETTINGS")"
+        if [ ! -f "$SETTINGS" ]; then
+          echo "$HOOKS_JSON" | ${pkgs.jq}/bin/jq . > "$SETTINGS"
+        else
+          ${pkgs.jq}/bin/jq -s '.[0] * .[1]' "$SETTINGS" <(echo "$HOOKS_JSON") > "$SETTINGS.tmp" && mv "$SETTINGS.tmp" "$SETTINGS"
         fi
       '';
       prekSetup = lib.hm.dag.entryAfter [ "writeBoundary" ] ''

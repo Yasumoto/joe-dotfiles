@@ -304,6 +304,23 @@
         echo "Done! Now on $NEW_BRANCH"
       '';
 
+      claude-sounds = ''
+        switch "$argv[1]"
+          case on
+            touch ~/.claude/sounds-enabled
+            echo "Claude Code sounds enabled"
+          case off
+            rm -f ~/.claude/sounds-enabled
+            echo "Claude Code sounds disabled"
+          case '*'
+            if test -f ~/.claude/sounds-enabled
+              echo "on"
+            else
+              echo "off"
+            end
+        end
+      '';
+
       update_submodules = "git submodule foreach git pull origin master";
 
       vault_login = ''
