@@ -5,6 +5,9 @@
 /config/
 /config/fish/fish_variables
 .terraform
+terraform.tfstate*
 .CLAUDE.local.md
 .claude/
 .envrc
+kubeconfig
+*.tfvars

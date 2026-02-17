@@ -1,0 +1,55 @@
+# Home Lab Infrastructure Variables
+# Copy this to terraform.tfvars and fill in your values
+# Uncomment and set the values you want to override
+
+# DNS Configuration
+# server_ip = "192.168.1.10"       # Your DNS server IP
+# home_domain = "home"             # Domain suffix for your devices
+# coredns_image_version = "1.11.3" # CoreDNS version
+
+# dns_records = {
+#   # Add your device DNS records here
+#   # "192.168.1.100" = "my-laptop"
+#   # "192.168.1.101" = "work-laptop"
+#   # "192.168.1.102" = "iphone"
+# }
+
+# MikroTik RouterOS DHCP Configuration
+# Required: Router admin password (keep secure!)
+router_password = "your-actual-router-password"
+
+# Router connection settings
+# router_host = "192.168.1.1"        # Router IP or hostname
+# router_username = "admin"          # Router admin username
+# router_insecure = false            # Set to true only for testing
+
+# Interface where DHCP runs (find with: /interface print)
+# dhcp_interface = "bridge-local"  # or "ether1", "ether2", etc.
+
+# Network configuration
+# dhcp_network = "192.168.1.0/24"
+# dhcp_gateway = "192.168.1.1"
+
+# DNS servers to advertise (your DNS server first, then public DNS)
+# dns_servers = ["192.168.1.10", "8.8.8.8", "1.1.1.1"]
+
+# DHCP settings
+# dhcp_domain = "home"
+# lease_time = "1d"
+# dhcp_pool_name = "home-pool"
+# ip_pool_ranges = ["192.168.1.100-192.168.1.199"]
+
+# Static DHCP leases (MAC address reservations)
+# static_leases = {
+#   # Example static leases - replace with your devices
+#   # "AA:BB:CC:DD:EE:FF" = {
+#   #   ip       = "192.168.1.10"
+#   #   hostname = "server"
+#   #   comment  = "Main server"
+#   # }
+#   # "11:22:33:44:55:66" = {
+#   #   ip       = "192.168.1.11"
+#   #   hostname = "desktop"
+#   #   comment  = "Main desktop PC"
+#   # }
+# }

@@ -97,6 +97,7 @@ in
         eksctl
         packer
         vault
+        terraform
         tfsec
         tflint
         terraform-ls
@@ -149,6 +150,140 @@ in
         mosh
         taskwarrior3
         nethack
+
+        # Voice interaction stack (STT/TTS for CLI agents)
+        whisper-cpp # Fast local speech-to-text
+        piper-tts # Fast local text-to-speech
+        sox # Audio recording/playback (rec, play commands)
+
+        # Voice wrapper for Claude CLI with session resume support
+        (pkgs.writeShellScriptBin "voice-claude" ''
+          set -euo pipefail
+
+          # Config
+          WHISPER_MODEL="''${WHISPER_MODEL:-$HOME/.local/share/whisper-models/ggml-base.en.bin}"
+          PIPER_VOICE="''${PIPER_VOICE:-$HOME/.local/share/piper-voices/en_US-lessac-medium.onnx}"
+          TMPDIR="''${TMPDIR:-/tmp}"
+          VOICE_CLAUDE_SPEAK="''${VOICE_CLAUDE_SPEAK:-1}"
+
+          # Parse arguments for session resume
+          CLAUDE_ARGS=""
+          while [[ $# -gt 0 ]]; do
+            case $1 in
+              --continue|-c)
+                CLAUDE_ARGS="--continue"
+                shift
+                ;;
+              --resume|-r)
+                if [[ -z "''${2:-}" ]]; then
+                  echo "Error: --resume requires a session ID" >&2
+                  exit 1
+                fi
+                CLAUDE_ARGS="--resume $2"
+                shift 2
+                ;;
+              --help|-h)
+                echo "Usage: voice-claude [--continue | --resume <session_id>]"
+                echo ""
+                echo "Options:"
+                echo "  --continue, -c           Resume the most recent session"
+                echo "  --resume, -r <id>        Resume a specific session by ID"
+                echo "  --help, -h               Show this help message"
+                exit 0
+                ;;
+              *)
+                echo "Error: Unknown option: $1" >&2
+                echo "Usage: voice-claude [--continue | --resume <session_id>]" >&2
+                exit 1
+                ;;
+            esac
+          done
+
+          # Check dependencies
+          for cmd in whisper-cli piper rec play claude; do
+            command -v "$cmd" &>/dev/null || { echo "Missing: $cmd" >&2; exit 1; }
+          done
+
+          # Check models
+          [[ -f "$WHISPER_MODEL" ]] || { echo "Whisper model not found: $WHISPER_MODEL" >&2; exit 1; }
+          [[ -f "$PIPER_VOICE" ]] || { echo "Piper voice not found: $PIPER_VOICE" >&2; exit 1; }
+
+          audio_file="$TMPDIR/voice-claude-$$.wav"
+          trap 'rm -f "$audio_file"' EXIT
+
+          # Record with Ctrl-C to stop
+          printf '\a'  # Bell to indicate start
+          echo "Recording... (Ctrl-C when done)"
+          rec -q -r 16000 -c 1 "$audio_file" gain -3 || true
+
+          # Transcribe (no timestamps, multi-threaded)
+          echo "Transcribing..."
+          prompt=$(whisper-cli -m "$WHISPER_MODEL" -f "$audio_file" -nt -np -t "$(nproc)" 2>/dev/null | xargs)
+
+          [[ -z "$prompt" ]] && { echo "No speech detected" >&2; exit 1; }
+          echo "> $prompt"
+
+          # Query Claude with optional session args
+          echo "Asking Claude..."
+          response=$(claude -p "$prompt" $CLAUDE_ARGS 2>/dev/null)
+          echo ""
+          echo "$response"
+
+          # Speak response (unless disabled)
+          if [[ "$VOICE_CLAUDE_SPEAK" == "1" ]]; then
+            echo "$response" | piper --model "$PIPER_VOICE" --output_raw 2>/dev/null | \
+              play -q -r 22050 -e signed -b 16 -c 1 -t raw -
+          fi
+        '')
+
+        # TTS helper for agent-initiated speech output
+        (pkgs.writeShellScriptBin "claude-speak" ''
+          set -euo pipefail
+          PIPER_VOICE="''${PIPER_VOICE:-$HOME/.local/share/piper-voices/en_US-lessac-medium.onnx}"
+
+          # Check dependencies
+          command -v piper &>/dev/null || { echo "Missing: piper" >&2; exit 1; }
+          command -v play &>/dev/null || { echo "Missing: play (sox)" >&2; exit 1; }
+
+          [[ -f "$PIPER_VOICE" ]] || { echo "Piper voice not found: $PIPER_VOICE" >&2; exit 1; }
+
+          # Accept text from argument or stdin
+          if [[ $# -gt 0 ]]; then
+            text="$*"
+          else
+            text=$(cat)
+          fi
+
+          [[ -z "$text" ]] && { echo "Error: No text provided" >&2; exit 1; }
+
+          # Synthesize and play
+          echo "$text" | piper --model "$PIPER_VOICE" --output_raw 2>/dev/null | \
+            play -q -r 22050 -e signed -b 16 -c 1 -t raw -
+        '')
+
+        # STT helper for agent-initiated voice input
+        (pkgs.writeShellScriptBin "claude-listen" ''
+          set -euo pipefail
+          WHISPER_MODEL="''${WHISPER_MODEL:-$HOME/.local/share/whisper-models/ggml-base.en.bin}"
+          TMPDIR="''${TMPDIR:-/tmp}"
+
+          # Check dependencies
+          command -v whisper-cli &>/dev/null || { echo "Missing: whisper-cli" >&2; exit 1; }
+          command -v rec &>/dev/null || { echo "Missing: rec (sox)" >&2; exit 1; }
+
+          [[ -f "$WHISPER_MODEL" ]] || { echo "Whisper model not found: $WHISPER_MODEL" >&2; exit 1; }
+
+          audio_file="$TMPDIR/claude-listen-$$.wav"
+          trap 'rm -f "$audio_file"' EXIT
+
+          # Record with Ctrl-C to stop
+          printf '\a'  # Bell to indicate start
+          echo "Listening... (Ctrl-C when done)" >&2
+          rec -q -r 16000 -c 1 "$audio_file" gain -3 || true
+
+          # Transcribe and output to stdout (no timestamps, multi-threaded)
+          whisper-cli -m "$WHISPER_MODEL" -f "$audio_file" -nt -np -t "$(nproc)" 2>/dev/null | xargs
+        '')
       ]
       ++ lib.optionals pkgs.stdenv.isLinux [
         xclip
