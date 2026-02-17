@@ -20,6 +20,10 @@ let
   soundsDir = "${hooksDir}/sounds";
   hookCmd = sound: "sh ${hooksDir}/play-sound.sh ${soundsDir}/${sound}";
   claudeHooksConfig = builtins.toJSON {
+    statusLine = {
+      type = "command";
+      command = "${homeDirectory}/.claude/statusline-async.sh";
+    };
     hooks = {
       SessionStart = [
         {
@@ -163,6 +167,22 @@ in
       ".claude/CLAUDE.md".source = ./dotfiles/claude/CLAUDE.md;
       ".claude/skills/commit-push-open-mr/SKILL.md".source =
         ./dotfiles/claude/skills/commit-push-open-mr/SKILL.md;
+      ".claude/statusline-async.sh" = {
+        source = ./dotfiles/claude/statusline-async.sh;
+        executable = true;
+      };
+      ".claude/gitlab-status.sh" = {
+        source = ./dotfiles/claude/gitlab-status.sh;
+        executable = true;
+      };
+      ".claude/aws-sso-status.sh" = {
+        source = ./dotfiles/claude/aws-sso-status.sh;
+        executable = true;
+      };
+      ".claude/k8s-token-status.sh" = {
+        source = ./dotfiles/claude/k8s-token-status.sh;
+        executable = true;
+      };
       ".claude/hooks/play-sound.sh".source = ./dotfiles/claude/hooks/play-sound.sh;
       ".claude/hooks/sounds/PeonReady1.ogg".source = ./dotfiles/claude/hooks/sounds/PeonReady1.ogg;
       ".claude/hooks/sounds/PeonYes3.ogg".source = ./dotfiles/claude/hooks/sounds/PeonYes3.ogg;
