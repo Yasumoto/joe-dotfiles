@@ -13,10 +13,14 @@ GRY='\e[90m'
 if [ -n "$KUBECONFIG" ]; then
     # Use existing $KUBECONFIG (may be colon-separated list)
     KUBE_CFG="$KUBECONFIG"
-else
-    # Default to ~/.kube/config
+elif [ -f "$HOME/.kube/config" ]; then
     KUBE_CFG="$HOME/.kube/config"
-    [ ! -f "$KUBE_CFG" ] && exit 0
+elif [ -d "$HOME/.nlk" ]; then
+    # Auto-detect nlk kubeconfig (use most recently modified)
+    KUBE_CFG=$(find "$HOME/.nlk" -maxdepth 2 -name "kube.config" -type f -exec stat -c '%Y %n' {} \; 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2)
+    [ -z "$KUBE_CFG" ] && exit 0
+else
+    exit 0
 fi
 
 # For multi-file $KUBECONFIG, kubectl merges them automatically
