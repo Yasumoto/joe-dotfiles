@@ -153,7 +153,7 @@ in
 
         # Voice interaction stack (STT/TTS for CLI agents)
         whisper-cpp # Fast local speech-to-text
-        piper-tts # Fast local text-to-speech
+        # piper-tts # Fast local text-to-speech (commented out due to Python 3.13 build issues)
         sox # Audio recording/playback (rec, play commands)
 
         # Voice wrapper for Claude CLI with session resume support
@@ -392,8 +392,8 @@ in
       enableDefaultConfig = false;
       matchBlocks."*" = {
         extraOptions = {
-          # Ignore unknown SSH options like GSSAPIAuthentication (Kerberos)
-          "IgnoreUnknown" = "GSSAPIAuthentication";
+          # Ignore unknown SSH options (for compatibility across SSH clients)
+          "IgnoreUnknown" = "GSSAPIAuthentication,UseKeychain,AddKeysToAgent";
           # Work-specific SSH config (silently ignored if file doesn't exist)
           "Include" = "${homeDirectory}/src/sw/ops/nlk_speed_up_git/ssh.config";
         }
