@@ -74,6 +74,13 @@ in
     ./modules/git.nix
   ];
 
+  programs._1password-shell-plugins = {
+    enable = true;
+    plugins = with pkgs; [
+      gh # GitHub CLI - uses 1Password for auth
+    ];
+  };
+
   home = {
     inherit username homeDirectory;
     stateVersion = "23.05";

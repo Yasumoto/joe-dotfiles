@@ -352,6 +352,22 @@
         set -Ux VAULT_TOKEN $token_result
         echo "Vault login successful"
       '';
+
+      # 1Password helpers
+      op-item = ''
+        # Quick item lookup: op-item "GitHub Token"
+        op item get "$argv[1]" --fields password 2>/dev/null; or op item get "$argv[1]"
+      '';
+
+      op-read = ''
+        # Read secret reference: op-read "op://vault/item/field"
+        op read "$argv[1]"
+      '';
+
+      op-env = ''
+        # Run command with 1Password env injection: op-env "op://vault/item/TOKEN" my-command
+        op run --env-file=/dev/stdin -- $argv[2..-1] < (echo "$argv[1]")
+      '';
     };
   };
 }

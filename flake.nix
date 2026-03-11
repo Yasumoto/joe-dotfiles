@@ -7,10 +7,19 @@
       url = "github:nix-community/home-manager/release-25.11";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    onepassword-shell-plugins = {
+      url = "github:1Password/shell-plugins";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
-    { nixpkgs, home-manager, ... }:
+    {
+      nixpkgs,
+      home-manager,
+      onepassword-shell-plugins,
+      ...
+    }:
     let
       mkHomeConfiguration =
         system: username:
@@ -19,8 +28,13 @@
             inherit system;
             config.allowUnfree = true;
           };
-          extraSpecialArgs = { inherit username; };
-          modules = [ ./home.nix ];
+          extraSpecialArgs = {
+            inherit username;
+          };
+          modules = [
+            ./home.nix
+            onepassword-shell-plugins.hmModules.default
+          ];
         };
     in
     {
