@@ -111,11 +111,12 @@
 
         # Get current directory and git info
         set CURRENT_DIR (pwd)
+        set WORKTREE_ROOT (git rev-parse --show-toplevel 2>/dev/null)
         set GIT_DIR (git rev-parse --git-dir 2>/dev/null)
 
         # Determine if we're in the master worktree
         set IN_MASTER_WORKTREE 0
-        if test "$CURRENT_DIR" = "$MASTER_WORKTREE"
+        if test "$WORKTREE_ROOT" = "$MASTER_WORKTREE"
           set IN_MASTER_WORKTREE 1
         end
 
@@ -175,14 +176,14 @@
           end
 
           # Safety: never destroy the master worktree
-          if test "$CURRENT_DIR" = "$MASTER_WORKTREE"
+          if test "$WORKTREE_ROOT" = "$MASTER_WORKTREE"
             echo "Error: Cannot destroy the master worktree at $MASTER_WORKTREE"
             echo "This worktree is intended to be persistent."
             return 1
           end
 
           set BRANCH (git branch --show-current)
-          set WORKTREE_DIR (pwd)
+          set WORKTREE_DIR $WORKTREE_ROOT
 
           # Confirmation prompt
           echo "This will destroy:"
@@ -251,7 +252,7 @@
         git branch -D $OLD_BRANCH
 
         # Rename worktree directory
-        set OLD_DIR (pwd)
+        set OLD_DIR $WORKTREE_ROOT
         set NEW_DIR "$WORKTREE_PARENT/$NEW_BRANCH"
 
         if test "$OLD_DIR" != "$NEW_DIR"
