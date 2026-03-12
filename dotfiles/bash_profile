@@ -10,8 +10,6 @@ export CLICOLOR=1
 
 PS1='\[\e[34;1m\]\t \[\e[33;1m\][\h \[\e[37;1m\]\W\[\e[33;1m\]] \[\e[31;1m\]\$ \[\e[0m\]'
 
-alias ls='ls --color=auto 2>/dev/null || ls -G'
-alias grep='grep --color=auto'
 
 [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 [ -f "$HOME/.nix-profile/etc/profile.d/hm-session-vars.sh" ] && . "$HOME/.nix-profile/etc/profile.d/hm-session-vars.sh"
