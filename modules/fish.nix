@@ -162,6 +162,13 @@
           end
 
           cd $NEW_WORKTREE
+
+          # Allow direnv if .envrc exists
+          if test -f .envrc
+            direnv allow
+            echo "Ran direnv allow"
+          end
+
           echo "Done! Now in $NEW_WORKTREE on $NEW_BRANCH"
           return 0
         end
