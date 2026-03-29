@@ -14,64 +14,12 @@ let
       "/Users/${username}"
     else
       "/home/${username}";
-
-  # Claude Code sound hooks
-  hooksDir = "${homeDirectory}/.claude/hooks";
-  soundsDir = "${hooksDir}/sounds";
-  hookCmd = sound: "sh ${hooksDir}/play-sound.sh ${soundsDir}/${sound}";
-  claudeHooksConfig = builtins.toJSON {
-    statusLine = {
-      type = "command";
-      command = "${homeDirectory}/.claude/statusline-async.sh";
-    };
-    hooks = {
-      SessionStart = [
-        {
-          hooks = [
-            {
-              type = "command";
-              command = hookCmd "PeonReady1.ogg";
-            }
-          ];
-        }
-      ];
-      UserPromptSubmit = [
-        {
-          hooks = [
-            {
-              type = "command";
-              command = hookCmd "PeonYes3.ogg";
-            }
-          ];
-        }
-      ];
-      Notification = [
-        {
-          hooks = [
-            {
-              type = "command";
-              command = hookCmd "PeonWhat3.ogg";
-            }
-          ];
-        }
-      ];
-      Stop = [
-        {
-          hooks = [
-            {
-              type = "command";
-              command = hookCmd "PeonBuildingComplete1.ogg";
-            }
-          ];
-        }
-      ];
-    };
-  };
 in
 {
   imports = [
     ./modules/fish.nix
     ./modules/git.nix
+    ./modules/claude-code.nix
   ];
 
   programs._1password-shell-plugins = {
@@ -159,143 +107,15 @@ in
         nethack
 
         # Voice interaction stack (STT/TTS for CLI agents)
-        whisper-cpp # Fast local speech-to-text
-        # piper-tts # Fast local text-to-speech (commented out due to Python 3.13 build issues)
-        sox # Audio recording/playback (rec, play commands)
-
-        # Voice wrapper for Claude CLI with session resume support
-        (pkgs.writeShellScriptBin "voice-claude" ''
-          set -euo pipefail
-
-          # Config
-          WHISPER_MODEL="''${WHISPER_MODEL:-$HOME/.local/share/whisper-models/ggml-base.en.bin}"
-          PIPER_VOICE="''${PIPER_VOICE:-$HOME/.local/share/piper-voices/en_US-lessac-medium.onnx}"
-          TMPDIR="''${TMPDIR:-/tmp}"
-          VOICE_CLAUDE_SPEAK="''${VOICE_CLAUDE_SPEAK:-1}"
-
-          # Parse arguments for session resume
-          CLAUDE_ARGS=""
-          while [[ $# -gt 0 ]]; do
-            case $1 in
-              --continue|-c)
-                CLAUDE_ARGS="--continue"
-                shift
-                ;;
-              --resume|-r)
-                if [[ -z "''${2:-}" ]]; then
-                  echo "Error: --resume requires a session ID" >&2
-                  exit 1
-                fi
-                CLAUDE_ARGS="--resume $2"
-                shift 2
-                ;;
-              --help|-h)
-                echo "Usage: voice-claude [--continue | --resume <session_id>]"
-                echo ""
-                echo "Options:"
-                echo "  --continue, -c           Resume the most recent session"
-                echo "  --resume, -r <id>        Resume a specific session by ID"
-                echo "  --help, -h               Show this help message"
-                exit 0
-                ;;
-              *)
-                echo "Error: Unknown option: $1" >&2
-                echo "Usage: voice-claude [--continue | --resume <session_id>]" >&2
-                exit 1
-                ;;
-            esac
-          done
-
-          # Check dependencies
-          for cmd in whisper-cli piper rec play claude; do
-            command -v "$cmd" &>/dev/null || { echo "Missing: $cmd" >&2; exit 1; }
-          done
-
-          # Check models
-          [[ -f "$WHISPER_MODEL" ]] || { echo "Whisper model not found: $WHISPER_MODEL" >&2; exit 1; }
-          [[ -f "$PIPER_VOICE" ]] || { echo "Piper voice not found: $PIPER_VOICE" >&2; exit 1; }
-
-          audio_file="$TMPDIR/voice-claude-$$.wav"
-          trap 'rm -f "$audio_file"' EXIT
-
-          # Record with Ctrl-C to stop
-          printf '\a'  # Bell to indicate start
-          echo "Recording... (Ctrl-C when done)"
-          rec -q -r 16000 -c 1 "$audio_file" gain -3 || true
-
-          # Transcribe (no timestamps, multi-threaded)
-          echo "Transcribing..."
-          prompt=$(whisper-cli -m "$WHISPER_MODEL" -f "$audio_file" -nt -np -t "$(nproc)" 2>/dev/null | xargs)
-
-          [[ -z "$prompt" ]] && { echo "No speech detected" >&2; exit 1; }
-          echo "> $prompt"
-
-          # Query Claude with optional session args
-          echo "Asking Claude..."
-          response=$(claude -p "$prompt" $CLAUDE_ARGS 2>/dev/null)
-          echo ""
-          echo "$response"
-
-          # Speak response (unless disabled)
-          if [[ "$VOICE_CLAUDE_SPEAK" == "1" ]]; then
-            echo "$response" | piper --model "$PIPER_VOICE" --output_raw 2>/dev/null | \
-              play -q -r 22050 -e signed -b 16 -c 1 -t raw -
-          fi
-        '')
-
-        # TTS helper for agent-initiated speech output
-        (pkgs.writeShellScriptBin "claude-speak" ''
-          set -euo pipefail
-          PIPER_VOICE="''${PIPER_VOICE:-$HOME/.local/share/piper-voices/en_US-lessac-medium.onnx}"
-
-          # Check dependencies
-          command -v piper &>/dev/null || { echo "Missing: piper" >&2; exit 1; }
-          command -v play &>/dev/null || { echo "Missing: play (sox)" >&2; exit 1; }
-
-          [[ -f "$PIPER_VOICE" ]] || { echo "Piper voice not found: $PIPER_VOICE" >&2; exit 1; }
-
-          # Accept text from argument or stdin
-          if [[ $# -gt 0 ]]; then
-            text="$*"
-          else
-            text=$(cat)
-          fi
-
-          [[ -z "$text" ]] && { echo "Error: No text provided" >&2; exit 1; }
-
-          # Synthesize and play
-          echo "$text" | piper --model "$PIPER_VOICE" --output_raw 2>/dev/null | \
-            play -q -r 22050 -e signed -b 16 -c 1 -t raw -
-        '')
-
-        # STT helper for agent-initiated voice input
-        (pkgs.writeShellScriptBin "claude-listen" ''
-          set -euo pipefail
-          WHISPER_MODEL="''${WHISPER_MODEL:-$HOME/.local/share/whisper-models/ggml-base.en.bin}"
-          TMPDIR="''${TMPDIR:-/tmp}"
-
-          # Check dependencies
-          command -v whisper-cli &>/dev/null || { echo "Missing: whisper-cli" >&2; exit 1; }
-          command -v rec &>/dev/null || { echo "Missing: rec (sox)" >&2; exit 1; }
-
-          [[ -f "$WHISPER_MODEL" ]] || { echo "Whisper model not found: $WHISPER_MODEL" >&2; exit 1; }
-
-          audio_file="$TMPDIR/claude-listen-$$.wav"
-          trap 'rm -f "$audio_file"' EXIT
-
-          # Record with Ctrl-C to stop
-          printf '\a'  # Bell to indicate start
-          echo "Listening... (Ctrl-C when done)" >&2
-          rec -q -r 16000 -c 1 "$audio_file" gain -3 || true
-
-          # Transcribe and output to stdout (no timestamps, multi-threaded)
-          whisper-cli -m "$WHISPER_MODEL" -f "$audio_file" -nt -np -t "$(nproc)" 2>/dev/null | xargs
-        '')
+        # Scripts deployed via modules/claude-code.nix, shared library at ~/.local/share/voice-lib.sh
+        whisper-cpp
+        ffmpeg
       ]
       ++ lib.optionals pkgs.stdenv.isLinux [
         xclip
         powerline
         git-credential-manager
+        sox # Provides play command for piper TTS output
         pipewire # Provides pw-play for audio playback (Claude Code hooks)
       ];
 
@@ -306,31 +126,7 @@ in
       ".tmux.conf".source = ./dotfiles/.tmux.conf;
       ".config/starship.toml".source = ./dotfiles/starship.toml;
       ".config/starship-minimal.toml".source = ./dotfiles/starship-minimal.toml;
-      ".claude/CLAUDE.md".source = ./dotfiles/claude/CLAUDE.md;
-      ".claude/skills/commit-push-open-mr/SKILL.md".source =
-        ./dotfiles/claude/skills/commit-push-open-mr/SKILL.md;
-      ".claude/statusline-async.sh" = {
-        source = ./dotfiles/claude/statusline-async.sh;
-        executable = true;
-      };
-      ".claude/gitlab-status.sh" = {
-        source = ./dotfiles/claude/gitlab-status.sh;
-        executable = true;
-      };
-      ".claude/aws-sso-status.sh" = {
-        source = ./dotfiles/claude/aws-sso-status.sh;
-        executable = true;
-      };
-      ".claude/k8s-token-status.sh" = {
-        source = ./dotfiles/claude/k8s-token-status.sh;
-        executable = true;
-      };
-      ".claude/hooks/play-sound.sh".source = ./dotfiles/claude/hooks/play-sound.sh;
-      ".claude/hooks/sounds/PeonReady1.ogg".source = ./dotfiles/claude/hooks/sounds/PeonReady1.ogg;
-      ".claude/hooks/sounds/PeonYes3.ogg".source = ./dotfiles/claude/hooks/sounds/PeonYes3.ogg;
-      ".claude/hooks/sounds/PeonWhat3.ogg".source = ./dotfiles/claude/hooks/sounds/PeonWhat3.ogg;
-      ".claude/hooks/sounds/PeonBuildingComplete1.ogg".source =
-        ./dotfiles/claude/hooks/sounds/PeonBuildingComplete1.ogg;
+      # Claude Code config managed by modules/claude-code.nix
     };
 
     sessionPath = [
@@ -360,17 +156,17 @@ in
           PATH="${pkgs.fnm}/bin:$PATH" FNM_DIR="$FNM_DIR" ${pkgs.fnm}/bin/fnm default lts-latest
         fi
       '';
-      claudeHooksSetup = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        SETTINGS="${homeDirectory}/.claude/settings.json"
-        HOOKS_JSON='${claudeHooksConfig}'
-
-        mkdir -p "$(dirname "$SETTINGS")"
-        if [ ! -f "$SETTINGS" ]; then
-          echo "$HOOKS_JSON" | ${pkgs.jq}/bin/jq . > "$SETTINGS"
-        else
-          ${pkgs.jq}/bin/jq -s '.[0] * .[1]' "$SETTINGS" <(echo "$HOOKS_JSON") > "$SETTINGS.tmp" && mv "$SETTINGS.tmp" "$SETTINGS"
+      installWhisperModel = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        WHISPER_MODEL="${config.home.homeDirectory}/.local/share/whisper-models/ggml-base.en.bin"
+        if [ ! -f "$WHISPER_MODEL" ]; then
+          echo "Downloading Whisper base.en model..."
+          mkdir -p "$(dirname "$WHISPER_MODEL")"
+          ${pkgs.curl}/bin/curl -L -o "$WHISPER_MODEL" \
+            "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin" || \
+            echo "WARNING: Failed to download Whisper model. voice-claude will be unavailable." >&2
         fi
       '';
+      # Claude settings activation moved to modules/claude-code.nix
       prekSetup = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         REPO_DIR="${config.home.homeDirectory}/workspace/github.com/Yasumoto/joe-dotfiles"
         if [ -d "$REPO_DIR" ] && [ -f "$REPO_DIR/.pre-commit-config.yaml" ]; then

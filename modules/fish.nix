@@ -104,9 +104,8 @@
       '';
 
       whipped = ''
-        # Constants
+        # Constants — ~/src/sw is both the main repo and where master lives
         set MAIN_REPO "$HOME/src/sw"
-        set MASTER_WORKTREE "$HOME/src/master"
         set WORKTREE_PARENT "$HOME/src"
 
         # Get current directory and git info
@@ -114,10 +113,10 @@
         set WORKTREE_ROOT (git rev-parse --show-toplevel 2>/dev/null)
         set GIT_DIR (git rev-parse --git-dir 2>/dev/null)
 
-        # Determine if we're in the master worktree
-        set IN_MASTER_WORKTREE 0
-        if test "$WORKTREE_ROOT" = "$MASTER_WORKTREE"
-          set IN_MASTER_WORKTREE 1
+        # Determine if we're in the main repo (master)
+        set IN_MAIN_REPO 0
+        if test "$WORKTREE_ROOT" = "$MAIN_REPO"
+          set IN_MAIN_REPO 1
         end
 
         # Validate suffix if provided (prevent command injection)
@@ -129,9 +128,9 @@
           end
         end
 
-        # === CASE 1: In master worktree, no args - prompt for suffix ===
-        if test $IN_MASTER_WORKTREE -eq 1 -a (count $argv) -eq 0
-          echo "You're in the master worktree. Please provide a suffix for the new worktree."
+        # === CASE 1: In main repo, no args - prompt for suffix ===
+        if test $IN_MAIN_REPO -eq 1 -a (count $argv) -eq 0
+          echo "You're in the main repo. Please provide a suffix for the new worktree."
           read -l -P "Suffix: " suffix_input
           if test -z "$suffix_input"
             echo "Aborted."
@@ -142,14 +141,14 @@
           return $status
         end
 
-        # === CASE 2: In master worktree, with suffix - create new worktree ===
-        if test $IN_MASTER_WORKTREE -eq 1 -a (count $argv) -gt 0
+        # === CASE 2: In main repo, with suffix - create new worktree ===
+        if test $IN_MAIN_REPO -eq 1 -a (count $argv) -gt 0
           set SUFFIX $argv[1]
           set DATE_STR (date +%Y-%m-%d)
           set NEW_BRANCH "joe-$DATE_STR-$SUFFIX"
           set NEW_WORKTREE "$WORKTREE_PARENT/$NEW_BRANCH"
 
-          echo "Pulling origin/master in master worktree..."
+          echo "Pulling origin/master..."
           if not git pull origin master
             echo "Error: Failed to pull origin/master"
             return 1
@@ -173,7 +172,7 @@
           return 0
         end
 
-        # === CASE 3: Not in master worktree, no args - CLEANUP MODE ===
+        # === CASE 3: Not in main repo, no args - CLEANUP MODE ===
         if test (count $argv) -eq 0
           # Safety: verify we're in a worktree, not the main repo
           if not string match -q "*.git/worktrees/*" "$GIT_DIR"
@@ -182,10 +181,9 @@
             return 1
           end
 
-          # Safety: never destroy the master worktree
-          if test "$WORKTREE_ROOT" = "$MASTER_WORKTREE"
-            echo "Error: Cannot destroy the master worktree at $MASTER_WORKTREE"
-            echo "This worktree is intended to be persistent."
+          # Safety: never destroy the main repo
+          if test "$WORKTREE_ROOT" = "$MAIN_REPO"
+            echo "Error: Cannot destroy the main repo at $MAIN_REPO"
             return 1
           end
 
@@ -219,33 +217,18 @@
           return 0
         end
 
-        # === CASE 4: Not in master worktree, with suffix - RECYCLE MODE ===
+        # === CASE 4: Not in main repo, with suffix - RECYCLE MODE ===
         set SUFFIX $argv[1]
         set OLD_BRANCH (git branch --show-current)
         set DATE_STR (date +%Y-%m-%d)
         set NEW_BRANCH "joe-$DATE_STR-$SUFFIX"
 
-        # Ensure master worktree exists
-        if not test -d "$MASTER_WORKTREE"
-          echo "Master worktree not found. Creating it at $MASTER_WORKTREE..."
-          cd $MAIN_REPO
-          if not git worktree add "$MASTER_WORKTREE" master
-            echo "Error: Failed to create master worktree"
-            return 1
-          end
-        end
-
-        # Pull origin/master in the master worktree
-        echo "Updating master worktree..."
-        cd $MASTER_WORKTREE
-        if not git pull origin master
-          echo "Error: Failed to pull origin/master in master worktree"
-          cd $CURRENT_DIR
+        # Fetch latest master
+        echo "Fetching origin/master..."
+        if not git fetch origin master
+          echo "Error: Failed to fetch origin/master"
           return 1
         end
-
-        # Return to original worktree
-        cd $CURRENT_DIR
 
         # Create new branch from origin/master
         echo "Creating branch $NEW_BRANCH from origin/master..."
