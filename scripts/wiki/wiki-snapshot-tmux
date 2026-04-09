@@ -1,0 +1,153 @@
+#!/usr/bin/env bash
+# Capture tmux workspace state as a wiki source document.
+# Reads the latest tmux-resurrect save file and produces a markdown snapshot
+# showing all windows, their working directories, and active Claude Code sessions.
+#
+# Usage: wiki-snapshot-tmux
+#        wiki-snapshot-tmux --dry-run   # print to stdout instead of writing
+
+set -euo pipefail
+
+WIKI_DIR="${WIKI_DIR:-$HOME/wiki}"
+RESURRECT_DIR="${RESURRECT_DIR:-$HOME/.local/share/tmux/resurrect}"
+DRY_RUN=false
+[ "${1:-}" = "--dry-run" ] && DRY_RUN=true
+
+# Find latest resurrect save
+if [ -L "$RESURRECT_DIR/last" ]; then
+  SAVE_FILE=$(readlink "$RESURRECT_DIR/last")
+  case "$SAVE_FILE" in
+    /*) ;;
+    *) SAVE_FILE="$RESURRECT_DIR/$SAVE_FILE" ;;
+  esac
+else
+  SAVE_FILE=$(find "$RESURRECT_DIR" -maxdepth 1 -name "tmux_resurrect_*.txt" -print0 2>/dev/null \
+    | xargs -0 stat -f "%m %N" 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2-)
+fi
+
+if [ -z "${SAVE_FILE:-}" ] || [ ! -f "$SAVE_FILE" ]; then
+  echo "No tmux-resurrect save file found in $RESURRECT_DIR" >&2
+  exit 1
+fi
+
+SAVE_TS=$(basename "$SAVE_FILE" | sed 's/tmux_resurrect_//;s/\.txt//')
+TODAY=$(date +%Y-%m-%d)
+OUTPUT="$WIKI_DIR/raw/tmux-snapshot-${TODAY}.md"
+
+# Use Python for parsing (bash 3.2 lacks associative arrays)
+PARSE_PY=$(cat <<'PYEOF'
+import sys, os, subprocess
+
+home = os.path.expanduser("~")
+save_file = sys.argv[1]
+save_ts = sys.argv[2]
+today = sys.argv[3]
+
+windows = {}   # idx -> name
+panes = {}     # idx -> list of {title, dir, active, command}
+
+with open(save_file) as f:
+    for line in f:
+        fields = line.rstrip("\n").split("\t")
+        if not fields:
+            continue
+        if fields[0] == "window" and len(fields) >= 4:
+            idx = int(fields[2])
+            name = fields[3].lstrip(":")
+            windows[idx] = name
+        elif fields[0] == "pane" and len(fields) >= 11:
+            idx = int(fields[2])
+            pane_idx = int(fields[5])
+            title = fields[6]
+            directory = fields[7].lstrip(":")
+            pane_active = fields[8]
+            command = fields[9]
+            if idx not in panes:
+                panes[idx] = []
+            panes[idx].append({
+                "title": title,
+                "dir": directory,
+                "active": pane_active == "1",
+                "command": command,
+            })
+
+def shorten(path):
+    if path.startswith(home):
+        return "~" + path[len(home):]
+    return path
+
+def get_branch(path):
+    try:
+        result = subprocess.run(
+            ["git", "-C", path, "branch", "--show-current"],
+            capture_output=True, text=True, timeout=5
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            return result.stdout.strip()
+    except Exception:
+        pass
+    return None
+
+print(f"# Tmux Workspace Snapshot — {today}")
+print()
+print(f"Source: tmux-resurrect save from {save_ts}")
+print()
+print("## Active Windows")
+print()
+print("| # | Window | Directory | Claude Code Session | Panes |")
+print("|---|--------|-----------|-------------------|-------|")
+
+for idx in sorted(windows.keys()):
+    name = windows[idx]
+    pane_list = panes.get(idx, [])
+    pane_count = len(pane_list)
+
+    # Use the active pane, or first pane
+    primary = next((p for p in pane_list if p["active"]), pane_list[0] if pane_list else None)
+    if not primary:
+        continue
+
+    directory = shorten(primary["dir"])
+    title = primary["title"].replace("\u2733 ", "")  # Remove ✳ prefix
+
+    # Detect Claude Code session
+    claude = ""
+    if "\u2733" in primary["title"] or "Claude Code" in primary["title"]:
+        if title and title != "Claude Code" and title != name:
+            claude = title
+        else:
+            claude = "active"
+    elif title and title != name:
+        claude = title
+
+    print(f"| {idx} | {name} | `{directory}` | {claude or '—'} | {pane_count} |")
+
+print()
+print("## Working Directories")
+print()
+print("Unique project roots from all panes:")
+print()
+
+all_dirs = set()
+for pane_list in panes.values():
+    for p in pane_list:
+        all_dirs.add(p["dir"])
+
+for d in sorted(all_dirs):
+    branch = get_branch(d)
+    short = shorten(d)
+    suffix = f" (branch: `{branch}`)" if branch else ""
+    print(f"- `{short}`{suffix}")
+PYEOF
+)
+
+generate() {
+  python3 -c "$PARSE_PY" "$SAVE_FILE" "$SAVE_TS" "$TODAY"
+}
+
+if $DRY_RUN; then
+  generate
+else
+  generate > "$OUTPUT"
+  echo "Snapshot written to: $OUTPUT"
+fi

@@ -1,0 +1,145 @@
+#!/usr/bin/env bash
+# Capture work repo state as a wiki source document.
+# Extracts worktree listing, recent commits, and branch summaries
+# from the main work monorepo.
+#
+# Usage: wiki-snapshot-work [repo-root]
+#        wiki-snapshot-work ~/src/sw
+#        wiki-snapshot-work --dry-run [repo-root]
+
+set -euo pipefail
+
+WIKI_DIR="${WIKI_DIR:-$HOME/wiki}"
+DRY_RUN=false
+if [ "${1:-}" = "--dry-run" ]; then
+  DRY_RUN=true
+  shift
+fi
+
+REPO_ROOT="${1:-$HOME/src/sw}"
+
+if [ ! -d "$REPO_ROOT/.git" ] && ! git -C "$REPO_ROOT" rev-parse --git-dir >/dev/null 2>&1; then
+  echo "Not a git repo: $REPO_ROOT" >&2
+  exit 1
+fi
+
+TODAY=$(date +%Y-%m-%d)
+OUTPUT="$WIKI_DIR/raw/work-snapshot-${TODAY}.md"
+
+# Get the main branch
+MAIN_BRANCH=$(git -C "$REPO_ROOT" symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/origin/||' || echo "master")
+
+{
+  echo "# Work Repo Snapshot — $TODAY"
+  echo ""
+  echo "Source: \`$REPO_ROOT\` (main branch: \`$MAIN_BRANCH\`)"
+  echo ""
+
+  # --- Worktree listing ---
+  echo "## Active Worktrees"
+  echo ""
+  echo "| Worktree | Branch | Status |"
+  echo "|----------|--------|--------|"
+
+  git -C "$REPO_ROOT" worktree list --porcelain 2>/dev/null | while read -r line; do
+    case "$line" in
+      "worktree "*)
+        wt_path="${line#worktree }"
+        wt_path_short="${wt_path/#$HOME/\~}"
+        ;;
+      "branch "*)
+        wt_branch="${line#branch refs/heads/}"
+        ;;
+      "HEAD "*)
+        wt_head="${line#HEAD }"
+        ;;
+      "detached")
+        wt_branch="(detached at ${wt_head:0:11})"
+        ;;
+      "")
+        # End of worktree entry — emit row
+        if [ -n "${wt_path:-}" ]; then
+          # Check if worktree has uncommitted changes
+          status="clean"
+          if [ -d "$wt_path" ]; then
+            if git -C "$wt_path" diff --quiet HEAD 2>/dev/null; then
+              uncommitted=$(git -C "$wt_path" status --porcelain 2>/dev/null | wc -l | tr -d ' ')
+              [ "$uncommitted" -gt 0 ] && status="${uncommitted} uncommitted"
+            else
+              status="dirty"
+            fi
+          else
+            status="missing"
+          fi
+          echo "| \`$wt_path_short\` | \`${wt_branch:-?}\` | $status |"
+        fi
+        wt_path="" wt_branch="" wt_head=""
+        ;;
+    esac
+  done
+
+  echo ""
+
+  # --- Recent commits on main ---
+  echo "## Recent Commits on \`$MAIN_BRANCH\`"
+  echo ""
+  echo '```'
+  git -C "$REPO_ROOT" log "$MAIN_BRANCH" --oneline -20 2>/dev/null || echo "(could not read main branch)"
+  echo '```'
+  echo ""
+
+  # --- Per-worktree summaries ---
+  echo "## Worktree Summaries"
+  echo ""
+
+  git -C "$REPO_ROOT" worktree list 2>/dev/null | while read -r wt_path wt_head _wt_rest; do
+    [ "$wt_path" = "$REPO_ROOT" ] && continue  # skip main worktree
+    [ ! -d "$wt_path" ] && continue
+
+    branch=$(git -C "$wt_path" branch --show-current 2>/dev/null || echo "detached")
+    wt_short="${wt_path/#$HOME/\~}"
+
+    echo "### \`$branch\` (\`$wt_short\`)"
+    echo ""
+
+    # Commit count ahead of main
+    ahead=$(git -C "$wt_path" rev-list --count "$MAIN_BRANCH..HEAD" 2>/dev/null || echo "?")
+    echo "- **$ahead commits** ahead of \`$MAIN_BRANCH\`"
+
+    # Recent commits on this branch
+    echo '- Recent commits:'
+    echo '```'
+    git -C "$wt_path" log --oneline -5 2>/dev/null || echo "  (no commits)"
+    echo '```'
+
+    # Changed files summary
+    changed=$(git -C "$wt_path" diff --stat "$MAIN_BRANCH"...HEAD 2>/dev/null | tail -1)
+    [ -n "$changed" ] && echo "- Diff stat: $changed"
+
+    echo ""
+  done
+
+  # --- Architecture docs ---
+  echo "## Key Documents"
+  echo ""
+  for doc in CLAUDE.md README.md AGENTS.md; do
+    if [ -f "$REPO_ROOT/$doc" ]; then
+      echo "### $doc"
+      echo ""
+      # First 50 lines only — enough to capture purpose/overview
+      echo '```'
+      head -50 "$REPO_ROOT/$doc"
+      echo '```'
+      echo ""
+    fi
+  done
+
+} > >(if $DRY_RUN; then cat; else
+  mkdir -p "$(dirname "$OUTPUT")"
+  tee "$OUTPUT"
+fi)
+
+if ! $DRY_RUN; then
+  echo ""
+  echo "Snapshot written to: $OUTPUT"
+fi

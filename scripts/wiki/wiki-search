@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Search wiki pages using ripgrep
+# Usage: wiki-search <pattern> [rg options...]
+#   wiki-search "kubernetes"
+#   wiki-search "kubernetes" -l        # filenames only
+#   wiki-search "kubernetes" -C 3      # with context
+
+set -euo pipefail
+
+WIKI_DIR="${WIKI_DIR:-$HOME/wiki}"
+
+if [ $# -eq 0 ]; then
+  echo "Usage: wiki-search <pattern> [rg options...]"
+  exit 1
+fi
+
+pattern="$1"
+shift
+
+exec rg --type md --no-heading --color=always "$pattern" "$@" "$WIKI_DIR/wiki/" "$WIKI_DIR/index.md"

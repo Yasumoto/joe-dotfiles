@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Browse wiki pages with glow
+# Usage: wiki-browse              # list all pages with titles
+#        wiki-browse <page>       # render a page (with or without .md)
+#        wiki-browse index        # render the index
+#        wiki-browse log          # render the log
+
+set -euo pipefail
+
+WIKI_DIR="${WIKI_DIR:-$HOME/wiki}"
+
+if [ $# -eq 0 ]; then
+  # List all wiki pages with their titles
+  find "$WIKI_DIR/wiki" -name "*.md" -not -name "*.lock" | sort | while IFS= read -r f; do
+    rel="${f#"$WIKI_DIR"/wiki/}"
+    title=$(grep -m1 "^title:" "$f" 2>/dev/null | sed 's/^title: *//' || true)
+    printf "  %-40s %s\n" "$rel" "$title"
+  done
+  exit 0
+fi
+
+page="$1"
+
+# Check common locations
+for candidate in \
+  "$WIKI_DIR/$page" \
+  "$WIKI_DIR/$page.md" \
+  "$WIKI_DIR/wiki/$page" \
+  "$WIKI_DIR/wiki/$page.md"; do
+  if [ -f "$candidate" ]; then
+    exec glow -p "$candidate"
+  fi
+done
+
+echo "Page not found: $page"
+echo "Try: wiki-browse (no args) to list all pages"
+exit 1

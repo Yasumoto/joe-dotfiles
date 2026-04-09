@@ -127,6 +127,38 @@ in
       ".config/starship.toml".source = ./dotfiles/starship.toml;
       ".config/starship-minimal.toml".source = ./dotfiles/starship-minimal.toml;
       # Claude Code config managed by modules/claude-code.nix
+
+      # Wiki CLI utilities
+      ".local/bin/wiki-search" = {
+        source = ./scripts/wiki/wiki-search;
+        executable = true;
+      };
+      ".local/bin/wiki-browse" = {
+        source = ./scripts/wiki/wiki-browse;
+        executable = true;
+      };
+      ".local/bin/wiki-lock" = {
+        source = ./scripts/wiki/wiki-lock;
+        executable = true;
+      };
+      ".local/bin/wiki-unlock" = {
+        source = ./scripts/wiki/wiki-unlock;
+        executable = true;
+      };
+
+      # Wiki snapshot/harvest utilities
+      ".local/bin/wiki-snapshot-tmux" = {
+        source = ./scripts/wiki/wiki-snapshot-tmux;
+        executable = true;
+      };
+      ".local/bin/wiki-snapshot-work" = {
+        source = ./scripts/wiki/wiki-snapshot-work;
+        executable = true;
+      };
+      ".local/bin/wiki-harvest-conversations" = {
+        source = ./scripts/wiki/wiki-harvest-conversations;
+        executable = true;
+      };
     };
 
     sessionPath = [
@@ -167,6 +199,14 @@ in
         fi
       '';
       # Claude settings activation moved to modules/claude-code.nix
+      initWiki = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        WIKI_DIR="${config.home.homeDirectory}/wiki"
+        if [ ! -d "$WIKI_DIR/.git" ]; then
+          echo "Initializing LLM Wiki at $WIKI_DIR..."
+          mkdir -p "$WIKI_DIR/raw" "$WIKI_DIR/wiki"
+          ${pkgs.git}/bin/git init "$WIKI_DIR"
+        fi
+      '';
       prekSetup = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         REPO_DIR="${config.home.homeDirectory}/workspace/github.com/Yasumoto/joe-dotfiles"
         if [ -d "$REPO_DIR" ] && [ -f "$REPO_DIR/.pre-commit-config.yaml" ]; then

@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Create an advisory lock for a wiki page
+# Usage: wiki-lock <page-name>
+# Lockfiles prevent concurrent Claude Code sessions from editing the same page.
+
+set -euo pipefail
+
+WIKI_DIR="${WIKI_DIR:-$HOME/wiki}"
+STALE_SECONDS=600
+
+if [ $# -eq 0 ]; then
+  echo "Usage: wiki-lock <page-name>"
+  echo "  wiki-lock kubernetes-networking"
+  exit 1
+fi
+
+page="$1"
+# Normalize: strip .md if provided
+page="${page%.md}"
+
+lockfile="$WIKI_DIR/wiki/${page}.md.lock"
+
+if [ -f "$lockfile" ]; then
+  # Check age — macOS uses -f %m, Linux uses -c %Y
+  if stat -f %m "$lockfile" >/dev/null 2>&1; then
+    mtime=$(stat -f %m "$lockfile")
+  else
+    mtime=$(stat -c %Y "$lockfile")
+  fi
+  age=$(( $(date +%s) - mtime ))
+
+  if [ "$age" -lt "$STALE_SECONDS" ]; then
+    echo "LOCKED (${age}s ago):"
+    cat "$lockfile"
+    exit 1
+  fi
+  echo "Removing stale lock (${age}s old)"
+fi
+
+echo "$$ $(date -u +%Y-%m-%dT%H:%M:%SZ) ${CLAUDE_SESSION_ID:-manual}" > "$lockfile"
+echo "Locked: $page"

@@ -1,0 +1,215 @@
+#!/usr/bin/env bash
+# Extract Claude Code conversation transcripts into wiki-ready markdown.
+# Parses JSONL conversation files and produces readable transcripts
+# organized by project.
+#
+# Usage: wiki-harvest-conversations                    # harvest all projects
+#        wiki-harvest-conversations --project agentic  # filter by name substring
+#        wiki-harvest-conversations --since 2026-03-01 # only recent conversations
+#        wiki-harvest-conversations --list              # list projects only
+#        wiki-harvest-conversations --dry-run           # print to stdout
+
+set -euo pipefail
+
+WIKI_DIR="${WIKI_DIR:-$HOME/wiki}"
+CLAUDE_DIR="$HOME/.claude/projects"
+DRY_RUN=false
+LIST_ONLY=false
+PROJECT_FILTER=""
+SINCE_DATE=""
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --dry-run) DRY_RUN=true; shift ;;
+    --list) LIST_ONLY=true; shift ;;
+    --project) PROJECT_FILTER="$2"; shift 2 ;;
+    --since) SINCE_DATE="$2"; shift 2 ;;
+    *) echo "Unknown option: $1" >&2; exit 1 ;;
+  esac
+done
+
+if [ ! -d "$CLAUDE_DIR" ]; then
+  echo "No Claude Code projects found at $CLAUDE_DIR" >&2
+  exit 1
+fi
+
+# Decode project directory name to human-readable path
+decode_project() {
+  local name="$1"
+  # Claude Code encodes full paths: /Users/<user>/src/sw -> -Users-<user>-src-sw
+  # The encoding is lossy (/ . - all become -), so just strip the home prefix
+  # and display the raw encoded name. project_slug is used for filenames.
+  local stripped="${name#-}"
+  # Remove first two path components (Users/<username>)
+  stripped="${stripped#*-}" # strip "Users"
+  stripped="${stripped#*-}" # strip username
+  stripped="${stripped#-}"  # strip leading dash
+  echo "$stripped"
+}
+
+# Shorter project label for filenames
+project_slug() {
+  local name
+  name="$(decode_project "$1")"
+  name="${name#src-}"
+  name="${name/#workspace-github-com-/gh-}"
+  echo "$name"
+}
+
+# List mode
+if $LIST_ONLY; then
+  echo "Claude Code Projects:"
+  echo ""
+  for dir in "$CLAUDE_DIR"/*/; do
+    [ ! -d "$dir" ] && continue
+    proj=$(basename "$dir")
+    slug=$(project_slug "$proj")
+    count=$(find "$dir" -maxdepth 1 -name "*.jsonl" | wc -l | tr -d ' ')
+    latest=$(find "$dir" -maxdepth 1 -name "*.jsonl" -exec stat -f "%m %N" {} \; 2>/dev/null \
+             || find "$dir" -maxdepth 1 -name "*.jsonl" -exec stat -c "%Y %n" {} \; 2>/dev/null \
+             | sort -rn | head -1 | cut -d' ' -f2-)
+    latest_date=""
+    if [ -n "$latest" ]; then
+      latest_date=$(stat -f "%Sm" -t "%Y-%m-%d" "$latest" 2>/dev/null \
+                    || date -r "$(stat -c "%Y" "$latest" 2>/dev/null)" "+%Y-%m-%d" 2>/dev/null \
+                    || echo "?")
+    fi
+    printf "  %-50s %3s convos  (latest: %s)\n" "$slug" "$count" "$latest_date"
+  done
+  exit 0
+fi
+
+# Python script for JSONL extraction (handles content as string or array)
+EXTRACT_PY=$(cat <<'PYEOF'
+import sys, json, os
+
+def extract_text(content):
+    """Extract readable text from message content (string or array)."""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts = []
+        for block in content:
+            if isinstance(block, dict):
+                if block.get("type") == "text":
+                    parts.append(block.get("text", ""))
+                elif block.get("type") == "thinking":
+                    # Include thinking as collapsed section
+                    thinking = block.get("thinking", "")
+                    if len(thinking) > 200:
+                        parts.append(f"<details><summary>thinking ({len(thinking)} chars)</summary>\n\n{thinking[:500]}...\n\n</details>")
+                elif block.get("type") == "tool_use":
+                    name = block.get("name", "?")
+                    inp = block.get("input", {})
+                    if name == "Bash":
+                        cmd = inp.get("command", "")[:200]
+                        parts.append(f"[tool: {name}] `{cmd}`")
+                    elif name in ("Read", "Write", "Edit", "Glob", "Grep"):
+                        path = inp.get("file_path", inp.get("pattern", inp.get("path", "")))
+                        parts.append(f"[tool: {name}] {path}")
+                    else:
+                        parts.append(f"[tool: {name}]")
+                elif block.get("type") == "tool_result":
+                    # Skip tool results to keep output manageable
+                    pass
+        return "\n".join(parts)
+    return str(content)
+
+jsonl_path = sys.argv[1]
+with open(jsonl_path, 'r') as f:
+    for line in f:
+        try:
+            d = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        msg_type = d.get("type", "")
+        if msg_type in ("user", "assistant"):
+            role = d["message"]["role"].upper()
+            content = d["message"].get("content", "")
+            text = extract_text(content).strip()
+            if text:
+                # Truncate very long messages
+                if len(text) > 2000:
+                    text = text[:2000] + f"\n\n... ({len(text)} chars total, truncated)"
+                print(f"### {role}\n\n{text}\n")
+PYEOF
+)
+
+# Process each project
+OUTPUT_DIR="$WIKI_DIR/raw/conversations"
+mkdir -p "$OUTPUT_DIR"
+
+processed=0
+for proj_dir in "$CLAUDE_DIR"/*/; do
+  [ ! -d "$proj_dir" ] && continue
+  proj=$(basename "$proj_dir")
+  slug=$(project_slug "$proj")
+
+  # Apply project filter
+  if [ -n "$PROJECT_FILTER" ]; then
+    echo "$slug" | grep -qi "$PROJECT_FILTER" || continue
+  fi
+
+  # Find conversation JSONL files (not subagents)
+  conversations=$(find "$proj_dir" -maxdepth 1 -name "*.jsonl" | sort)
+  [ -z "$conversations" ] && continue
+
+  # Apply date filter
+  if [ -n "$SINCE_DATE" ]; then
+    since_ts=$(date -j -f "%Y-%m-%d" "$SINCE_DATE" "+%s" 2>/dev/null \
+               || date -d "$SINCE_DATE" "+%s" 2>/dev/null)
+    filtered=""
+    for f in $conversations; do
+      if [ -f "$f" ]; then
+        file_ts=$(stat -f "%m" "$f" 2>/dev/null || stat -c "%Y" "$f" 2>/dev/null)
+        [ "${file_ts:-0}" -ge "${since_ts:-0}" ] && filtered="$filtered $f"
+      fi
+    done
+    conversations="$filtered"
+    [ -z "$conversations" ] && continue
+  fi
+
+  conv_count=$(echo "$conversations" | wc -w | tr -d ' ')
+  output_file="$OUTPUT_DIR/${slug}.md"
+
+  echo "Processing: $slug ($conv_count conversations)..."
+
+  {
+    echo "# Conversations: $slug"
+    echo ""
+    echo "Project: \`$(decode_project "$proj")\`"
+    echo "Conversations: $conv_count"
+    echo "Harvested: $(date +%Y-%m-%d)"
+    echo ""
+
+    conv_num=0
+    for jsonl in $conversations; do
+      [ ! -f "$jsonl" ] && continue
+      conv_num=$((conv_num + 1))
+      conv_id=$(basename "$jsonl" .jsonl)
+      conv_date=$(stat -f "%Sm" -t "%Y-%m-%d %H:%M" "$jsonl" 2>/dev/null || stat -c "%y" "$jsonl" 2>/dev/null | cut -d. -f1)
+
+      echo "---"
+      echo ""
+      echo "## Session $conv_num — $conv_date"
+      echo ""
+      echo "ID: \`$conv_id\`"
+      echo ""
+
+      python3 -c "$EXTRACT_PY" "$jsonl" 2>/dev/null || echo "(failed to parse)"
+      echo ""
+    done
+  } > >(if $DRY_RUN; then cat; else tee "$output_file" > /dev/null; fi)
+
+  processed=$((processed + 1))
+done
+
+if ! $DRY_RUN; then
+  echo ""
+  echo "Harvested $processed projects to: $OUTPUT_DIR/"
+  echo ""
+  echo "Next steps:"
+  echo "  cd ~/wiki && claude"
+  echo "  Then ask: \"Ingest the conversations in raw/conversations/ — summarize key"
+  echo "  decisions, architecture patterns, and knowledge per project.\""
+fi

@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Remove an advisory lock for a wiki page
+# Usage: wiki-unlock <page-name>
+
+set -euo pipefail
+
+WIKI_DIR="${WIKI_DIR:-$HOME/wiki}"
+
+if [ $# -eq 0 ]; then
+  echo "Usage: wiki-unlock <page-name>"
+  exit 1
+fi
+
+page="$1"
+page="${page%.md}"
+
+lockfile="$WIKI_DIR/wiki/${page}.md.lock"
+
+if [ -f "$lockfile" ]; then
+  rm "$lockfile"
+  echo "Unlocked: $page"
+else
+  echo "No lock found: $page"
+fi
