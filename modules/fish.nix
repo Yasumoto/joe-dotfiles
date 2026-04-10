@@ -293,7 +293,10 @@
       update_submodules = "git submodule foreach git pull origin master";
 
       vault_login = ''
-        set -e VAULT_TOKEN
+        # Erase from both scopes so vault login doesn't see any stale token
+        # (inherited global from tmux can shadow universal)
+        set -e -g VAULT_TOKEN 2>/dev/null
+        set -e -U VAULT_TOKEN 2>/dev/null
 
         if not command -v vault > /dev/null
           echo "No vault binary installed!"
@@ -341,6 +344,13 @@
         end
 
         set -Ux VAULT_TOKEN $token_result
+
+        # Update tmux environment so new panes inherit the fresh token
+        # (prevents stale inherited global from shadowing the universal)
+        if set -q TMUX
+          tmux setenv VAULT_TOKEN $token_result
+        end
+
         echo "Vault login successful"
       '';
 
