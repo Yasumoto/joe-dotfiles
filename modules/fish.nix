@@ -44,6 +44,9 @@
         fortune
       end
       echo
+
+      # tcd: Ctrl+G inserts a Terraform root-module path at cursor via fzf
+      bind \cg __tcd_widget
     '';
 
     functions = {
@@ -368,6 +371,274 @@
       op-env = ''
         # Run command with 1Password env injection: op-env "op://vault/item/TOKEN" my-command
         op run --env-file=/dev/stdin -- $argv[2..-1] < (echo "$argv[1]")
+      '';
+
+      # tcd — Terraform root-module navigator with fzf + zoxide
+      # Discovers all TF roots under infrastructure/, categorizes by Substrate env vs corp,
+      # and provides an interactive fuzzy picker with preview pane.
+
+      __tcd_discover = ''
+        set -l git_root (git rev-parse --show-toplevel 2>/dev/null)
+        or set git_root (pwd)
+
+        set -l cache_file /tmp/tcd_cache_(echo $git_root | string replace -a / _).txt
+        set -l cache_max_age 300
+
+        if not contains -- --no-cache $argv
+          if test -f "$cache_file"
+            # GNU stat uses -c %Y, BSD stat uses -f %m
+            set -l file_mtime (stat -c %Y "$cache_file" 2>/dev/null; or stat -f %m "$cache_file" 2>/dev/null)
+            set -l now (date +%s)
+            set -l cache_age (math "$now - $file_mtime")
+            if test "$cache_age" -lt "$cache_max_age"
+              cat "$cache_file"
+              return 0
+            end
+          end
+        end
+
+        set -l roots
+        if command -q fd
+          set roots (fd -t f '(main\.tf|backend\.tf|terragrunt\.hcl)$' \
+            -E '.terraform' -E 'node_modules' -E '.git' \
+            "$git_root/infrastructure/" 2>/dev/null \
+            | xargs -I'{}' dirname '{}' \
+            | sort -u)
+        else
+          set roots (find "$git_root/infrastructure/" \
+            \( -name main.tf -o -name backend.tf -o -name terragrunt.hcl \) \
+            -not -path '*/.terraform/*' \
+            -not -path '*/node_modules/*' \
+            -not -path '*/.git/*' \
+            2>/dev/null \
+            | xargs -I'{}' dirname '{}' \
+            | sort -u)
+        end
+
+        set -l filtered
+        for d in $roots
+          if string match -q '*/modules/*' "$d"
+            continue
+          end
+          set -l rel (string replace "$git_root/" "" "$d")
+          set -a filtered $rel
+        end
+
+        printf '%s\n' $filtered > "$cache_file"
+        printf '%s\n' $filtered
+      '';
+
+      tcd = ''
+        set -l env_filter ""
+        set -l no_cache 0
+        set -l argidx 1
+
+        while test $argidx -le (count $argv)
+          switch $argv[$argidx]
+            case --env -e
+              set argidx (math $argidx + 1)
+              set env_filter $argv[$argidx]
+            case --refresh -r
+              set no_cache 1
+            case --help -h
+              echo "tcd - Terraform root-module navigator"
+              echo ""
+              echo "Usage: tcd [OPTIONS] [QUERY]"
+              echo ""
+              echo "Options:"
+              echo "  -e, --env ENV    Filter: dev/stg/prod/admin (Substrate) or corp (everything else)"
+              echo "  -r, --refresh    Rebuild the cache"
+              echo "  -h, --help       Show this help"
+              echo ""
+              echo "Examples:"
+              echo "  tcd              Interactive fuzzy finder"
+              echo "  tcd neuralink    Pre-filter for 'neuralink'"
+              echo "  tcd -e prod      Only show prod root modules"
+              echo "  tcd -e corp      Show non-Substrate roots (services, env-corp, etc.)"
+              echo "  tcd -r           Refresh cache then pick"
+              echo ""
+              echo "Keybinding: Ctrl+G inserts a TF root path at the cursor"
+              return 0
+            case '*'
+              break
+          end
+          set argidx (math $argidx + 1)
+        end
+
+        set -l initial_query ""
+        if test $argidx -le (count $argv)
+          set initial_query (string join " " $argv[$argidx..-1])
+        end
+
+        set -l git_root (git rev-parse --show-toplevel 2>/dev/null)
+        if test $status -ne 0
+          echo "tcd: not in a git repository"
+          return 1
+        end
+
+        set -l discover_args
+        if test $no_cache -eq 1
+          set discover_args --no-cache
+        end
+        set -l roots (__tcd_discover $discover_args)
+
+        if test (count $roots) -eq 0
+          echo "tcd: no Terraform root modules found"
+          return 1
+        end
+
+        # Substrate envs (dev/stg/prod/admin) live under root-modules/DOMAIN/ENV/...
+        # "corp" means everything NOT under root-modules/
+        if test -n "$env_filter"
+          set -l filtered
+          for r in $roots
+            switch $env_filter
+              case corp
+                if not string match -q '*/root-modules/*' "$r"
+                  set -a filtered $r
+                end
+              case dev stg prod admin
+                if string match -q "*/root-modules/*/$env_filter/*" "$r"
+                  set -a filtered $r
+                end
+              case '*'
+                string match -q "*$env_filter*" "$r"; and set -a filtered $r
+            end
+          end
+          set roots $filtered
+          if test (count $roots) -eq 0
+            echo "tcd: no root modules found for '$env_filter'"
+            return 1
+          end
+        end
+
+        set -l n_total (count $roots)
+        set -l n_substrate (printf '%s\n' $roots | grep -c '/root-modules/')
+        set -l n_corp (math $n_total - $n_substrate)
+        set -l header_text "$n_total roots: $n_substrate substrate, $n_corp corp  |  Ctrl+R: refresh"
+
+        set -l preview_cmd
+        if command -q eza
+          set preview_cmd "eza --tree --level=2 --color=always --icons $git_root/{} 2>/dev/null; echo ''''; echo '--- .tf files ---'; head -5 $git_root/{}/*.tf 2>/dev/null | head -30"
+        else
+          set preview_cmd "ls -la $git_root/{} 2>/dev/null; echo ''''; echo '--- .tf files ---'; head -5 $git_root/{}/*.tf 2>/dev/null | head -30"
+        end
+
+        set -l selected (printf '%s\n' $roots | fzf \
+          --ansi \
+          --query "$initial_query" \
+          --header "$header_text" \
+          --preview "$preview_cmd" \
+          --preview-window "right:50%:wrap" \
+          --height "70%" \
+          --reverse \
+          --border rounded \
+          --prompt "tcd> " \
+          --pointer "▶" \
+          --marker "✓" \
+          --bind "ctrl-r:reload(__tcd_discover --no-cache | tr ' ' '\n')" \
+          --color "header:italic:dim,prompt:bold:green,pointer:green,marker:green" \
+        )
+
+        if test -z "$selected"
+          return 0
+        end
+
+        set -l target "$git_root/$selected"
+        if test -d "$target"
+          cd "$target"
+          zoxide add (pwd)
+          if test -f .envrc
+            direnv allow
+          end
+          # Auto-init if terraform hasn't been initialized yet
+          if test -f main.tf -o -f backend.tf
+            if not test -d .terraform
+              echo "→ running terraform init..."
+              terraform init
+            end
+          end
+          echo "→ tcd to $selected"
+        else
+          echo "tcd: directory not found: $target"
+          return 1
+        end
+      '';
+
+      __tcd_widget = ''
+        set -l current_token (commandline --current-token)
+
+        set -l git_root (git rev-parse --show-toplevel 2>/dev/null)
+        if test $status -ne 0
+          commandline -f repaint
+          return
+        end
+
+        set -l roots (__tcd_discover)
+        if test (count $roots) -eq 0
+          commandline -f repaint
+          return
+        end
+
+        set -l n_total (count $roots)
+        set -l header_text "$n_total TF roots  |  Tab: multi-select  |  Ctrl+R: refresh"
+
+        set -l preview_cmd
+        if command -q eza
+          set preview_cmd "eza --tree --level=2 --color=always --icons $git_root/{} 2>/dev/null; echo ''''; echo '--- key files ---'; ls $git_root/{}/*.tf $git_root/{}/*.tfvars 2>/dev/null"
+        else
+          set preview_cmd "ls -la $git_root/{} 2>/dev/null; echo ''''; head -3 $git_root/{}/*.tf 2>/dev/null | head -20"
+        end
+
+        set -l initial_query ""
+        if test -n "$current_token"
+          set initial_query "$current_token"
+        end
+
+        set -l selected (printf '%s\n' $roots | fzf \
+          --ansi \
+          --multi \
+          --query "$initial_query" \
+          --header "$header_text" \
+          --preview "$preview_cmd" \
+          --preview-window "right:50%:wrap" \
+          --height "70%" \
+          --reverse \
+          --border rounded \
+          --prompt "tf-root> " \
+          --pointer "▶" \
+          --marker "✓" \
+          --bind "ctrl-r:reload(__tcd_discover --no-cache | tr ' ' '\n')" \
+          --color "header:italic:dim,prompt:bold:cyan,pointer:cyan,marker:cyan" \
+        )
+
+        if test -z "$selected"
+          commandline -f repaint
+          return
+        end
+
+        set -l insertion (string join " " $selected)
+
+        if test -n "$current_token"
+          commandline --current-token --replace -- "$insertion"
+        else
+          commandline --insert -- "$insertion"
+        end
+
+        for sel in $selected
+          set -l full_path "$git_root/$sel"
+          if test -d "$full_path"
+            zoxide add "$full_path"
+          end
+        end
+
+        commandline -f repaint
+      '';
+
+      tcd_refresh = ''
+        __tcd_discover --no-cache >/dev/null
+        set -l count (count (__tcd_discover))
+        echo "tcd: cache refreshed ($count root modules indexed)"
       '';
     };
   };
