@@ -135,6 +135,10 @@ let
         }
       ];
     };
+    fileSuggestion = {
+      type = "command";
+      command = "${homeDir}/.claude/file-suggestion.sh";
+    };
     inherit enabledPlugins;
     permissions = globalPermissions;
     autoDreamEnabled = true;
@@ -144,6 +148,12 @@ in
   home.file = {
     # CLAUDE.md — personal workflow conventions
     ".claude/CLAUDE.md".source = ../dotfiles/claude/CLAUDE.md;
+
+    # File suggestion script — custom @ autocomplete via git ls-files + fzf
+    ".claude/file-suggestion.sh" = {
+      source = ../dotfiles/claude/file-suggestion.sh;
+      executable = true;
+    };
 
     # Statusline scripts
     ".claude/statusline-async.sh" = {
