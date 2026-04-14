@@ -45,11 +45,15 @@
       end
       echo
 
-      # tcd: Ctrl+G inserts a Terraform root-module path at cursor via fzf
-      bind \cg __tcd_widget
     '';
 
     functions = {
+      # Fish calls this function to set up key bindings — proper place for bind commands
+      fish_user_key_bindings = ''
+        # tcd: Ctrl+G inserts a Terraform root-module path at cursor via fzf
+        bind \cg __tcd_widget
+      '';
+
       clone = ''
         set LOCATION $argv[1]
         if echo $LOCATION | grep -q https
@@ -519,9 +523,9 @@
 
         set -l preview_cmd
         if command -q eza
-          set preview_cmd "eza --tree --level=2 --color=always --icons $git_root/{} 2>/dev/null; echo ''''; echo '--- .tf files ---'; head -5 $git_root/{}/*.tf 2>/dev/null | head -30"
+          set preview_cmd "eza --tree --level=2 --color=always --icons $git_root/{} 2>/dev/null; echo; echo '--- .tf files ---'; head -5 $git_root/{}/*.tf 2>/dev/null | head -30"
         else
-          set preview_cmd "ls -la $git_root/{} 2>/dev/null; echo ''''; echo '--- .tf files ---'; head -5 $git_root/{}/*.tf 2>/dev/null | head -30"
+          set preview_cmd "ls -la $git_root/{} 2>/dev/null; echo; echo '--- .tf files ---'; head -5 $git_root/{}/*.tf 2>/dev/null | head -30"
         end
 
         set -l selected (printf '%s\n' $roots | fzf \
@@ -585,9 +589,9 @@
 
         set -l preview_cmd
         if command -q eza
-          set preview_cmd "eza --tree --level=2 --color=always --icons $git_root/{} 2>/dev/null; echo ''''; echo '--- key files ---'; ls $git_root/{}/*.tf $git_root/{}/*.tfvars 2>/dev/null"
+          set preview_cmd "eza --tree --level=2 --color=always --icons $git_root/{} 2>/dev/null; echo; echo '--- key files ---'; ls $git_root/{}/*.tf $git_root/{}/*.tfvars 2>/dev/null"
         else
-          set preview_cmd "ls -la $git_root/{} 2>/dev/null; echo ''''; head -3 $git_root/{}/*.tf 2>/dev/null | head -20"
+          set preview_cmd "ls -la $git_root/{} 2>/dev/null; echo; head -3 $git_root/{}/*.tf 2>/dev/null | head -20"
         end
 
         set -l initial_query ""
