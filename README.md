@@ -30,6 +30,23 @@ nix run home-manager/release-25.11 -- switch --flake ~/workspace/github.com/Yasu
 prek install
 ```
 
+### 🍎 macOS Extras
+
+After `home-manager switch`, enable Remote Login (SSH) and set up mosh:
+
+```sh
+# Enable SSH (or via System Settings > General > Sharing > Remote Login)
+sudo systemsetup -setremotelogin on
+
+# Add ~/.nix-profile/bin to sshd's PATH so mosh-server (and other Nix tools) are found
+echo "SetEnv PATH=$HOME/.nix-profile/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin" | sudo tee /etc/ssh/sshd_config.d/050-path.conf
+sudo launchctl kickstart -k system/com.openssh.sshd
+
+# Allow mosh-server through the firewall (re-run after mosh Nix store path changes)
+sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add $(which mosh-server)
+sudo /usr/libexec/ApplicationFirewall/socketfilterfw --unblockapp $(which mosh-server)
+```
+
 ### 🐧 Linux Extras
 
 ```sh

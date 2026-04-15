@@ -126,6 +126,13 @@ in
       ".tmux.conf".source = ./dotfiles/.tmux.conf;
       ".config/starship.toml".source = ./dotfiles/starship.toml;
       ".config/starship-minimal.toml".source = ./dotfiles/starship-minimal.toml;
+      ".config/ghostty/config".text = ''
+        shell-integration-features = ssh-terminfo,ssh-env
+      '';
+      ".config/opencode/tui.json".text = builtins.toJSON {
+        "$schema" = "https://opencode.ai/tui.json";
+        mouse = false;
+      };
       # Claude Code config managed by modules/claude-code.nix
 
       # Wiki CLI utilities
