@@ -280,6 +280,98 @@
         echo "Done! Now on $NEW_BRANCH"
       '';
 
+      nipped = ''
+        set -l MAIN_REPO "$HOME/src/sw"
+        set -l WORKTREE_PARENT "$HOME/src"
+        set -l input $argv[1]
+
+        if test -z "$input"
+          echo "Usage: nipped <MR_URL | branch_name>"
+          echo ""
+          echo "Examples:"
+          echo "  nipped https://git.int.n7k.io/neuralink/sw/-/merge_requests/37192"
+          echo "  nipped claude-code/stim-terraform"
+          return 1
+        end
+
+        set -l branch ""
+
+        if string match -q 'http*' "$input"
+          set -l mr_number (string match -r '/merge_requests/(\d+)' "$input")[2]
+          if test -z "$mr_number"
+            echo "nipped: could not parse MR number from URL"
+            return 1
+          end
+
+          set -l host (string match -r 'https?://([^/]+)' "$input")[2]
+          set -l project_path (string match -r "https?://[^/]+/(.+)/-/merge_requests/" "$input")[2]
+
+          if test -z "$host" -o -z "$project_path"
+            echo "nipped: could not parse host/project from URL"
+            return 1
+          end
+
+          echo "Resolving MR !$mr_number on $host..."
+          set branch (GITLAB_HOST="$host" glab api "projects/$project_path/merge_requests/$mr_number" 2>/dev/null | jq -r '.source_branch')
+
+          if test -z "$branch" -o "$branch" = "null"
+            # Try URL-encoded project path
+            set -l encoded_path (string replace -a '/' '%2F' "$project_path")
+            set branch (GITLAB_HOST="$host" glab api "projects/$encoded_path/merge_requests/$mr_number" 2>/dev/null | jq -r '.source_branch')
+          end
+
+          if test -z "$branch" -o "$branch" = "null"
+            echo "nipped: could not resolve branch for MR !$mr_number"
+            return 1
+          end
+
+          echo "Resolved to branch: $branch"
+        else
+          set branch "$input"
+        end
+
+        set -l dir_name (string replace -a '/' '-' "$branch")
+        set -l worktree_dir "$WORKTREE_PARENT/$dir_name"
+
+        if test -d "$worktree_dir"
+          echo "Worktree already exists, jumping in..."
+          cd "$worktree_dir"
+          if test -f .envrc
+            direnv allow
+            sleep 1
+          end
+          echo "→ nipped into $dir_name"
+          return 0
+        end
+
+        echo "Fetching origin/$branch..."
+        if not git -C "$MAIN_REPO" fetch origin "$branch"
+          echo "nipped: failed to fetch origin/$branch"
+          return 1
+        end
+
+        echo "Creating worktree at $worktree_dir..."
+        if not git -C "$MAIN_REPO" worktree add --track -b "$branch" "$worktree_dir" "origin/$branch" 2>/dev/null
+          # Branch may already exist locally, try without -b
+          if not git -C "$MAIN_REPO" worktree add "$worktree_dir" "$branch" 2>/dev/null
+            # Last resort: detached HEAD on the remote ref
+            if not git -C "$MAIN_REPO" worktree add "$worktree_dir" "origin/$branch"
+              echo "nipped: failed to create worktree"
+              return 1
+            end
+          end
+        end
+
+        cd "$worktree_dir"
+
+        if test -f .envrc
+          direnv allow
+          sleep 1
+        end
+
+        echo "→ nipped $branch into $dir_name"
+      '';
+
       claude-sounds = ''
         switch "$argv[1]"
           case on
@@ -554,6 +646,7 @@
           zoxide add (pwd)
           if test -f .envrc
             direnv allow
+            sleep 1
           end
           # Auto-init if terraform hasn't been initialized yet
           if test -f main.tf -o -f backend.tf
@@ -643,6 +736,42 @@
         __tcd_discover --no-cache >/dev/null
         set -l count (count (__tcd_discover))
         echo "tcd: cache refreshed ($count root modules indexed)"
+      '';
+
+      # Google Workspace CLI (gogcli) helpers
+      gog-accounts = ''
+        gog account --list
+      '';
+
+      gog-gmail-list = ''
+        # Quick Gmail list (last 10 threads)
+        gog gmail thread --list --limit 10
+      '';
+
+      gog-send = ''
+        # Send email via gogcli
+        if test (count $argv) -lt 2
+          echo "Usage: gog-send <to@example.com> <subject> [body]"
+          return 1
+        end
+
+        set to $argv[1]
+        set subject $argv[2]
+        set body ""
+        if test (count $argv) -ge 3
+          set body $argv[3]
+        end
+
+        gog gmail send --to "$to" --subject "$subject" --body "$body"
+      '';
+
+      gog-status = ''
+        # Check gogcli auth status
+        echo "=== Google Workspace CLI Status ==="
+        gog account --list
+        echo ""
+        echo "To authenticate: gog account --add <account-name>"
+        echo "To use: gog gmail thread --list"
       '';
     };
   };

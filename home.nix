@@ -20,6 +20,7 @@ in
     ./modules/fish.nix
     ./modules/git.nix
     ./modules/claude-code.nix
+    ./modules/gogcli.nix
   ];
 
   programs._1password-shell-plugins = {
@@ -41,6 +42,7 @@ in
         gcc
         htop
         fortune
+        difftastic
         delta
         fd
         eza
@@ -105,6 +107,7 @@ in
         mosh
         taskwarrior3
         nethack
+        google-cloud-sdk
 
         # Voice interaction stack (STT/TTS for CLI agents)
         # Scripts deployed via modules/claude-code.nix, shared library at ~/.local/share/voice-lib.sh
