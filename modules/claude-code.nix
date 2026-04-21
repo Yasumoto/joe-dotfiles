@@ -78,6 +78,16 @@ let
   };
 
   # Generate the settings.json content that gets merged at activation
+  # MCP servers go in ~/.claude.json (user scope), not settings.json
+  claudeMcpOverlay = builtins.toJSON {
+    mcpServers = {
+      xai-docs = {
+        type = "http";
+        url = "https://docs.x.ai/api/mcp";
+      };
+    };
+  };
+
   claudeSettingsOverlay = builtins.toJSON {
     statusLine = {
       type = "command";
@@ -217,6 +227,18 @@ in
         echo "$OVERLAY" | ${pkgs.jq}/bin/jq . > "$SETTINGS"
       else
         ${pkgs.jq}/bin/jq -s '.[0] * .[1]' "$SETTINGS" <(echo "$OVERLAY") > "$SETTINGS.tmp" && mv "$SETTINGS.tmp" "$SETTINGS"
+      fi
+    '';
+
+    # Merge MCP servers into ~/.claude.json (user scope — available across all projects)
+    claudeMcpSetup = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      CLAUDE_JSON="${homeDir}/.claude.json"
+      MCP_OVERLAY='${claudeMcpOverlay}'
+
+      if [ ! -f "$CLAUDE_JSON" ]; then
+        echo "$MCP_OVERLAY" | ${pkgs.jq}/bin/jq . > "$CLAUDE_JSON"
+      else
+        ${pkgs.jq}/bin/jq -s '.[0] * .[1]' "$CLAUDE_JSON" <(echo "$MCP_OVERLAY") > "$CLAUDE_JSON.tmp" && mv "$CLAUDE_JSON.tmp" "$CLAUDE_JSON"
       fi
     '';
 
