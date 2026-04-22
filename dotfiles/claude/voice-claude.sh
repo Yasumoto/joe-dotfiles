@@ -22,13 +22,21 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-require_cmds whisper-cli ffmpeg claude
-require_whisper_model
+require_cmds curl jq ffmpeg claude
 
-audio_file="$VOICE_TMPDIR/voice-claude-$$.wav"
-trap 'rm -f "$audio_file"' EXIT
+audio_file="$VOICE_TMPDIR/voice-claude-$$.mp3"
+if [ -z "${VOICE_DEBUG:-}" ]; then
+  trap 'rm -f "$audio_file"' EXIT
+fi
 
 record_audio "$audio_file"
+
+if [ -n "${VOICE_DEBUG:-}" ]; then
+  size=$(wc -c < "$audio_file" 2>/dev/null || echo 0)
+  echo "[debug] captured $size bytes -> $audio_file" >&2
+  ffmpeg -nostdin -i "$audio_file" -af volumedetect -f null - 2>&1 \
+    | awk '/Duration:|mean_volume|max_volume/ {print "[debug] " $0}' >&2
+fi
 
 echo "Transcribing..."
 prompt=$(transcribe "$audio_file")

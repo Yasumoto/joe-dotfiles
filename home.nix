@@ -109,16 +109,16 @@ in
         nethack
         google-cloud-sdk
 
-        # Voice interaction stack (STT/TTS for CLI agents)
+        # Voice interaction stack (xAI STT/TTS for CLI agents)
         # Scripts deployed via modules/claude-code.nix, shared library at ~/.local/share/voice-lib.sh
-        whisper-cpp
         ffmpeg
+        jq
       ]
       ++ lib.optionals pkgs.stdenv.isLinux [
         xclip
         powerline
         git-credential-manager
-        sox # Provides play command for piper TTS output
+        sox # Provides play command for xAI TTS output on Linux
         pipewire # Provides pw-play for audio playback (Claude Code hooks)
       ];
 
@@ -196,16 +196,6 @@ in
           echo "Installing Node.js LTS via fnm..."
           PATH="${pkgs.fnm}/bin:$PATH" FNM_DIR="$FNM_DIR" ${pkgs.fnm}/bin/fnm install --lts
           PATH="${pkgs.fnm}/bin:$PATH" FNM_DIR="$FNM_DIR" ${pkgs.fnm}/bin/fnm default lts-latest
-        fi
-      '';
-      installWhisperModel = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        WHISPER_MODEL="${config.home.homeDirectory}/.local/share/whisper-models/ggml-base.en.bin"
-        if [ ! -f "$WHISPER_MODEL" ]; then
-          echo "Downloading Whisper base.en model..."
-          mkdir -p "$(dirname "$WHISPER_MODEL")"
-          ${pkgs.curl}/bin/curl -L -o "$WHISPER_MODEL" \
-            "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin" || \
-            echo "WARNING: Failed to download Whisper model. voice-claude will be unavailable." >&2
         fi
       '';
       # Claude settings activation moved to modules/claude-code.nix

@@ -8,12 +8,11 @@ VOICE_LIB="${VOICE_LIB:-$HOME/.local/share/voice-lib.sh}"
 # shellcheck source=/dev/null
 . "$VOICE_LIB" || { echo "Missing: $VOICE_LIB" >&2; exit 1; }
 
-require_cmds whisper-cli ffmpeg
-require_whisper_model
+require_cmds curl jq ffmpeg
 
-audio_file="$VOICE_TMPDIR/claude-listen-$$.wav"
+audio_file="$VOICE_TMPDIR/claude-listen-$$.mp3"
 trap 'rm -f "$audio_file"' EXIT
 
-record_audio "$audio_file" 2>/dev/null
+record_audio "$audio_file"
 
 transcribe "$audio_file"
