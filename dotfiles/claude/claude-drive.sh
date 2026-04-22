@@ -3,8 +3,8 @@
 # Designed for car use: press Enter to end turn, auto-speak responses, session resume.
 #
 # Usage:
-#   claude-drive                       # Resume most recent session (PTT mode)
-#   claude-drive --new                 # Start fresh session
+#   claude-drive                       # Start fresh session (PTT mode)
+#   claude-drive --continue | -c       # Resume most recent session
 #   DRIVE_MODE=auto claude-drive       # ffmpeg silencedetect (quieter envs)
 #
 # Env:
@@ -27,8 +27,10 @@ log() { echo "[$(ts)] $*"; }
 
 require_cmds curl jq ffmpeg claude
 
-CLAUDE_ARGS=("--continue")
-[ "${1:-}" = "--new" ] && CLAUDE_ARGS=()
+CLAUDE_ARGS=()
+case "${1:-}" in
+  --continue|-c) CLAUDE_ARGS=("--continue") ;;
+esac
 
 FFMPEG_PID=""
 cleanup() {
@@ -116,7 +118,12 @@ capture_auto() {
 # --- main loop ---------------------------------------------------------------
 
 log "Claude drive mode ready ($DRIVE_MODE)."
-speak "Claude drive mode ready." || log "Warning: initial TTS failed — check network."
+tts_stderr="$VOICE_TMPDIR/claude-drive-$$-tts.log"
+if ! speak "Claude drive mode ready." 2>"$tts_stderr"; then
+  log "Warning: initial TTS failed — check network."
+  [ -s "$tts_stderr" ] && tail -10 "$tts_stderr" >&2
+fi
+rm -f "$tts_stderr"
 
 empty_count=0
 mic_checked=false
@@ -195,14 +202,23 @@ while true; do
   beep thinking
   log "Asking Claude..."
 
-  if ! response=$(claude -p "$prompt" --bare \
+  claude_stderr="$VOICE_TMPDIR/claude-drive-$$-stderr.log"
+  response=$(claude -p "$prompt" \
       --system-prompt "$VOICE_SYSTEM_PROMPT" \
-      "${CLAUDE_ARGS[@]}"); then
-    log "Claude error"
+      "${CLAUDE_ARGS[@]}" 2>"$claude_stderr")
+  claude_rc=$?
+  if [ $claude_rc -ne 0 ]; then
+    log "Claude error (exit $claude_rc)"
+    if [ -s "$claude_stderr" ]; then
+      log "claude stderr:"
+      tail -20 "$claude_stderr" >&2
+    fi
+    rm -f "$claude_stderr"
     beep error
     speak_or_fallback "Sorry, couldn't process that."
     continue
   fi
+  rm -f "$claude_stderr"
 
   if [ -z "$response" ]; then
     log "Empty response"
