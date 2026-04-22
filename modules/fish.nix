@@ -644,9 +644,28 @@
         if test -d "$target"
           cd "$target"
           zoxide add (pwd)
-          if test -f .envrc
-            direnv allow
-            sleep 1
+          # Find nearest ancestor .envrc and allow it (handles fresh worktrees
+          # where the parent repo's .envrc is not yet blessed). Then reload so
+          # TF_*/auth vars are active before terraform init runs.
+          set -l dir (pwd)
+          while test "$dir" != "/"
+            if test -f "$dir/.envrc"
+              direnv allow "$dir/.envrc" 2>/dev/null
+              break
+            end
+            set dir (path dirname "$dir")
+          end
+          direnv reload 2>/dev/null; or true
+          # If this root module uses the vault provider, ensure we have a
+          # valid token before terraform init tries to read state/data.
+          set -l tf_found (find . -maxdepth 1 -name "*.tf" -print -quit 2>/dev/null)
+          if test -n "$tf_found"; and command -q vault
+            if grep -qE '("vault"|"vault_|hashicorp/vault)' *.tf 2>/dev/null
+              if not vault token lookup >/dev/null 2>&1
+                echo "→ vault token missing/expired, running vault_login..."
+                vault_login
+              end
+            end
           end
           # Auto-init if terraform hasn't been initialized yet
           if test -f main.tf -o -f backend.tf
