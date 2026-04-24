@@ -282,7 +282,7 @@ in
           WORK_CONFIG="$HOME/.claude/work-config"
           if [ ! -d "$WORK_CONFIG/.git" ]; then
             echo "Cloning Claude work-config from $GIT_HOST..." >&2
-            ${pkgs.git}/bin/git clone "git@$GIT_HOST:$GIT_USER/claude-work-config.git" "$WORK_CONFIG" 2>/dev/null || \
+            ${pkgs.git}/bin/git clone "git@$GIT_HOST:$GIT_USER/work-config.git" "$WORK_CONFIG" 2>/dev/null || \
               echo "WARNING: Failed to clone work-config repo. Agents and harness scripts will be unavailable." >&2
           fi
           if [ -d "$WORK_CONFIG/agents" ]; then
