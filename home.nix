@@ -38,6 +38,7 @@ in
       with pkgs;
       [
         awscli2
+        azure-cli
         clang-tools
         gcc
         htop
