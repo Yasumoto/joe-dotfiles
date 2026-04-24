@@ -74,6 +74,11 @@ let
     ];
     deny = [
       "Bash(terraform*)"
+      # Device-code auth is being removed from work skills; block the auth-subcommand
+      # forms the skills actually use. Avoid substring-matching `--device-code` so
+      # git/rg searches for the string still work.
+      "Bash(* auth --device-code*)"
+      "Bash(*_api.py auth --device-code*)"
     ];
   };
 
@@ -134,6 +139,17 @@ let
           ];
         }
       ];
+      PostToolUse = [
+        {
+          matcher = "Edit|Write|MultiEdit";
+          hooks = [
+            {
+              type = "command";
+              command = "sh ${hooksDir}/pre-commit-check.sh";
+            }
+          ];
+        }
+      ];
       PostCompact = [
         {
           hooks = [
@@ -183,6 +199,11 @@ in
       executable = true;
     };
 
+    ".claude/hooks/pre-commit-check.sh" = {
+      source = ../dotfiles/claude/hooks/pre-commit-check.sh;
+      executable = true;
+    };
+
     # Sound hooks
     ".claude/hooks/play-sound.sh".source = ../dotfiles/claude/hooks/play-sound.sh;
     ".claude/hooks/sounds/PeonReady1.ogg".source = ../dotfiles/claude/hooks/sounds/PeonReady1.ogg;
@@ -205,12 +226,12 @@ in
       source = ../dotfiles/claude/voice-claude.sh;
       executable = true;
     };
-    ".local/bin/claude-speak" = {
-      source = ../dotfiles/claude/claude-speak.sh;
+    ".local/bin/grok-speak" = {
+      source = ../dotfiles/claude/grok-speak.sh;
       executable = true;
     };
-    ".local/bin/claude-listen" = {
-      source = ../dotfiles/claude/claude-listen.sh;
+    ".local/bin/grok-listen" = {
+      source = ../dotfiles/claude/grok-listen.sh;
       executable = true;
     };
   };
@@ -273,6 +294,22 @@ in
             ln -sfn "$WORK_CONFIG/scripts" "$HOME/.claude/scripts"
           else
             echo "WARNING: $WORK_CONFIG/scripts not found. Harness script unavailable." >&2
+          fi
+          # Symlink each work-config skill + command individually so public-repo
+          # home.file entries (e.g. commit-push-open-mr) coexist.
+          if [ -d "$WORK_CONFIG/skills" ]; then
+            mkdir -p "$HOME/.claude/skills"
+            for skill in "$WORK_CONFIG/skills"/*/; do
+              [ -d "$skill" ] || continue
+              ln -sfn "$skill" "$HOME/.claude/skills/$(basename "$skill")"
+            done
+          fi
+          if [ -d "$WORK_CONFIG/commands" ]; then
+            mkdir -p "$HOME/.claude/commands"
+            for cmd in "$WORK_CONFIG/commands"/*.md; do
+              [ -f "$cmd" ] || continue
+              ln -sfn "$cmd" "$HOME/.claude/commands/$(basename "$cmd")"
+            done
           fi
         fi
       fi

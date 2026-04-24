@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Shared voice functions for Claude voice scripts
-# Sourced by: voice-claude, claude-listen, claude-speak, claude-drive
+# Shared voice functions for voice scripts
+# Sourced by: voice-claude, grok-listen, grok-speak, claude-drive
 
 # shellcheck disable=SC2034 # used by scripts that source this library
 VOICE_TMPDIR="${TMPDIR:-/tmp}"
@@ -13,7 +13,11 @@ XAI_VOICE="${XAI_VOICE:-eve}"
 XAI_LANG="${XAI_LANG:-en}"
 XAI_TTS_MAX_CHARS=15000
 XAI_KEY_FILE="${XAI_KEY_FILE:-$HOME/grok.txt}"
-XAI_CURL_OPTS=(--connect-timeout 10 --max-time 30)
+XAI_STT_CURL_OPTS=(--connect-timeout 10 --max-time 15)
+XAI_TTS_CURL_OPTS=(--connect-timeout 10 --max-time 60)
+# Legacy alias; new code should use the STT/TTS-specific variants.
+XAI_CURL_OPTS=("${XAI_TTS_CURL_OPTS[@]}")
+XAI_TTS_CHUNK_CHARS=1200
 
 # Platform detection — resolved once at source time
 IS_DARWIN=false
@@ -73,10 +77,14 @@ resolve_xai_key() {
   fi
   if [ -f "$XAI_KEY_FILE" ]; then
     local perms
-    perms=$(stat -f '%A' "$XAI_KEY_FILE" 2>/dev/null || stat -c '%a' "$XAI_KEY_FILE" 2>/dev/null)
+    if $IS_DARWIN; then
+      perms=$(stat -f '%A' "$XAI_KEY_FILE" 2>/dev/null)
+    else
+      perms=$(stat -c '%a' "$XAI_KEY_FILE" 2>/dev/null)
+    fi
     case "$perms" in
-      600|400) ;;
-      ?*) echo "Warning: $XAI_KEY_FILE has mode $perms (expected 600)" >&2 ;;
+      600|400|"") ;;
+      *) echo "Warning: $XAI_KEY_FILE has mode $perms (expected 600)" >&2 ;;
     esac
   fi
   local key
@@ -95,7 +103,7 @@ transcribe() {
   key=$(resolve_xai_key) || return 1
 
   local response
-  if ! response=$(curl -sS --fail-with-body "${XAI_CURL_OPTS[@]}" -X POST "$XAI_API_BASE/stt" \
+  if ! response=$(curl -sS --fail-with-body "${XAI_STT_CURL_OPTS[@]}" -X POST "$XAI_API_BASE/stt" \
     -H "Authorization: Bearer $key" \
     -F "format=true" \
     -F "language=$XAI_LANG" \
@@ -125,7 +133,7 @@ _tts_to_file() {
     '{text: $text, voice_id: $voice, language: $lang}')
 
   local http_code
-  http_code=$(curl -sS "${XAI_CURL_OPTS[@]}" -X POST "$XAI_API_BASE/tts" \
+  http_code=$(curl -sS "${XAI_TTS_CURL_OPTS[@]}" -X POST "$XAI_API_BASE/tts" \
     -H "Authorization: Bearer $key" \
     -H "Content-Type: application/json" \
     -d "$payload" \
@@ -173,6 +181,54 @@ speak() {
 
   _tts_to_file "$text" "$audio_file" || return 1
   _play_audio "$audio_file"
+}
+
+# Split long text into chunks and speak sequentially.
+# Prefers paragraph boundaries, falls back to sentence-ish boundaries.
+speak_long() {
+  local text="$1"
+  [ -z "$text" ] && return
+  if [ ${#text} -le $XAI_TTS_CHUNK_CHARS ]; then
+    speak "$text"
+    return
+  fi
+
+  # Using a sentinel line for chunk boundaries — BSD awk on macOS silently drops
+  # \0 from print, so ORS="\0" isn't portable across all awk variants.
+  local sep="__GROK_CHUNK_BOUNDARY__"
+  text="${text//${sep}/}"
+
+  local line chunk=""
+  while IFS= read -r line; do
+    if [ "$line" = "$sep" ]; then
+      [ -n "$chunk" ] && { speak "$chunk" || return 1; }
+      chunk=""
+    else
+      chunk="${chunk:+$chunk$'\n'}$line"
+    fi
+  done < <(printf '%s' "$text" | awk -v max="$XAI_TTS_CHUNK_CHARS" -v sep="$sep" '
+    function flush() { if (buf != "") { print buf; print sep; buf = "" } }
+    {
+      if ($0 == "") { flush(); next }
+      candidate = (buf == "" ? $0 : buf " " $0)
+      if (length(candidate) <= max) { buf = candidate; next }
+      flush()
+      line = $0
+      while (length(line) > max) {
+        cut = max
+        for (i = max; i > max/2; i--) {
+          c = substr(line, i, 1)
+          if (c == "." || c == "!" || c == "?") { cut = i; break }
+        }
+        print substr(line, 1, cut); print sep
+        line = substr(line, cut + 1)
+        sub(/^ +/, "", line)
+      }
+      buf = line
+    }
+    END { flush() }
+  ')
+  [ -n "$chunk" ] && speak "$chunk"
 }
 
 # Speak with barge-in: any keypress (Enter etc.) interrupts playback.
