@@ -85,6 +85,7 @@ in
         btop
         neofetch
         git-lfs
+        git-spice
         glab
         pyenv
         rustup
