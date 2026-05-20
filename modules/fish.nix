@@ -506,15 +506,17 @@
         if command -q fd
           set roots (fd -t f '(main\.tf|backend\.tf|terragrunt\.hcl)$' \
             -E '.terraform' -E 'node_modules' -E '.git' \
-            "$git_root/infrastructure/" 2>/dev/null \
+            -E 'bazel-*' \
+            "$git_root" 2>/dev/null \
             | xargs -I'{}' dirname '{}' \
             | sort -u)
         else
-          set roots (find "$git_root/infrastructure/" \
+          set roots (find "$git_root" \
             \( -name main.tf -o -name backend.tf -o -name terragrunt.hcl \) \
             -not -path '*/.terraform/*' \
             -not -path '*/node_modules/*' \
             -not -path '*/.git/*' \
+            -not -path '*/bazel-*/*' \
             2>/dev/null \
             | xargs -I'{}' dirname '{}' \
             | sort -u)
@@ -523,6 +525,9 @@
         set -l filtered
         for d in $roots
           if string match -q '*/modules/*' "$d"
+            continue
+          end
+          if string match -q '*/lib/*' "$d"
             continue
           end
           set -l rel (string replace "$git_root/" "" "$d")
@@ -617,6 +622,26 @@
           end
         end
 
+        # Smart-resolve: if the query is a path to an existing file or
+        # directory, strip any filename and skip fzf when the parent dir
+        # is a known TF root (so `tcd path/to/main.tf` jumps straight in).
+        set -l selected ""
+        if test -n "$initial_query"
+          set -l candidate "$initial_query"
+          if not string match -q '/*' "$candidate"
+            set candidate "$git_root/$candidate"
+          end
+          if test -f "$candidate"
+            set candidate (path dirname "$candidate")
+          end
+          if test -d "$candidate"
+            set -l rel (string replace "$git_root/" "" "$candidate")
+            if contains -- "$rel" $roots
+              set selected "$rel"
+            end
+          end
+        end
+
         set -l n_total (count $roots)
         set -l n_substrate (printf '%s\n' $roots | grep -c '/root-modules/')
         set -l n_corp (math $n_total - $n_substrate)
@@ -629,21 +654,23 @@
           set preview_cmd "ls -la $git_root/{} 2>/dev/null; echo; echo '--- .tf files ---'; head -5 $git_root/{}/*.tf 2>/dev/null | head -30"
         end
 
-        set -l selected (printf '%s\n' $roots | fzf \
-          --ansi \
-          --query "$initial_query" \
-          --header "$header_text" \
-          --preview "$preview_cmd" \
-          --preview-window "right:50%:wrap" \
-          --height "70%" \
-          --reverse \
-          --border rounded \
-          --prompt "tcd> " \
-          --pointer "▶" \
-          --marker "✓" \
-          --bind "ctrl-r:reload(__tcd_discover --no-cache | tr ' ' '\n')" \
-          --color "header:italic:dim,prompt:bold:green,pointer:green,marker:green" \
-        )
+        if test -z "$selected"
+          set selected (printf '%s\n' $roots | fzf \
+            --ansi \
+            --query "$initial_query" \
+            --header "$header_text" \
+            --preview "$preview_cmd" \
+            --preview-window "right:50%:wrap" \
+            --height "70%" \
+            --reverse \
+            --border rounded \
+            --prompt "tcd> " \
+            --pointer "▶" \
+            --marker "✓" \
+            --bind "ctrl-r:reload(__tcd_discover --no-cache | tr ' ' '\n')" \
+            --color "header:italic:dim,prompt:bold:green,pointer:green,marker:green" \
+          )
+        end
 
         if test -z "$selected"
           return 0
