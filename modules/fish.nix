@@ -155,10 +155,19 @@
           set NEW_BRANCH "joe-$DATE_STR-$SUFFIX"
           set NEW_WORKTREE "$WORKTREE_PARENT/$NEW_BRANCH"
 
-          echo "Pulling origin/master..."
-          if not git pull origin master
-            echo "Error: Failed to pull origin/master"
-            return 1
+          set CURRENT_BRANCH (git branch --show-current)
+          if test "$CURRENT_BRANCH" = "master"
+            echo "Pulling origin/master..."
+            if not git pull origin master
+              echo "Error: Failed to pull origin/master"
+              return 1
+            end
+          else
+            echo "Main repo is on $CURRENT_BRANCH; fetching origin/master..."
+            if not git fetch origin master
+              echo "Error: Failed to fetch origin/master"
+              return 1
+            end
           end
 
           echo "Creating new worktree at $NEW_WORKTREE with branch $NEW_BRANCH..."
