@@ -46,8 +46,8 @@
     {
       homeConfigurations = {
         "linux" = mkHomeConfiguration "x86_64-linux" "joe";
-        "joe" = mkHomeConfiguration "aarch64-darwin" "joe";
-        "joe.smith" = mkHomeConfiguration "aarch64-darwin" "joe.smith";
+        "darwin" = mkHomeConfiguration "aarch64-darwin" "joe";
+        "darwin-joe.smith" = mkHomeConfiguration "aarch64-darwin" "joe.smith";
       };
     };
 }
