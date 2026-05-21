@@ -9,9 +9,20 @@ let
   homeDir = config.home.homeDirectory;
   hooksDir = "${homeDir}/.claude/hooks";
   soundsDir = "${hooksDir}/sounds";
-  hookCmd = sound: "sh ${hooksDir}/play-sound.sh ${soundsDir}/${sound}";
+  hookCmd = sound: "${hooksDir}/play-sound.sh ${soundsDir}/${sound}";
+  soundHook = sound: [
+    {
+      hooks = [
+        {
+          type = "command";
+          command = hookCmd sound;
+        }
+      ];
+    }
+  ];
 
-  # Declarative plugin list — add/remove here
+  # Declarative plugin list — true = enabled, false = explicitly disabled
+  # (explicit false overrides any manual /plugin enable in settings.json)
   enabledPlugins = {
     "pyright-lsp@claude-plugins-official" = true;
     "typescript-lsp@claude-plugins-official" = true;
@@ -19,8 +30,43 @@ let
     "ralph-loop@claude-plugins-official" = true;
     "hookify@claude-plugins-official" = true;
     "commit-commands@claude-plugins-official" = true;
+    "playwright@claude-plugins-official" = false;
   };
 
+  # Permission groups — passed through mkBashAllow to get Bash(cmd:*) form
+  readOnlyCoreutils = [
+    "ls"
+    "cat"
+    "head"
+    "tail"
+    "wc"
+    "stat"
+    "find"
+    "md5sum"
+    "sha256sum"
+    "jq"
+  ];
+  bazelCmds = [
+    "bazel query"
+    "bazel info"
+    "bazel build"
+    "bazel test"
+    "./bazel query"
+    "./bazel info"
+    "./bazel build"
+    "./bazel test"
+  ];
+  glabReadCmds = [
+    "glab api"
+    "glab mr list"
+    "glab mr view"
+    "glab ci view"
+    "glab ci trace"
+    "glab ci list"
+    "glab ci status"
+    "glab issue list"
+    "glab issue view"
+  ];
   kubectlReadVerbs = [
     "get"
     "describe"
@@ -28,50 +74,29 @@ let
     "top"
     "config"
   ];
+  # NB: the flag-prefix forms must stay glob-style — `:*` is literal prefix-match
+  # syntax that does not interpret `*` as a glob, so `kubectl --context *get:*`
+  # would match nothing. Keep the trailing space + `*` glob.
   kubectlPerms =
-    (map (v: "Bash(kubectl ${v} *)") kubectlReadVerbs)
+    (map (v: "Bash(kubectl ${v}:*)") kubectlReadVerbs)
     ++ (lib.concatMap (flag: map (v: "Bash(kubectl ${flag} *${v} *)") kubectlReadVerbs) [
       "--context"
       "-n"
     ]);
 
-  # Read-only permissions that apply globally across all checkouts and worktrees
-  # No hardcoded repo paths — portable across macOS and Linux
+  mkBashAllow = cmds: map (c: "Bash(${c}:*)") cmds;
+
   globalPermissions = {
     allow = [
       "Read(**)"
       "Glob(**)"
       "Grep(**)"
-      "Bash(git *)"
-      "Bash(glab api *)"
-      "Bash(glab mr list *)"
-      "Bash(glab mr view *)"
-      "Bash(glab ci view *)"
-      "Bash(glab ci trace *)"
-      "Bash(glab ci list *)"
-      "Bash(glab ci status *)"
-      "Bash(glab issue list *)"
-      "Bash(glab issue view *)"
+      "Bash(git:*)"
     ]
+    ++ mkBashAllow glabReadCmds
     ++ kubectlPerms
-    ++ [
-      "Bash(jq *)"
-      "Bash(python3:*)"
-      "Bash(find:*)"
-      "Bash(ls *)"
-      "Bash(ls:*)"
-      "Bash(wc *)"
-      "Bash(head *)"
-      "Bash(tail *)"
-      "Bash(cat *)"
-      "Bash(stat *)"
-      "Bash(md5sum *)"
-      "Bash(sha256sum *)"
-      "Bash(bazel query *)"
-      "Bash(bazel info *)"
-      "Bash(bazel build *)"
-      "Bash(bazel test *)"
-    ];
+    ++ mkBashAllow readOnlyCoreutils
+    ++ mkBashAllow bazelCmds;
     deny = [
       "Bash(terraform*)"
       # Device-code auth is being removed from work skills; block the auth-subcommand
@@ -82,8 +107,6 @@ let
     ];
   };
 
-  # Generate the settings.json content that gets merged at activation
-  # MCP servers go in ~/.claude.json (user scope), not settings.json
   claudeMcpOverlay = builtins.toJSON {
     mcpServers = {
       xai-docs = {
@@ -99,53 +122,17 @@ let
       command = "${homeDir}/.claude/statusline-async.sh";
     };
     hooks = {
-      SessionStart = [
-        {
-          hooks = [
-            {
-              type = "command";
-              command = hookCmd "PeonReady1.ogg";
-            }
-          ];
-        }
-      ];
-      UserPromptSubmit = [
-        {
-          hooks = [
-            {
-              type = "command";
-              command = hookCmd "PeonYes3.ogg";
-            }
-          ];
-        }
-      ];
-      Notification = [
-        {
-          hooks = [
-            {
-              type = "command";
-              command = hookCmd "PeonWhat3.ogg";
-            }
-          ];
-        }
-      ];
-      Stop = [
-        {
-          hooks = [
-            {
-              type = "command";
-              command = hookCmd "PeonBuildingComplete1.ogg";
-            }
-          ];
-        }
-      ];
+      SessionStart = soundHook "PeonReady1.ogg";
+      UserPromptSubmit = soundHook "PeonYes3.ogg";
+      Notification = soundHook "PeonWhat3.ogg";
+      Stop = soundHook "PeonBuildingComplete1.ogg";
       PostToolUse = [
         {
           matcher = "Edit|Write|MultiEdit";
           hooks = [
             {
               type = "command";
-              command = "sh ${hooksDir}/pre-commit-check.sh";
+              command = "${hooksDir}/pre-commit-check.sh";
             }
           ];
         }
@@ -155,7 +142,7 @@ let
           hooks = [
             {
               type = "command";
-              command = "cat ${homeDir}/.claude/projects/*/memory/MEMORY.md 2>/dev/null || true";
+              command = "${hooksDir}/dump-memory.sh";
             }
           ];
         }
@@ -199,22 +186,9 @@ in
       executable = true;
     };
 
-    ".claude/hooks/pre-commit-check.sh" = {
-      source = ../dotfiles/claude/hooks/pre-commit-check.sh;
-      executable = true;
-    };
-
-    # Sound hooks
-    ".claude/hooks/play-sound.sh".source = ../dotfiles/claude/hooks/play-sound.sh;
-    ".claude/hooks/sounds/PeonReady1.ogg".source = ../dotfiles/claude/hooks/sounds/PeonReady1.ogg;
-    ".claude/hooks/sounds/PeonYes3.ogg".source = ../dotfiles/claude/hooks/sounds/PeonYes3.ogg;
-    ".claude/hooks/sounds/PeonWhat3.ogg".source = ../dotfiles/claude/hooks/sounds/PeonWhat3.ogg;
-    ".claude/hooks/sounds/PeonBuildingComplete1.ogg".source =
-      ../dotfiles/claude/hooks/sounds/PeonBuildingComplete1.ogg;
-
-    # Skills
-    ".claude/skills/commit-push-open-mr/SKILL.md".source =
-      ../dotfiles/claude/skills/commit-push-open-mr/SKILL.md;
+    # Hooks and skills — whole-directory sources, add files without touching Nix
+    ".claude/hooks".source = ../dotfiles/claude/hooks;
+    ".claude/skills".source = ../dotfiles/claude/skills;
 
     # Voice scripts — shared library + individual commands
     ".local/share/voice-lib.sh".source = ../dotfiles/claude/voice-lib.sh;
