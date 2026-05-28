@@ -68,67 +68,8 @@ resource "kubernetes_service_account" "coredns" {
   metadata {
     name      = "coredns"
     namespace = kubernetes_namespace.dns.metadata[0].name
-    labels = {
-      "kubernetes.io/cluster-service"   = "true"
-      "addonmanager.kubernetes.io/mode" = "Reconcile"
-    }
   }
-
   depends_on = [kubernetes_namespace.dns]
-}
-
-# ClusterRole for CoreDNS
-resource "kubernetes_cluster_role" "coredns" {
-  metadata {
-    name = "system:coredns"
-    labels = {
-      "kubernetes.io/bootstrapping"     = "rbac-defaults"
-      "addonmanager.kubernetes.io/mode" = "Reconcile"
-    }
-  }
-
-  rule {
-    api_groups = [""]
-    resources  = ["endpoints", "services", "pods", "namespaces"]
-    verbs      = ["list", "watch"]
-  }
-
-  rule {
-    api_groups = [""]
-    resources  = ["nodes"]
-    verbs      = ["get"]
-  }
-
-  rule {
-    api_groups = ["discovery.k8s.io"]
-    resources  = ["endpointslices"]
-    verbs      = ["list", "watch"]
-  }
-}
-
-# ClusterRoleBinding for CoreDNS
-resource "kubernetes_cluster_role_binding" "coredns" {
-  metadata {
-    name = "system:coredns"
-    labels = {
-      "kubernetes.io/bootstrapping"     = "rbac-defaults"
-      "addonmanager.kubernetes.io/mode" = "Reconcile"
-    }
-  }
-
-  role_ref {
-    api_group = "rbac.authorization.k8s.io"
-    kind      = "ClusterRole"
-    name      = "system:coredns"
-  }
-
-  subject {
-    kind      = "ServiceAccount"
-    name      = "coredns"
-    namespace = kubernetes_namespace.dns.metadata[0].name
-  }
-
-  depends_on = [kubernetes_service_account.coredns, kubernetes_cluster_role.coredns]
 }
 
 # CoreDNS Deployment
@@ -136,11 +77,6 @@ resource "kubernetes_deployment" "coredns" {
   metadata {
     name      = "coredns"
     namespace = kubernetes_namespace.dns.metadata[0].name
-    labels = {
-      "k8s-app"                         = "coredns"
-      "kubernetes.io/cluster-service"   = "true"
-      "addonmanager.kubernetes.io/mode" = "Reconcile"
-    }
   }
 
   spec {
@@ -148,14 +84,14 @@ resource "kubernetes_deployment" "coredns" {
 
     selector {
       match_labels = {
-        "k8s-app" = "coredns"
+        "app.kubernetes.io/name" = "homelab-coredns"
       }
     }
 
     template {
       metadata {
         labels = {
-          "k8s-app" = "coredns"
+          "app.kubernetes.io/name" = "homelab-coredns"
         }
       }
 
@@ -173,13 +109,11 @@ resource "kubernetes_deployment" "coredns" {
             name           = "dns"
             protocol       = "UDP"
           }
-
           port {
             container_port = 53
             name           = "dns-tcp"
             protocol       = "TCP"
           }
-
           port {
             container_port = 9153
             name           = "metrics"
@@ -196,10 +130,9 @@ resource "kubernetes_deployment" "coredns" {
               path = "/health"
               port = 8080
             }
-            initial_delay_seconds = 60
+            initial_delay_seconds = 30
+            period_seconds        = 10
             timeout_seconds       = 5
-            success_threshold     = 1
-            failure_threshold     = 5
           }
 
           readiness_probe {
@@ -207,10 +140,9 @@ resource "kubernetes_deployment" "coredns" {
               path = "/ready"
               port = 8181
             }
-            initial_delay_seconds = 30
-            timeout_seconds       = 5
-            success_threshold     = 1
-            failure_threshold     = 3
+            initial_delay_seconds = 10
+            period_seconds        = 5
+            timeout_seconds       = 3
           }
 
           resources {
@@ -219,8 +151,8 @@ resource "kubernetes_deployment" "coredns" {
               memory = "128Mi"
             }
             requests = {
-              cpu    = "100m"
-              memory = "70Mi"
+              cpu    = "50m"
+              memory = "64Mi"
             }
           }
         }
@@ -243,8 +175,7 @@ resource "kubernetes_deployment" "coredns" {
 
   depends_on = [
     kubernetes_config_map.coredns,
-    kubernetes_service_account.coredns,
-    kubernetes_cluster_role_binding.coredns
+    kubernetes_service_account.coredns
   ]
 }
 
@@ -262,7 +193,7 @@ resource "kubernetes_service" "coredns" {
 
   spec {
     selector = {
-      "k8s-app" = "coredns"
+      "app.kubernetes.io/name" = "homelab-coredns"
     }
 
     port {

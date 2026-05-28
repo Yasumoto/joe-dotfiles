@@ -44,7 +44,7 @@ variable "home_domain" {
 variable "coredns_image_version" {
   description = "CoreDNS container image version"
   type        = string
-  default     = "1.11.3"
+  default     = "1.12.1"
 }
 
 variable "dns_records" {
