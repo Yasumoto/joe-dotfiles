@@ -246,7 +246,12 @@ tmux_conf_theme_right_separator_sub="|"
 #     - #{username}
 #     - #{username_ssh}
 tmux_conf_theme_status_left=" ❐ #S | ↑#{?uptime_y, #{uptime_y}y,}#{?uptime_d, #{uptime_d}d,}#{?uptime_h, #{uptime_h}h,}#{?uptime_m, #{uptime_m}m,} "
-tmux_conf_theme_status_right=" #{prefix}#{mouse}#{pairing}#{synchronized}#{?battery_status,#{battery_status},}#{?battery_bar, #{battery_bar},}#{?battery_percentage, #{battery_percentage},} , %R , %d %b | #{username}#{root} | #{hostname_style}#{hostname} "
+# #{username}/#{hostname}/#{root} each shell out (ps + ssh -G) per attached
+# client every redraw to resolve the *remote* end of ssh/mosh panes; with many
+# mosh panes + clients this fork-storms the box (load >100). We only want the
+# identity of the machine running tmux, so use native #{host_short} (no fork)
+# and a username captured once at load into @local_user (see run-shell below).
+tmux_conf_theme_status_right=" #{prefix}#{mouse}#{pairing}#{synchronized}#{?battery_status,#{battery_status},}#{?battery_bar, #{battery_bar},}#{?battery_percentage, #{battery_percentage},} , %R , %d %b | #{@local_user}@#{host_short} "
 
 # status left style
 tmux_conf_theme_status_left_fg="$tmux_conf_theme_colour_6,$tmux_conf_theme_colour_7,$tmux_conf_theme_colour_8"
@@ -402,7 +407,19 @@ tmux_conf_update_plugins_on_reload=true
 set -g @plugin 'tmux-plugins/tmux-resurrect'
 set -g @plugin 'tmux-plugins/tmux-continuum'
 set -g @continuum-restore 'on'
-set -g @continuum-save-interval '15'
+set -g @continuum-save-interval '60'
+
+# Capture the local username once at config load (used by status-right instead
+# of the per-redraw, ssh-resolving #{username} token).
+run-shell 'tmux set -gq @local_user "$(id -un)"'
+
+# Stock tmux-continuum has no timer hook: it triggers saves by injecting
+# continuum_save.sh into status-right, so a save-check fires on every status
+# redraw. Under disk/CPU pressure those checks ran slower than the redraw
+# interval and stacked into a fork storm (load >120). Slowing redraws is the
+# real lever; override oh-my-tmux's status-interval=10 here (this file is
+# sourced after .tmux.conf, so this wins).
+set -g status-interval 30
 
 set -g @plugin 'tmux-plugins/tmux-yank'
 set -g @plugin 'tmux-plugins/tmux-copycat'
