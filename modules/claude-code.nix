@@ -156,9 +156,19 @@ let
     permissions = globalPermissions;
     autoDreamEnabled = true;
   };
+
+  # One home.file entry per skill directory, so ~/.claude/skills stays a real
+  # directory and the activation script can drop work-config skill symlinks
+  # alongside the public ones. A whole-directory source would make the parent
+  # itself a symlink into the read-only Nix store.
+  skillsSrc = ../dotfiles/claude/skills;
+  publicSkills = lib.mapAttrs' (name: _: {
+    name = ".claude/skills/${name}";
+    value.source = "${skillsSrc}/${name}";
+  }) (lib.filterAttrs (_: type: type == "directory") (builtins.readDir skillsSrc));
 in
 {
-  home.file = {
+  home.file = publicSkills // {
     # CLAUDE.md — personal workflow conventions
     ".claude/CLAUDE.md".source = ../dotfiles/claude/CLAUDE.md;
 
@@ -186,9 +196,9 @@ in
       executable = true;
     };
 
-    # Hooks and skills — whole-directory sources, add files without touching Nix
+    # Hooks — whole-directory source. (Skills are wired up per-directory above
+    # so work-config skills can coexist with public ones.)
     ".claude/hooks".source = ../dotfiles/claude/hooks;
-    ".claude/skills".source = ../dotfiles/claude/skills;
 
     # Voice scripts — shared library + individual commands
     ".local/share/voice-lib.sh".source = ../dotfiles/claude/voice-lib.sh;
