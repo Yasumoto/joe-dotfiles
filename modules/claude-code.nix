@@ -113,6 +113,9 @@ let
         type = "http";
         url = "https://docs.x.ai/api/mcp";
       };
+      agent-voice = {
+        command = "${homeDir}/.cargo/bin/agent-voice-mcp";
+      };
     };
   };
 
