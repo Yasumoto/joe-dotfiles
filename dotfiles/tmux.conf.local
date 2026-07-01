@@ -419,7 +419,7 @@ run-shell 'tmux set -gq @local_user "$(id -un)"'
 # interval and stacked into a fork storm (load >120). Slowing redraws is the
 # real lever; override oh-my-tmux's status-interval=10 here (this file is
 # sourced after .tmux.conf, so this wins).
-set -g status-interval 30
+set -g status-interval 180
 
 set -g @plugin 'tmux-plugins/tmux-yank'
 set -g @plugin 'tmux-plugins/tmux-copycat'
