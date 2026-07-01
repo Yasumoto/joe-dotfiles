@@ -9,6 +9,10 @@ YEL='\e[33m'
 RED='\e[31m'
 GRY='\e[90m'
 
+# Detect structured-output mode early (like aws-sso-status.sh) so EVERY exit honors BRIEFING_JSON/--json
+JSON_MODE=0
+if [ "${BRIEFING_JSON:-}" = "1" ] || [[ "$*" == *--json* ]]; then JSON_MODE=1; fi
+
 # Find kubeconfig (respect $KUBECONFIG env var, handle colon-separated lists)
 if [ -n "$KUBECONFIG" ]; then
     # Use existing $KUBECONFIG (may be colon-separated list)
@@ -16,8 +20,8 @@ if [ -n "$KUBECONFIG" ]; then
 elif [ -f "$HOME/.kube/config" ]; then
     KUBE_CFG="$HOME/.kube/config"
 elif [ -d "$HOME/.nlk" ]; then
-    # Auto-detect nlk kubeconfig (use most recently modified)
-    KUBE_CFG=$(find "$HOME/.nlk" -maxdepth 2 -name "kube.config" -type f -exec stat -c '%Y %n' {} \; 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2)
+    # Portable mtime sort (ls -t works on macOS + Linux)
+    KUBE_CFG=$(find "$HOME/.nlk" -maxdepth 2 -name "kube.config" -type f -print0 2>/dev/null | xargs -0 ls -1t 2>/dev/null | head -1)
     [ -z "$KUBE_CFG" ] && exit 0
 else
     exit 0
@@ -32,8 +36,9 @@ if [ "$KUBE_CFG" = "$KUBECONFIG" ] && [[ "$KUBECONFIG" == *:* ]]; then
     for f in "${FILES[@]}"; do
         [ -f "$f" ] && HAS_FILE=1 && break
     done
-    [ "$HAS_FILE" -eq 0 ] && exit 0
+    [ "$HAS_FILE" -eq 0 ] && { [ "$JSON_MODE" = "1" ] && printf '{"context":"unknown","status":"no-config","expires_in_minutes":0,"short":""}\n'; exit 0; }
 elif [ ! -f "$KUBE_CFG" ]; then
+    [ "$JSON_MODE" = "1" ] && printf '{"context":"unknown","status":"no-config","expires_in_minutes":0,"short":""}\n'
     exit 0
 fi
 
@@ -59,7 +64,7 @@ else
     USER=$(grep -A 3 "name: $CONTEXT" "$KUBECONFIG" | grep 'user:' | awk '{print $2}' | tr -d '\n\r')
 fi
 
-[ -z "$USER" ] && exit 0
+[ -z "$USER" ] && { [ "$JSON_MODE" = "1" ] && printf '{"context":"unknown","status":"no-user","expires_in_minutes":0,"short":""}\n'; exit 0; }
 
 # Extract exp from JWT (without jq)
 jwt_exp() {
@@ -132,14 +137,22 @@ CTX_SHORT=$(echo "$CONTEXT" | sed 's/^k3s-//;s/^eks-//;s/^arn:aws:eks:[^:]*:[^:]
 
 # If no token found, show AUTH NEEDED
 if [ -z "$TOKEN" ]; then
-    printf '%b' "${GRY}⛵${RED}${CTX_SHORT}:AUTH${RST}"
+    if [ "$JSON_MODE" = "1" ]; then
+        printf '{"context":"%s","status":"auth-needed","expires_in_minutes":0,"short":"AUTH"}\n' "$CTX_SHORT"
+    else
+        printf '%b' "${GRY}⛵${RED}${CTX_SHORT}:AUTH${RST}"
+    fi
     exit 0
 fi
 
 # Extract expiry from JWT
 EXP=$(jwt_exp "$TOKEN")
 if [ -z "$EXP" ] || [ "$EXP" = "null" ]; then
-    printf '%b' "${GRY}⛵${RED}${CTX_SHORT}:AUTH${RST}"
+    if [ "$JSON_MODE" = "1" ]; then
+        printf '{"context":"%s","status":"auth-needed","expires_in_minutes":0,"short":"AUTH"}\n' "$CTX_SHORT"
+    else
+        printf '%b' "${GRY}⛵${RED}${CTX_SHORT}:AUTH${RST}"
+    fi
     exit 0
 fi
 
@@ -160,4 +173,12 @@ else
     DURATION="expired"
 fi
 
-printf '%b' "${GRY}⛵${COLOR}${CTX_SHORT}:${DURATION}${RST}"
+# Structured output for briefing/orchestrator (object shape for consistency with aws-sso and gitlab)
+if [ "$JSON_MODE" = "1" ]; then
+    status="ok"
+    mins=$REMAINING
+    [ "$REMAINING" -le 0 ] && status="expired"
+    printf '{"context":"%s","status":"%s","expires_in_minutes":%d,"short":"%s"}\n' "$CTX_SHORT" "$status" "$mins" "$DURATION"
+else
+    printf '%b' "${GRY}⛵${COLOR}${CTX_SHORT}:${DURATION}${RST}"
+fi

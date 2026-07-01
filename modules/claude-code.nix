@@ -57,7 +57,7 @@ let
     "./bazel test"
   ];
   glabReadCmds = [
-    "glab api"
+    "glab api --method GET"
     "glab mr list"
     "glab mr view"
     "glab ci view"
@@ -99,11 +99,6 @@ let
     ++ mkBashAllow bazelCmds;
     deny = [
       "Bash(terraform*)"
-      # Device-code auth is being removed from work skills; block the auth-subcommand
-      # forms the skills actually use. Avoid substring-matching `--device-code` so
-      # git/rg searches for the string still work.
-      "Bash(* auth --device-code*)"
-      "Bash(*_api.py auth --device-code*)"
     ];
   };
 

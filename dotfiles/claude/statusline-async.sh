@@ -12,7 +12,7 @@ CACHE_DIR="${HOME}/.cache/claude-statusline"
 mkdir -p "$CACHE_DIR"
 
 # Cache files (keyed by CWD hash for repo-specific caching)
-CWD_HASH=$(echo -n "$CWD" | md5sum 2>/dev/null | cut -d' ' -f1 || echo "default")
+CWD_HASH=$(printf '%s' "$CWD" | (md5sum 2>/dev/null | cut -d' ' -f1) || (md5 -q 2>/dev/null) || (shasum -a 256 2>/dev/null | cut -d' ' -f1) || echo "default")
 GIT_CACHE="${CACHE_DIR}/git-${CWD_HASH}"
 AWS_CACHE="${CACHE_DIR}/aws-sso"
 K8S_CACHE="${CACHE_DIR}/k8s-token"
@@ -78,8 +78,11 @@ else
         GIT_STATUS="\e[90m🔄\e[0m"
     fi
 
-    # Update in background
-    update_cache_bg "$GIT_CACHE" "echo '$INPUT' | ${SCRIPT_DIR}/gitlab-status.sh"
+    # Update in background (safe pipe, no eval of user INPUT)
+    (
+        printf '%s\n' "$INPUT" | "${SCRIPT_DIR}/gitlab-status.sh" > "${GIT_CACHE}.tmp" 2>/dev/null
+        mv "${GIT_CACHE}.tmp" "$GIT_CACHE" 2>/dev/null
+    ) & disown
 fi
 
 # 2. AWS SSO (global cache)

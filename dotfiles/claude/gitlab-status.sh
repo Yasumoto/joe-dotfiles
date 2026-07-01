@@ -16,6 +16,10 @@ BLU='\e[34m'
 GRY='\e[90m'
 ORN='\e[38;5;208m'
 
+# Detect structured-output mode early
+JSON_MODE=0
+if [ "${BRIEFING_JSON:-}" = "1" ] || [[ "$*" == *--json* ]]; then JSON_MODE=1; fi
+
 # OSC 8 hyperlink: makes terminal text clickable
 # Auto-detect support: if TERM supports it, use hyperlinks, otherwise plain text
 mk_link() {
@@ -35,12 +39,16 @@ mk_link() {
 
 # Not a git repo → show directory name
 if ! git rev-parse --is-inside-work-tree &>/dev/null; then
-    printf '%b' "${GRY}$(basename "${CWD:-$PWD}")${RST}"
+    if [ "$JSON_MODE" = "1" ]; then
+        printf '{"my_open_mrs":0,"branch_mrs":0,"pipeline_status":"unknown","pipeline_id":""}\n'
+    else
+        printf '%b' "${GRY}$(basename "${CWD:-$PWD}")${RST}"
+    fi
     exit 0
 fi
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
-[ -z "$BRANCH" ] && exit 0
+[ -z "$BRANCH" ] && { [ "$JSON_MODE" = "1" ] && printf '{"my_open_mrs":0,"branch_mrs":0,"pipeline_status":"unknown","pipeline_id":""}\n'; exit 0; }
 
 # Green = clean, yellow = dirty
 if [ -z "$(git status --porcelain 2>/dev/null)" ]; then
@@ -48,6 +56,12 @@ if [ -z "$(git status --porcelain 2>/dev/null)" ]; then
 else
     OUT="${YEL}${BRANCH}${RST}"
 fi
+
+# Defaults for JSON mode (so the final block always produces valid payload even on early/non-gitlab paths)
+MR_TMP=""
+TOTAL_MR_TMP=""
+PIPE_STATUS="unknown"
+PIPE_ID=""
 
 # GitLab CI/MR only for git.int.n7k.io repos
 if git remote -v 2>/dev/null | grep -qi 'git\.int\.n7k\.io' && command -v glab &>/dev/null; then
@@ -151,4 +165,13 @@ if git remote -v 2>/dev/null | grep -qi 'git\.int\.n7k\.io' && command -v glab &
     OUT="${OUT} ${GRY}|${RST} ${CI} ${GRY}|${RST} MR:${MR}"
 fi
 
-printf '%b\n' "$OUT"
+# Structured JSON for briefing orchestrator (when BRIEFING_JSON=1 or --json)
+if [ "$JSON_MODE" = "1" ]; then
+    # Minimal useful payload; vars defaulted above or populated inside gitlab block
+    my_open=$(jq -r 'length' < "$TOTAL_MR_TMP" 2>/dev/null || echo 0)
+    branch_open=$(jq -r 'length' < "$MR_TMP" 2>/dev/null || echo 0)
+    printf '{"my_open_mrs":%s,"branch_mrs":%s,"pipeline_status":"%s","pipeline_id":"%s"}\n' \
+        "$my_open" "$branch_open" "${PIPE_STATUS}" "${PIPE_ID}"
+else
+    printf '%b\n' "$OUT"
+fi

@@ -77,6 +77,13 @@
 
       # Tell GCM this is a GitLab instance (avoids runtime config writes)
       "credential \"https://git.int.n7k.io\"".provider = "gitlab";
+
+      # git-spice: map the self-hosted instance to the GitLab forge so `gs`
+      # recognizes git.int.n7k.io (auth reuses the glab CLI token).
+      "spice \"forge.gitlab\"" = {
+        url = "https://git.int.n7k.io";
+        apiUrl = "https://git.int.n7k.io/api/v4";
+      };
     };
 
     ignores = [

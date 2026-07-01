@@ -8,13 +8,36 @@ GRN='\e[32m'
 YEL='\e[33m'
 RED='\e[31m'
 
+# Detect structured-output mode early so EVERY exit path can honor it. The
+# briefing orchestrator needs JSON back even when there's no session / expired;
+# otherwise a missing payload reads as "unknown".
+JSON_MODE=0
+if [ "${BRIEFING_JSON:-}" = "1" ] || [[ "$*" == *--json* ]]; then JSON_MODE=1; fi
+
+# emit <status> <mins> <short> <human-fallback>
+# JSON mode -> one JSON object on every path; statusline mode -> the human
+# string (empty where the original printed nothing, to preserve the prompt).
+emit() {
+    if [ "$JSON_MODE" = "1" ]; then
+        # Safer JSON if jq available (prevents issues if status ever contains quotes)
+        if command -v jq >/dev/null 2>&1; then
+            jq -n --arg s "$1" --argjson m "${2:-0}" --arg sh "${3:-}" \
+               '{status:$s, expires_in_minutes:$m, short:$sh}'
+        else
+            printf '{"status":"%s","expires_in_minutes":%d,"short":"%s"}\n' "$1" "${2:-0}" "${3:-}"
+        fi
+    else
+        printf '%b' "${4:-}"
+    fi
+}
+
 # Check if cache directory exists
 SSO_CACHE="${HOME}/.aws/sso/cache"
-[ ! -d "$SSO_CACHE" ] && exit 0
+[ ! -d "$SSO_CACHE" ] && { emit "no-session" 0 "" ""; exit 0; }
 
 # Find all cache files
 CACHE_FILES=("$SSO_CACHE"/*.json)
-[ ! -e "${CACHE_FILES[0]}" ] && exit 0
+[ ! -e "${CACHE_FILES[0]}" ] && { emit "no-session" 0 "" ""; exit 0; }
 
 # Get current epoch time
 NOW=$(date +%s)
@@ -48,29 +71,24 @@ for file in "${CACHE_FILES[@]}"; do
 done
 
 # No valid expiry found
-[ "$SHORTEST_EXPIRY" -eq 9999999999 ] && exit 0
+[ "$SHORTEST_EXPIRY" -eq 9999999999 ] && { emit "no-session" 0 "" ""; exit 0; }
 
-# Calculate time remaining
 REMAINING=$((SHORTEST_EXPIRY - NOW))
 
-# Check if expired
 if [ "$REMAINING" -le 0 ]; then
-    printf '%b' "${RED}aws:expired${RST}"
+    emit "expired" 0 "" "${RED}aws:expired${RST}"
     exit 0
 fi
 
-# Convert seconds to human-readable
 HOURS=$((REMAINING / 3600))
 MINUTES=$(((REMAINING % 3600) / 60))
 
-# Format output
 if [ "$HOURS" -gt 0 ]; then
     TIME_STR="${HOURS}h${MINUTES}m"
 else
     TIME_STR="${MINUTES}m"
 fi
 
-# Color based on thresholds
 if [ "$REMAINING" -gt 1800 ]; then
     # >30 min: green
     COLOR="$GRN"
@@ -82,4 +100,6 @@ else
     COLOR="$RED"
 fi
 
-printf '%b' "${COLOR}aws:${TIME_STR}${RST}"
+# Healthy path: a positive remaining time (expired/no-session handled above).
+mins=$(( REMAINING / 60 ))
+emit "ok" "$mins" "$TIME_STR" "${COLOR}aws:${TIME_STR}${RST}"
