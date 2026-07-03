@@ -78,7 +78,7 @@ if uname -r | grep -qi wsl; then
 fi
 
 if [ "$(which home-manager)" = "" ]; then
-  nix run home-manager/release-25.05 -- init --switch -b gimmeh -f ~/workspace/github.com/Yasumoto/joe-dotfiles/home.nix
+  nix run home-manager/release-26.05 -- init --switch -b gimmeh -f ~/workspace/github.com/Yasumoto/joe-dotfiles/home.nix
 fi
 
 #SCRIPT_DIRECTORY=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)

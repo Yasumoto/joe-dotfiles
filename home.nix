@@ -61,7 +61,7 @@ in
         terraform-ls
         prek # v0.2.30 or later needed for builtin hooks
         alejandra
-        nixfmt-rfc-style
+        nixfmt
         statix
         taplo
         stylua
@@ -83,7 +83,7 @@ in
         cbonsai
         topgrade
         btop
-        neofetch
+        fastfetch
         git-lfs
         git-spice
         glab
@@ -97,10 +97,10 @@ in
         go
         pyright
         gopls
-        nodePackages.bash-language-server
+        bash-language-server
         dockerfile-language-server
-        nodePackages.typescript-language-server
-        nodePackages.typescript
+        typescript-language-server
+        typescript
         nil
         jdt-language-server
         yaml-language-server
@@ -269,6 +269,9 @@ in
     neovim = {
       enable = true;
       defaultEditor = true;
+      # Explicit legacy defaults (HM 26.05 changed defaults to false when stateVersion >= 26.05)
+      withRuby = true;
+      withPython3 = true;
       plugins = with pkgs.vimPlugins; [
         nvim-lspconfig
         nvim-cmp
@@ -355,7 +358,7 @@ in
         autocmd BufWinLeave * call clearmatches()
       '';
 
-      extraLuaConfig = builtins.readFile ./modules/neovim-lua.lua;
+      initLua = builtins.readFile ./modules/neovim-lua.lua;
     };
 
     gnome-terminal = {

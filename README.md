@@ -19,13 +19,13 @@ cd joe-dotfiles
 
 # Choose the appropriate configuration for your system:
 # Linux:
-nix run home-manager/release-25.11 -- switch --flake ~/workspace/github.com/Yasumoto/joe-dotfiles#linux
+nix run home-manager/release-26.05 -- switch --flake ~/workspace/github.com/Yasumoto/joe-dotfiles#linux
 
 # macOS (username `joe` — personal or work mac):
-nix run home-manager/release-25.11 -- switch --flake ~/workspace/github.com/Yasumoto/joe-dotfiles#darwin
+nix run home-manager/release-26.05 -- switch --flake ~/workspace/github.com/Yasumoto/joe-dotfiles#darwin
 
 # macOS (username `joe.smith` — corp mac with dotted username):
-nix run home-manager/release-25.11 -- switch --flake ~/workspace/github.com/Yasumoto/joe-dotfiles#darwin-joe.smith
+nix run home-manager/release-26.05 -- switch --flake ~/workspace/github.com/Yasumoto/joe-dotfiles#darwin-joe.smith
 
 prek install
 ```

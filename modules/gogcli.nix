@@ -1,14 +1,13 @@
 {
   pkgs,
-  pkgs-unstable,
   lib,
   ...
 }:
 
 {
   home.packages = [
-    # Use Go 1.26 from unstable because gogcli requires go >= 1.25.8, but nixpkgs stable only has 1.25.7
-    (pkgs.buildGoModule.override { go = pkgs-unstable.go_1_26; } rec {
+    # Stable 26.05 ships Go 1.26.x (gogcli needs go >= 1.25.8)
+    (pkgs.buildGoModule rec {
       pname = "gogcli";
       version = "unstable-2024-12-20";
 
