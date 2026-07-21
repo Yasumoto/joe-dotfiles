@@ -828,6 +828,19 @@
         echo "To authenticate: gog account --add <account-name>"
         echo "To use: gog gmail thread --list"
       '';
+
+      # Recover frozen GNOME Wayland display (amdgpu flip_done) via Mutter DPMS cycle.
+      # Script lives at ~/.local/bin/gui-unstick (see scripts/host/gui-unstick).
+      gui-unstick = ''
+        if command -q gui-unstick
+          command gui-unstick $argv
+        else if test -x "$HOME/workspace/github.com/Yasumoto/joe-dotfiles/scripts/host/gui-unstick"
+          "$HOME/workspace/github.com/Yasumoto/joe-dotfiles/scripts/host/gui-unstick" $argv
+        else
+          echo "gui-unstick: binary not found; run home-manager switch or use scripts/host/gui-unstick" >&2
+          return 127
+        end
+      '';
     };
   };
 }

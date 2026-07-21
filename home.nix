@@ -171,6 +171,12 @@ in
         source = ./scripts/wiki/wiki-harvest-conversations;
         executable = true;
       };
+
+      # Recover frozen GNOME Wayland (amdgpu flip_done) via Mutter DPMS cycle
+      ".local/bin/gui-unstick" = {
+        source = ./scripts/host/gui-unstick;
+        executable = true;
+      };
     };
 
     sessionPath = [

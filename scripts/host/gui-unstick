@@ -1,0 +1,187 @@
+#!/usr/bin/env bash
+# gui-unstick — recover a frozen GNOME Wayland display (amdgpu flip_done class).
+#
+# When the mouse/display freeze but SSH/mosh still work, this cycles Mutter's
+# DisplayConfig PowerSaveMode (DPMS off → on) to force a re-modeset. That
+# unwedged a Strix Halo + Dell U2725QE session on Bluefin after:
+#   kernel: amdgpu: [CRTC:…] flip_done timed out
+#
+# Works from:
+#   - Bluefin/host GNOME session (busctl --user)
+#   - Distrobox / SSH with shared /run/user (via distrobox-host-exec if needed)
+#
+# Usage:
+#   gui-unstick              # DPMS cycle (default)
+#   gui-unstick status       # show PowerSaveMode + sessions + recent drm errors
+#   gui-unstick diag         # write freeze diagnostics under ~/host-freeze-*/
+#   gui-unstick terminate    # loginctl terminate-session for seat0 graphical session
+#   gui-unstick help
+#
+# See also (prevention, personal):
+#   Settings → Displays → pick fixed refresh (avoid Variable / VRR if freezes recur)
+#   gdctl show
+#   Kernel workaround (reboot required): amdgpu.dcdebugmask=0x10
+set -euo pipefail
+
+TIMEOUT="${GUI_UNSTICK_TIMEOUT:-15}"
+OFF_SLEEP="${GUI_UNSTICK_OFF_SLEEP:-2}"
+
+usage() {
+  cat <<'EOF'
+gui-unstick — recover a frozen GNOME Wayland display (amdgpu flip_done class).
+
+Cycles Mutter DisplayConfig PowerSaveMode (DPMS off → on) to force a re-modeset.
+Works on host or from Distrobox (via distrobox-host-exec).
+
+Usage:
+  gui-unstick              # DPMS cycle (default)
+  gui-unstick status       # PowerSaveMode + sessions + recent drm errors
+  gui-unstick diag         # write freeze diagnostics under ~/host-freeze-*/
+  gui-unstick terminate    # loginctl terminate-session for seat0 graphical session
+  gui-unstick help
+
+Env:
+  GUI_UNSTICK_TIMEOUT      seconds for each busctl set-property (default 15)
+  GUI_UNSTICK_OFF_SLEEP    seconds between off and on (default 2)
+
+Prevention tips:
+  Settings → Displays → fixed refresh (avoid Variable / VRR if freezes recur)
+  gdctl show
+  Kernel param (reboot): amdgpu.dcdebugmask=0x10
+EOF
+}
+
+in_container() {
+  [[ -n "${CONTAINER_ID:-}" ]] \
+    || [[ -f /run/.containerenv ]] \
+    || [[ -f /.dockerenv ]] \
+    || [[ -d /run/host/usr ]]
+}
+
+# Run a command on the host that owns the graphical session.
+host_run() {
+  if in_container && command -v distrobox-host-exec >/dev/null 2>&1; then
+    distrobox-host-exec "$@"
+  elif in_container && command -v host-spawn >/dev/null 2>&1; then
+    host-spawn "$@"
+  else
+    "$@"
+  fi
+}
+
+bus() {
+  # Session bus is often shared into distrobox; try local first for speed.
+  if command -v busctl >/dev/null 2>&1 && busctl --user status >/dev/null 2>&1; then
+    busctl --user "$@"
+  else
+    host_run busctl --user "$@"
+  fi
+}
+
+get_powersave() {
+  bus get-property \
+    org.gnome.Mutter.DisplayConfig \
+    /org/gnome/Mutter/DisplayConfig \
+    org.gnome.Mutter.DisplayConfig \
+    PowerSaveMode 2>/dev/null || echo "(unavailable)"
+}
+
+set_powersave() {
+  local mode="$1"
+  host_run timeout "$TIMEOUT" busctl --user set-property \
+    org.gnome.Mutter.DisplayConfig \
+    /org/gnome/Mutter/DisplayConfig \
+    org.gnome.Mutter.DisplayConfig \
+    PowerSaveMode i "$mode"
+}
+
+cmd_status() {
+  echo "=== PowerSaveMode (0=on 1=standby 2=suspend 3=off) ==="
+  get_powersave
+  echo
+  echo "=== loginctl sessions ==="
+  host_run loginctl list-sessions 2>/dev/null || true
+  echo
+  echo "=== display (gdctl if present) ==="
+  host_run bash -c 'command -v gdctl >/dev/null && gdctl show || true' 2>/dev/null || true
+  echo
+  echo "=== recent amdgpu/drm errors (this boot, last 30) ==="
+  host_run journalctl -b -k --no-pager -g 'flip_done|commit wait|amdgpu.*ERROR' -n 30 2>/dev/null || true
+}
+
+cmd_diag() {
+  local out
+  out="${HOME}/host-freeze-$(date +%Y%m%d-%H%M%S)"
+  mkdir -p "$out"
+  echo "Writing diagnostics to $out"
+  host_run journalctl -b -p err..alert --no-pager >"$out/err.txt" 2>&1 || true
+  host_run journalctl -b -k -n 400 --no-pager >"$out/kern.txt" 2>&1 || true
+  host_run journalctl -b --no-pager -g 'amdgpu|flip_done|commit wait|mutter|gnome-shell|drm' -n 400 \
+    >"$out/gpu-gnome.txt" 2>&1 || true
+  host_run loginctl list-sessions >"$out/sessions.txt" 2>&1 || true
+  host_run bash -c 'ps aux | grep -E "gnome-shell|gdm|Xwayland|mutter" | grep -v grep' \
+    >"$out/ps-gnome.txt" 2>&1 || true
+  host_run free -h >"$out/mem.txt" 2>&1 || true
+  host_run sync 2>/dev/null || true
+  echo "Done: $out"
+  echo "  ls $out"
+}
+
+cmd_unstick() {
+  echo "gui-unstick: PowerSaveMode before: $(get_powersave)"
+  echo "gui-unstick: setting PowerSaveMode=3 (off)…"
+  if ! set_powersave 3; then
+    echo "gui-unstick: failed to set off (timeout or D-Bus error)" >&2
+    return 1
+  fi
+  sleep "$OFF_SLEEP"
+  echo "gui-unstick: setting PowerSaveMode=0 (on)…"
+  if ! set_powersave 0; then
+    echo "gui-unstick: failed to set on (timeout or D-Bus error)" >&2
+    return 1
+  fi
+  sleep 1
+  echo "gui-unstick: PowerSaveMode after: $(get_powersave)"
+  echo
+  echo "If the panel is still frozen:"
+  echo "  1) reseat DP / power-cycle the monitor"
+  echo "  2) gui-unstick diag   # capture logs"
+  echo "  3) gui-unstick terminate   # clean logout of graphical session"
+  echo "  4) reboot (most reliable for hard flip_done)"
+}
+
+cmd_terminate() {
+  local sid
+  sid="$(host_run loginctl list-sessions --no-legend 2>/dev/null \
+    | awk '$5=="seat0" && $6=="user" {print $1; exit}')"
+  if [[ -z "${sid:-}" ]]; then
+    # Fallback: active wayland session for this user
+    sid="$(host_run loginctl list-sessions --no-legend 2>/dev/null \
+      | awk -v u="$(id -un)" '$3==u && $4=="seat0" {print $1; exit}')"
+  fi
+  if [[ -z "${sid:-}" ]]; then
+    echo "gui-unstick: could not find seat0 graphical session" >&2
+    host_run loginctl list-sessions || true
+    return 1
+  fi
+  echo "gui-unstick: terminating session $sid (GUI apps will close)…"
+  host_run loginctl terminate-session "$sid"
+}
+
+main() {
+  local cmd="${1:-unstick}"
+  case "$cmd" in
+    unstick|fix|dpms) cmd_unstick ;;
+    status|st) cmd_status ;;
+    diag|diagnose) cmd_diag ;;
+    terminate|logout) cmd_terminate ;;
+    help|-h|--help) usage ;;
+    *)
+      echo "Unknown command: $cmd" >&2
+      usage
+      return 2
+      ;;
+  esac
+}
+
+main "$@"
