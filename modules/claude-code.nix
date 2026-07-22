@@ -30,6 +30,9 @@ let
     "ralph-loop@claude-plugins-official" = true;
     "hookify@claude-plugins-official" = true;
     "commit-commands@claude-plugins-official" = true;
+    # Official Slack MCP + skills — OAuth via Anthropic's registered Slack app
+    # (https://docs.slack.dev/ai/slack-mcp-server/connect-to-claude)
+    "slack@claude-plugins-official" = true;
     "playwright@claude-plugins-official" = false;
   };
 
@@ -102,6 +105,9 @@ let
     ];
   };
 
+  # MCP servers merged into ~/.claude.json (user scope).
+  # Slack uses Anthropic's pre-registered OAuth client (no DCR) — same as the
+  # official slack plugin. First use prompts a browser OAuth consent.
   claudeMcpOverlay = builtins.toJSON {
     mcpServers = {
       xai-docs = {
@@ -110,6 +116,14 @@ let
       };
       agent-voice = {
         command = "${homeDir}/.cargo/bin/agent-voice-mcp";
+      };
+      slack = {
+        type = "http";
+        url = "https://mcp.slack.com/mcp";
+        oauth = {
+          clientId = "1601185624273.8899143856786";
+          callbackPort = 3118;
+        };
       };
     };
   };

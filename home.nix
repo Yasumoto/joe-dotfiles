@@ -20,6 +20,7 @@ in
     ./modules/fish.nix
     ./modules/git.nix
     ./modules/claude-code.nix
+    ./modules/grok.nix
     ./modules/gogcli.nix
   ];
 
@@ -241,18 +242,15 @@ in
     ssh = {
       enable = true;
       enableDefaultConfig = false;
-      matchBlocks."*" = {
-        extraOptions = {
-          # Ignore unknown SSH options (for compatibility across SSH clients)
-          "IgnoreUnknown" = "GSSAPIAuthentication,UseKeychain,AddKeysToAgent";
-          # Work-specific SSH config (silently ignored if file doesn't exist)
-          "Include" = "${homeDirectory}/src/sw/ops/nlk_speed_up_git/ssh.config";
-        }
-        // lib.optionalAttrs pkgs.stdenv.isDarwin {
-          # macOS keychain integration
-          "UseKeychain" = "yes";
-          "AddKeysToAgent" = "yes";
-        };
+      # Work-specific SSH config (silently ignored if the file doesn't exist)
+      includes = [ "${homeDirectory}/src/sw/ops/nlk_speed_up_git/ssh.config" ];
+      # Use upstream OpenSSH directive names (matchBlocks/extraOptions are deprecated)
+      settings."*" = {
+        IgnoreUnknown = "GSSAPIAuthentication,UseKeychain,AddKeysToAgent";
+      }
+      // lib.optionalAttrs pkgs.stdenv.isDarwin {
+        UseKeychain = "yes";
+        AddKeysToAgent = "yes";
       };
     };
 
