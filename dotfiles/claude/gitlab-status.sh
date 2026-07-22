@@ -69,10 +69,11 @@ if git remote -v 2>/dev/null | grep -qi 'git\.int\.n7k\.io' && command -v glab &
     TOTAL_MR_TMP=$(mktemp)
     trap 'rm -f "$MR_TMP" "$TOTAL_MR_TMP"' EXIT
 
-    # Get MR counts in parallel
-    timeout 3 glab mr list --source-branch "$BRANCH" --state=opened --output=json >"$MR_TMP" 2>/dev/null &
+    # Get MR counts in parallel.
+    # Open MRs are glab's default (glab 1.86+ has no --state flag on `mr list`).
+    timeout 3 glab mr list --source-branch "$BRANCH" -F json >"$MR_TMP" 2>/dev/null &
     MR_PID=$!
-    timeout 3 glab mr list --author=@me --state=opened --output=json >"$TOTAL_MR_TMP" 2>/dev/null &
+    timeout 3 glab mr list --author=@me -F json >"$TOTAL_MR_TMP" 2>/dev/null &
     TOTAL_MR_PID=$!
 
     # Get pipeline info via API (more reliable than parsing ci status)
