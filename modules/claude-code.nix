@@ -294,12 +294,39 @@ in
         if [ -z "$GIT_HOST" ]; then
           echo "WARNING: could not derive a GitLab host from $WORK_REPO origin ($WORK_REMOTE)." >&2
         elif [ ! -d "$WORK_CONFIG/.git" ]; then
+          # home-manager activation rewrites PATH to a minimal nix-store set that
+          # does NOT include system ssh (/usr/bin/ssh) or openssh from
+          # home.packages. git then fails with:
+          #   error: cannot run ssh: No such file or directory
+          # Point GIT_SSH_COMMAND at pkgs.openssh so the clone can actually run.
+          #
+          # Also discover a user SSH agent if the invoking shell didn't export
+          # one. The private key is passphrase-protected, so without an unlocked
+          # agent (gcr-ssh-agent / ssh-agent) auth fails even with ssh on PATH.
+          if [ -z "''${SSH_AUTH_SOCK:-}" ] || [ ! -S "$SSH_AUTH_SOCK" ]; then
+            runtimeDir="''${XDG_RUNTIME_DIR:-/run/user/$(${pkgs.coreutils}/bin/id -u)}"
+            for sock in \
+              "$runtimeDir/gcr/ssh" \
+              "$runtimeDir/gcr/.ssh" \
+              "$runtimeDir/ssh-agent" \
+              "$runtimeDir/ssh-agent.socket"; do
+              if [ -S "$sock" ]; then
+                export SSH_AUTH_SOCK="$sock"
+                break
+              fi
+            done
+          fi
+
           # Do NOT swallow git's stderr: "repo not found" vs "permission denied
-          # (publickey)" are different problems and the message is the only clue.
+          # (publickey)" vs "cannot run ssh" are different problems and the
+          # message is the only clue. BatchMode avoids a hung askpass prompt
+          # during non-interactive activation.
           echo "Cloning Claude work-config from git@$GIT_HOST:$WORK_CONFIG_USER/work-config.git ..." >&2
-          if ! ${pkgs.git}/bin/git clone "git@$GIT_HOST:$WORK_CONFIG_USER/work-config.git" "$WORK_CONFIG"; then
+          if ! GIT_SSH_COMMAND="${pkgs.openssh}/bin/ssh -o BatchMode=yes" \
+            ${pkgs.git}/bin/git clone "git@$GIT_HOST:$WORK_CONFIG_USER/work-config.git" "$WORK_CONFIG"; then
             echo "WARNING: work-config clone failed (see git error above). Agents, harness scripts, and work skills will be unavailable." >&2
-            echo "         If it says 'Permission denied (publickey)', check this host's key at https://$GIT_HOST/-/user_settings/ssh_keys" >&2
+            echo "         If it says 'Permission denied (publickey)', unlock your SSH key (ssh-add) or check https://$GIT_HOST/-/user_settings/ssh_keys" >&2
+            echo "         If it says 'cannot run ssh', PATH during activation is missing openssh — this module should set GIT_SSH_COMMAND." >&2
           fi
         fi
 
