@@ -22,6 +22,7 @@ in
     ./modules/claude-code.nix
     ./modules/grok.nix
     ./modules/gogcli.nix
+    ./modules/herdr.nix
   ];
 
   programs._1password-shell-plugins = {

@@ -11,6 +11,8 @@
       url = "github:1Password/shell-plugins";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # Keep herdr on its own nixpkgs + rust-overlay (do not follows nixpkgs).
+    herdr.url = "github:ogulcancelik/herdr/v0.7.5";
   };
 
   outputs =
@@ -18,6 +20,7 @@
       nixpkgs,
       home-manager,
       onepassword-shell-plugins,
+      herdr,
       ...
     }:
     let
@@ -30,6 +33,7 @@
           };
           extraSpecialArgs = {
             inherit username;
+            herdrPkgs = herdr.packages.${system};
           };
           modules = [
             ./home.nix
