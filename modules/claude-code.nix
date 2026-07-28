@@ -264,49 +264,71 @@ in
       find "${homeDir}/.claude/plugins" -name "*.sh" -type f ! -perm -u+x -exec chmod +x {} + 2>/dev/null || true
     '';
 
-    # Clone work-specific config if a work monorepo is present at ~/src/sw
-    # Derives GitLab host and username from that repo's remote origin
+    # Clone work-specific config if a work monorepo is present at ~/src/sw.
+    #
+    # work-config lives in my PERSONAL namespace on the work forge, NOT the
+    # monorepo's org namespace. The user used to be derived from ~/src/sw's
+    # origin, but that yields the ORG (".../<org>/<repo>" -> "<org>"), so the
+    # clone URL pointed at a repo that does not exist and always failed. A
+    # personal namespace is not recoverable from the monorepo URL, so the user
+    # is set explicitly below.
+    #
+    # The HOST is still derived from ~/src/sw's remote and never hardcoded --
+    # this repo is public, so no internal hostname belongs in it.
+    #
+    # ~/src/sw is still the trigger (only wire up work config on work machines),
+    # but it no longer gates the symlinking: an existing checkout must get
+    # linked even if the clone is skipped or fails.
     cloneWorkConfig = lib.hm.dag.entryAfter [ "claudeSettingsSetup" ] ''
       WORK_REPO="$HOME/src/sw"
-      if [ -d "$WORK_REPO/.git" ]; then
-        WORK_REMOTE=$(${pkgs.git}/bin/git -C "$WORK_REPO" remote get-url origin 2>/dev/null)
-        # Extract host and user from git@HOST:USER/REPO or https://HOST/USER/REPO
-        GIT_HOST=$(echo "$WORK_REMOTE" | ${pkgs.gnused}/bin/sed -n 's|.*@\([^:]*\):.*|\1|p; s|https\?://\([^/]*\)/.*|\1|p' | head -1)
-        GIT_USER=$(echo "$WORK_REMOTE" | ${pkgs.gnused}/bin/sed -n 's|.*[:/]\([^/]*\)/[^/]*$|\1|p' | head -1)
+      WORK_CONFIG="$HOME/.claude/work-config"
+      WORK_CONFIG_USER="joe.smith"
 
-        if [ -n "$GIT_HOST" ] && [ -n "$GIT_USER" ]; then
-          WORK_CONFIG="$HOME/.claude/work-config"
-          if [ ! -d "$WORK_CONFIG/.git" ]; then
-            echo "Cloning Claude work-config from $GIT_HOST..." >&2
-            ${pkgs.git}/bin/git clone "git@$GIT_HOST:$GIT_USER/work-config.git" "$WORK_CONFIG" 2>/dev/null || \
-              echo "WARNING: Failed to clone work-config repo. Agents and harness scripts will be unavailable." >&2
+      if [ ! -d "$WORK_REPO/.git" ]; then
+        echo "NOTE: $WORK_REPO not found — skipping Claude work-config (not a work machine?)." >&2
+      else
+        WORK_REMOTE=$(${pkgs.git}/bin/git -C "$WORK_REPO" remote get-url origin 2>/dev/null)
+        # Host only, from git@HOST:ORG/REPO or https://HOST/ORG/REPO
+        GIT_HOST=$(echo "$WORK_REMOTE" | ${pkgs.gnused}/bin/sed -n 's|.*@\([^:]*\):.*|\1|p; s|https\?://\([^/]*\)/.*|\1|p' | head -1)
+
+        if [ -z "$GIT_HOST" ]; then
+          echo "WARNING: could not derive a GitLab host from $WORK_REPO origin ($WORK_REMOTE)." >&2
+        elif [ ! -d "$WORK_CONFIG/.git" ]; then
+          # Do NOT swallow git's stderr: "repo not found" vs "permission denied
+          # (publickey)" are different problems and the message is the only clue.
+          echo "Cloning Claude work-config from git@$GIT_HOST:$WORK_CONFIG_USER/work-config.git ..." >&2
+          if ! ${pkgs.git}/bin/git clone "git@$GIT_HOST:$WORK_CONFIG_USER/work-config.git" "$WORK_CONFIG"; then
+            echo "WARNING: work-config clone failed (see git error above). Agents, harness scripts, and work skills will be unavailable." >&2
+            echo "         If it says 'Permission denied (publickey)', check this host's key at https://$GIT_HOST/-/user_settings/ssh_keys" >&2
           fi
-          if [ -d "$WORK_CONFIG/agents" ]; then
-            ln -sfn "$WORK_CONFIG/agents" "$HOME/.claude/agents"
-          else
-            echo "WARNING: $WORK_CONFIG/agents not found. Claude agents unavailable." >&2
-          fi
-          if [ -d "$WORK_CONFIG/scripts" ]; then
-            ln -sfn "$WORK_CONFIG/scripts" "$HOME/.claude/scripts"
-          else
-            echo "WARNING: $WORK_CONFIG/scripts not found. Harness script unavailable." >&2
-          fi
-          # Symlink each work-config skill + command individually so public-repo
-          # home.file entries (e.g. commit-push-open-mr) coexist.
-          if [ -d "$WORK_CONFIG/skills" ]; then
-            mkdir -p "$HOME/.claude/skills"
-            for skill in "$WORK_CONFIG/skills"/*/; do
-              [ -d "$skill" ] || continue
-              ln -sfn "$skill" "$HOME/.claude/skills/$(basename "$skill")"
-            done
-          fi
-          if [ -d "$WORK_CONFIG/commands" ]; then
-            mkdir -p "$HOME/.claude/commands"
-            for cmd in "$WORK_CONFIG/commands"/*.md; do
-              [ -f "$cmd" ] || continue
-              ln -sfn "$cmd" "$HOME/.claude/commands/$(basename "$cmd")"
-            done
-          fi
+        fi
+
+        # Link whatever is present, regardless of whether we just cloned it.
+        if [ -d "$WORK_CONFIG/agents" ]; then
+          ln -sfn "$WORK_CONFIG/agents" "$HOME/.claude/agents"
+        else
+          echo "WARNING: $WORK_CONFIG/agents not found. Claude agents unavailable." >&2
+        fi
+        if [ -d "$WORK_CONFIG/scripts" ]; then
+          ln -sfn "$WORK_CONFIG/scripts" "$HOME/.claude/scripts"
+        else
+          echo "WARNING: $WORK_CONFIG/scripts not found. Harness script unavailable." >&2
+        fi
+        # Symlink each work-config skill + command individually so public-repo
+        # home.file entries (e.g. commit-push-open-mr) coexist.
+        if [ -d "$WORK_CONFIG/skills" ]; then
+          mkdir -p "$HOME/.claude/skills"
+          for skill in "$WORK_CONFIG/skills"/*/; do
+            [ -d "$skill" ] || continue
+            ln -sfn "$skill" "$HOME/.claude/skills/$(basename "$skill")"
+          done
+        fi
+        if [ -d "$WORK_CONFIG/commands" ]; then
+          mkdir -p "$HOME/.claude/commands"
+          for cmd in "$WORK_CONFIG/commands"/*.md; do
+            [ -f "$cmd" ] || continue
+            ln -sfn "$cmd" "$HOME/.claude/commands/$(basename "$cmd")"
+          done
         fi
       fi
     '';
