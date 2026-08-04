@@ -453,9 +453,11 @@
 
         set -Ux VAULT_TOKEN $token_result
 
-        # Update tmux environment so new panes inherit the fresh token
-        # (prevents stale inherited global from shadowing the universal)
+        # Push into tmux so new panes/windows (and other sessions) inherit it.
+        # -g = global tmux env (all sessions); also set session env for the
+        # current session. Already-running processes keep their old env.
         if set -q TMUX
+          tmux setenv -g VAULT_TOKEN $token_result
           tmux setenv VAULT_TOKEN $token_result
         end
 
