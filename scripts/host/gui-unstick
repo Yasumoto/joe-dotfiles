@@ -6,6 +6,10 @@
 # unwedged a Strix Halo + Dell U2725QE session on Bluefin after:
 #   kernel: amdgpu: [CRTC:…] flip_done timed out
 #
+# Under a wedged amdgpu, busctl set-property often *applies* the new mode but
+# times out waiting for the method reply. Trust PowerSaveMode reads over the
+# busctl exit code, and always attempt "on" even if "off" appears to fail.
+#
 # Works from:
 #   - Bluefin/host GNOME session (busctl --user)
 #   - Distrobox / SSH with shared /run/user (via distrobox-host-exec if needed)
@@ -23,8 +27,12 @@
 #   Kernel workaround (reboot required): amdgpu.dcdebugmask=0x10
 set -euo pipefail
 
+# Back-compat: GUI_UNSTICK_TIMEOUT sets both if the split vars are unset.
 TIMEOUT="${GUI_UNSTICK_TIMEOUT:-15}"
+OFF_TIMEOUT="${GUI_UNSTICK_OFF_TIMEOUT:-${TIMEOUT}}"
+ON_TIMEOUT="${GUI_UNSTICK_ON_TIMEOUT:-${TIMEOUT}}"
 OFF_SLEEP="${GUI_UNSTICK_OFF_SLEEP:-2}"
+POLL_INTERVAL="${GUI_UNSTICK_POLL_INTERVAL:-0.5}"
 
 usage() {
   cat <<'EOF'
@@ -32,6 +40,9 @@ gui-unstick — recover a frozen GNOME Wayland display (amdgpu flip_done class).
 
 Cycles Mutter DisplayConfig PowerSaveMode (DPMS off → on) to force a re-modeset.
 Works on host or from Distrobox (via distrobox-host-exec).
+
+Under a GPU wedge, set-property may apply but time out on the reply. This script
+verifies via PowerSaveMode reads and always attempts to restore "on".
 
 Usage:
   gui-unstick              # DPMS cycle (default)
@@ -41,8 +52,11 @@ Usage:
   gui-unstick help
 
 Env:
-  GUI_UNSTICK_TIMEOUT      seconds for each busctl set-property (default 15)
-  GUI_UNSTICK_OFF_SLEEP    seconds between off and on (default 2)
+  GUI_UNSTICK_TIMEOUT        default seconds for busctl set-property (default 15)
+  GUI_UNSTICK_OFF_TIMEOUT    seconds for PowerSaveMode=3 (default: TIMEOUT)
+  GUI_UNSTICK_ON_TIMEOUT     seconds for PowerSaveMode=0 (default: TIMEOUT)
+  GUI_UNSTICK_OFF_SLEEP      seconds between off and on (default 2)
+  GUI_UNSTICK_POLL_INTERVAL  seconds between property polls (default 0.5)
 
 Prevention tips:
   Settings → Displays → fixed refresh (avoid Variable / VRR if freezes recur)
@@ -78,6 +92,7 @@ bus() {
   fi
 }
 
+# Raw property string, e.g. "i 0" or "(unavailable)".
 get_powersave() {
   bus get-property \
     org.gnome.Mutter.DisplayConfig \
@@ -86,18 +101,117 @@ get_powersave() {
     PowerSaveMode 2>/dev/null || echo "(unavailable)"
 }
 
+# Numeric mode only, or empty if unavailable.
+powersave_mode() {
+  local raw
+  raw="$(get_powersave)"
+  if [[ "$raw" =~ ^i[[:space:]]+([0-9]+)$ ]]; then
+    echo "${BASH_REMATCH[1]}"
+  else
+    echo ""
+  fi
+}
+
+powersave_label() {
+  case "${1:-}" in
+    0) echo "on" ;;
+    1) echo "standby" ;;
+    2) echo "suspend" ;;
+    3) echo "off" ;;
+    *) echo "unknown" ;;
+  esac
+}
+
+# Fire set-property with timeout; do not treat timeout as definitive failure.
+# Caller should verify with powersave_mode / wait_for_powersave.
 set_powersave() {
   local mode="$1"
-  host_run timeout "$TIMEOUT" busctl --user set-property \
-    org.gnome.Mutter.DisplayConfig \
-    /org/gnome/Mutter/DisplayConfig \
-    org.gnome.Mutter.DisplayConfig \
-    PowerSaveMode i "$mode"
+  local tmo="${2:-$TIMEOUT}"
+  # Prefer local bus when available (same as get); fall back to host_run.
+  if command -v busctl >/dev/null 2>&1 && busctl --user status >/dev/null 2>&1; then
+    timeout "$tmo" busctl --user set-property \
+      org.gnome.Mutter.DisplayConfig \
+      /org/gnome/Mutter/DisplayConfig \
+      org.gnome.Mutter.DisplayConfig \
+      PowerSaveMode i "$mode"
+  else
+    host_run timeout "$tmo" busctl --user set-property \
+      org.gnome.Mutter.DisplayConfig \
+      /org/gnome/Mutter/DisplayConfig \
+      org.gnome.Mutter.DisplayConfig \
+      PowerSaveMode i "$mode"
+  fi
+}
+
+# Poll until PowerSaveMode equals want, or deadline. Returns 0 on match.
+wait_for_powersave() {
+  local want="$1"
+  local tmo="$2"
+  local start now elapsed mode
+  start="$(date +%s)"
+  while true; do
+    mode="$(powersave_mode)"
+    if [[ "$mode" == "$want" ]]; then
+      return 0
+    fi
+    now="$(date +%s)"
+    elapsed=$((now - start))
+    if (( elapsed >= tmo )); then
+      return 1
+    fi
+    sleep "$POLL_INTERVAL"
+  done
+}
+
+# Best-effort set + verify. Prints status. Returns 0 if mode matches want.
+ensure_powersave() {
+  local want="$1"
+  local tmo="$2"
+  local label rc=0 mode
+  label="$(powersave_label "$want")"
+
+  mode="$(powersave_mode)"
+  if [[ "$mode" == "$want" ]]; then
+    echo "gui-unstick: PowerSaveMode already ${want} (${label})"
+    return 0
+  fi
+
+  echo "gui-unstick: setting PowerSaveMode=${want} (${label}), timeout ${tmo}s…"
+  rc=0
+  set_powersave "$want" "$tmo" || rc=$?
+
+  if (( rc == 0 )); then
+    mode="$(powersave_mode)"
+    if [[ "$mode" == "$want" ]]; then
+      echo "gui-unstick: PowerSaveMode=${want} (${label}) ok"
+      return 0
+    fi
+    echo "gui-unstick: set-property returned ok but mode is '${mode:-unavailable}' (wanted ${want})"
+  elif (( rc == 124 )); then
+    echo "gui-unstick: set-property timed out after ${tmo}s (mode may still have applied)"
+  else
+    echo "gui-unstick: set-property failed (exit ${rc}); checking property…"
+  fi
+
+  # Reply often hangs while the property already changed — poll briefly.
+  if wait_for_powersave "$want" "$tmo"; then
+    echo "gui-unstick: PowerSaveMode=${want} (${label}) confirmed after poll"
+    return 0
+  fi
+
+  mode="$(powersave_mode)"
+  echo "gui-unstick: PowerSaveMode now ${mode:-unavailable} (wanted ${want})" >&2
+  return 1
 }
 
 cmd_status() {
+  local mode
+  mode="$(powersave_mode)"
   echo "=== PowerSaveMode (0=on 1=standby 2=suspend 3=off) ==="
-  get_powersave
+  echo "$(get_powersave)  # $(powersave_label "${mode:-}")"
+  if [[ "$mode" == "3" ]]; then
+    echo "note: mode is off while a session may still be active — mid-unstick or stuck off"
+  fi
   echo
   echo "=== loginctl sessions ==="
   host_run loginctl list-sessions 2>/dev/null || true
@@ -122,32 +236,53 @@ cmd_diag() {
   host_run bash -c 'ps aux | grep -E "gnome-shell|gdm|Xwayland|mutter" | grep -v grep' \
     >"$out/ps-gnome.txt" 2>&1 || true
   host_run free -h >"$out/mem.txt" 2>&1 || true
+  get_powersave >"$out/powersave.txt" 2>&1 || true
   host_run sync 2>/dev/null || true
   echo "Done: $out"
   echo "  ls $out"
 }
 
 cmd_unstick() {
-  echo "gui-unstick: PowerSaveMode before: $(get_powersave)"
-  echo "gui-unstick: setting PowerSaveMode=3 (off)…"
-  if ! set_powersave 3; then
-    echo "gui-unstick: failed to set off (timeout or D-Bus error)" >&2
-    return 1
+  local before after
+  before="$(powersave_mode)"
+  echo "gui-unstick: PowerSaveMode before: $(get_powersave) ($(powersave_label "${before:-}"))"
+
+  # Always try to restore "on", even if we error/timeout during off or the
+  # script is interrupted after blanking the panel.
+  restore_on() {
+    echo "gui-unstick: ensuring PowerSaveMode=0 (on)…"
+    ensure_powersave 0 "$ON_TIMEOUT" || true
+  }
+  trap 'restore_on' EXIT
+
+  if [[ "$before" == "3" ]]; then
+    echo "gui-unstick: already off — skipping off step (fast path)"
+  else
+    # Off may time out on a wedged compositor; continue either way.
+    ensure_powersave 3 "$OFF_TIMEOUT" || true
+    echo "gui-unstick: waiting ${OFF_SLEEP}s before on…"
+    sleep "$OFF_SLEEP"
   fi
-  sleep "$OFF_SLEEP"
-  echo "gui-unstick: setting PowerSaveMode=0 (on)…"
-  if ! set_powersave 0; then
-    echo "gui-unstick: failed to set on (timeout or D-Bus error)" >&2
-    return 1
-  fi
-  sleep 1
-  echo "gui-unstick: PowerSaveMode after: $(get_powersave)"
+
+  trap - EXIT
+  restore_on
+
+  after="$(powersave_mode)"
+  echo "gui-unstick: PowerSaveMode after: $(get_powersave) ($(powersave_label "${after:-}"))"
   echo
+
+  if [[ "$after" == "0" ]]; then
+    echo "gui-unstick: DPMS cycle finished (display reports on)."
+  else
+    echo "gui-unstick: display may still be off or unknown." >&2
+  fi
   echo "If the panel is still frozen:"
   echo "  1) reseat DP / power-cycle the monitor"
   echo "  2) gui-unstick diag   # capture logs"
   echo "  3) gui-unstick terminate   # clean logout of graphical session"
   echo "  4) reboot (most reliable for hard flip_done)"
+
+  [[ "$after" == "0" ]]
 }
 
 cmd_terminate() {
