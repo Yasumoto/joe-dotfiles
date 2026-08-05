@@ -21,7 +21,11 @@ allowed-tools: Bash, Read, Glob, Grep
 
 1. **Orient.** If today's briefing exists, read it fully. If not, tell Joe and offer to read the most recent one instead. Read all pending inbox items (status: pending in frontmatter).
 
-2. **Summarize aloud in 3-4 sentences.** Urgent count, on-call state, MR review queue size, any notable trend from the dashboard scan. Match the tone of commute-driving conversation — short, declarative, no markdown in the spoken output.
+   The briefing's `## Continuity — last night's EOD` section is the important one — it carries last night's named outcome, the guardrail he set, and any unsent comms drafts. If that section still looks like a bare list of file paths, `/morning-briefing` phase 2 didn't run; read the newest `~/wiki/eod-reviews/*.md` yourself before talking.
+
+2. **Open on continuity, then summarize.** Lead with what he decided last night and where it stands — *"Last night you said the one thing today was finishing the read and sending the review ask. That MR is still open and still red."* That's the sentence that makes the commute useful; it beats an urgent count he can't act on from the car. Then 3-4 sentences on the rest: on-call state, MR review queue size, any notable trend. Match the tone of commute-driving conversation — short, declarative, no markdown in the spoken output.
+
+   If the same outcome carried across 2+ nights, say it once, plainly, and move on. He already knows, and his own EOD files already made the point — don't lecture from the passenger seat.
 
 3. **Walk the inbox.** For each pending item, state the title + urgency + one-line context. Ask Joe what he wants to do (tackle now / defer to X time / dismiss / leave pending). Listen — do NOT edit the files. Track Joe's verbal decisions in your working memory only.
 
