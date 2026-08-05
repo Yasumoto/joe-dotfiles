@@ -365,41 +365,5 @@ in
 
       initLua = builtins.readFile ./modules/neovim-lua.lua;
     };
-
-    gnome-terminal = {
-      enable = pkgs.stdenv.isLinux;
-      showMenubar = false;
-      profile.b1dcc9dd-5262-4d8d-a863-c897e6d979b9 = {
-        audibleBell = false;
-        default = true;
-        visibleName = "Nord";
-        showScrollbar = false;
-        transparencyPercent = 5;
-        font = "CaskaydiaCove Nerd Font Mono 14";
-        colors = {
-          foregroundColor = "#A9B2C3";
-          backgroundColor = "#21252B";
-          boldColor = "#D2DDF2";
-          palette = [
-            "#21252B"
-            "#B85960"
-            "#98C379"
-            "#C4A469"
-            "#61AFEF"
-            "#B57EDC"
-            "#56B6C2"
-            "#A9B2C3"
-            "#5F6672"
-            "#FF7A85"
-            "#C6FF9E"
-            "#FFD588"
-            "#67BAFF"
-            "#D192FF"
-            "#71EFFF"
-            "#DDE8FF"
-          ];
-        };
-      };
-    };
   };
 }
