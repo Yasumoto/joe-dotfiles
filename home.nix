@@ -20,7 +20,8 @@ in
     ./modules/fish.nix
     ./modules/git.nix
     ./modules/claude-code.nix
-    ./modules/grok.nix
+    # Slack for Grok is a Space connector (managed_gateway), not a local MCP.
+    # Do not re-add mcp_servers.slack — it shadows the connector and fails OAuth.
     ./modules/gogcli.nix
     ./modules/herdr.nix
   ];
