@@ -22,6 +22,8 @@ in
     ./modules/claude-code.nix
     # Slack for Grok is a Space connector (managed_gateway), not a local MCP.
     # Do not re-add mcp_servers.slack — it shadows the connector and fails OAuth.
+    # grok.nix is AWS toolkit only (MCP proxy + core-skills path).
+    ./modules/grok.nix
     ./modules/gogcli.nix
     ./modules/herdr.nix
   ];

@@ -33,6 +33,11 @@ let
     # Official Slack MCP + skills — OAuth via Anthropic's registered Slack app
     # (https://docs.slack.dev/ai/slack-mcp-server/connect-to-claude)
     "slack@claude-plugins-official" = true;
+    # AWS Agent Toolkit — core skills (incl. billing/cost) + AWS MCP server.
+    # One-time install if missing: /plugin marketplace update claude-plugins-official
+    # then /plugin install aws-core@claude-plugins-official
+    # https://github.com/aws/agent-toolkit-for-aws
+    "aws-core@claude-plugins-official" = true;
     "playwright@claude-plugins-official" = false;
   };
 
