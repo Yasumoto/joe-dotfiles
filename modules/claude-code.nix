@@ -33,7 +33,8 @@ let
     # Official Slack MCP + skills — OAuth via Anthropic's registered Slack app
     # (https://docs.slack.dev/ai/slack-mcp-server/connect-to-claude)
     "slack@claude-plugins-official" = true;
-    # AWS Agent Toolkit — core skills (incl. billing/cost) + AWS MCP server.
+    # AWS Agent Toolkit — core skills (billing/cost, IAM, CDK, …).
+    # The plugin also ships an AWS MCP sidecar; that is disabled below.
     # One-time install if missing: /plugin marketplace update claude-plugins-official
     # then /plugin install aws-core@claude-plugins-official
     # https://github.com/aws/agent-toolkit-for-aws
@@ -170,6 +171,10 @@ let
       command = "${homeDir}/.claude/file-suggestion.sh";
     };
     inherit enabledPlugins;
+    # Keep aws-core skills; do not start the plugin's unsigned AWS MCP sidecar.
+    # Claude's /mcp disable is per-project (see claudeMcpSetup); this covers
+    # settings.json if/when Claude honors it at user scope.
+    disabledMcpServers = [ "plugin:aws-core:aws-mcp" ];
     permissions = globalPermissions;
     autoDreamEnabled = true;
   };
@@ -262,6 +267,28 @@ in
       else
         ${pkgs.jq}/bin/jq -s '.[0] * .[1]' "$CLAUDE_JSON" <(echo "$MCP_OVERLAY") > "$CLAUDE_JSON.tmp" && mv "$CLAUDE_JSON.tmp" "$CLAUDE_JSON"
       fi
+
+      # aws-core ships skills + an AWS MCP sidecar. Keep the skills; disable
+      # only the sidecar. Claude's /mcp disable writes disabledMcpServers on
+      # the *current project* entry, so walk every project (and the top-level
+      # key) so a new cwd does not start the unsigned proxy.
+      ${pkgs.jq}/bin/jq --arg name "plugin:aws-core:aws-mcp" '
+        def union($x): ((. // []) + [$x] | unique);
+        .disabledMcpServers |= union($name)
+        | if (.projects | type) == "object" then
+            .projects |= with_entries(
+              .value.disabledMcpServers |= union($name)
+            )
+          else . end
+      ' "$CLAUDE_JSON" > "$CLAUDE_JSON.tmp" && mv "$CLAUDE_JSON.tmp" "$CLAUDE_JSON"
+
+      # Plugin updates restore .mcp.json. Empty the sidecar so Claude/Grok
+      # do not even discover aws-mcp; skills still load from skills/.
+      ${pkgs.findutils}/bin/find "${homeDir}/.claude/plugins/cache/claude-plugins-official/aws-core" \
+        -name .mcp.json -type f -print0 2>/dev/null \
+        | while IFS= read -r -d "" mcp; do
+            echo '{"mcpServers":{}}' | ${pkgs.jq}/bin/jq . > "$mcp"
+          done || true
     '';
 
     # Fix plugin hook permissions (plugin sync downloads without +x)
