@@ -1,0 +1,18 @@
+[Unit]
+Description=Lockstep RGB spectrum across desk devices
+After=openrgb.service openrazer-daemon.service
+Wants=openrgb.service openrazer-daemon.service
+ConditionPathExists=%h/.local/share/desk-rgb/venv/bin/python
+
+[Service]
+Type=simple
+Environment=SPECTRUM_PERIOD=10
+Environment=SPECTRUM_FPS=8
+Environment=OPENRGB_HOST=127.0.0.1
+Environment=OPENRGB_PORT=6742
+ExecStart=%h/.local/share/desk-rgb/venv/bin/python %h/.local/share/desk-rgb/sync.py
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=default.target

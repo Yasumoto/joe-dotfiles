@@ -1,0 +1,15 @@
+[Unit]
+Description=OpenRGB SDK server (local lighting)
+After=graphical-session.target
+PartOf=graphical-session.target
+ConditionPathExists=%h/AppImages/openrgb.appimage
+
+[Service]
+Type=simple
+Environment=QT_QPA_PLATFORM=offscreen
+ExecStart=%h/AppImages/openrgb.appimage --server --server-host 127.0.0.1 --server-port 6742 --noautoconnect
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=default.target
