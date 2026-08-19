@@ -228,10 +228,45 @@ in
           PATH="${pkgs.git}/bin:$PATH" ${pkgs.prek}/bin/prek install --install-hooks
         fi
       '';
+      # Stop a previously-started gpg-agent-ssh.socket and point the systemd
+      # user environment at OpenSSH ssh-agent when gcr is not present.
+      # (The unit file itself is masked declaratively below.)
+      maskGpgAgentSsh = lib.mkIf pkgs.stdenv.isLinux (
+        lib.hm.dag.entryAfter [ "reloadSystemd" ] ''
+          sys="${pkgs.systemd}/bin/systemctl"
+          runtime="''${XDG_RUNTIME_DIR:-/run/user/$(${pkgs.coreutils}/bin/id -u)}"
+          export XDG_RUNTIME_DIR="$runtime"
+          export DBUS_SESSION_BUS_ADDRESS="''${DBUS_SESSION_BUS_ADDRESS:-unix:path=$runtime/bus}"
+          "$sys" --user stop gpg-agent-ssh.socket 2>/dev/null || true
+          "$sys" --user unset-environment GSM_SKIP_SSH_AGENT_WORKAROUND 2>/dev/null || true
+          if [ -S "$runtime/gcr/ssh" ]; then
+            "$sys" --user set-environment SSH_AUTH_SOCK="$runtime/gcr/ssh" 2>/dev/null || true
+          elif [ -S "$runtime/gcr/.ssh" ]; then
+            "$sys" --user set-environment SSH_AUTH_SOCK="$runtime/gcr/.ssh" 2>/dev/null || true
+          else
+            "$sys" --user start ssh-agent.service 2>/dev/null || true
+            if [ -S "$runtime/ssh-agent" ]; then
+              "$sys" --user set-environment SSH_AUTH_SOCK="$runtime/ssh-agent" 2>/dev/null || true
+            elif "$sys" --user show-environment 2>/dev/null | ${pkgs.gnugrep}/bin/grep -q "^SSH_AUTH_SOCK=$runtime/gnupg/S.gpg-agent.ssh$"; then
+              "$sys" --user unset-environment SSH_AUTH_SOCK 2>/dev/null || true
+            fi
+          fi
+        ''
+      );
     };
   };
 
   fonts.fontconfig.enable = !pkgs.stdenv.isDarwin;
+
+  # systemd treats a 0-byte unit file as masked, so this wins over Ubuntu's
+  # preset-enabled gpg-agent-ssh.socket without calling systemctl mask.
+  xdg.configFile."systemd/user/gpg-agent-ssh.socket" = lib.mkIf pkgs.stdenv.isLinux {
+    source = pkgs.emptyFile;
+  };
+
+  # Linux: OpenSSH ssh-agent via systemd --user ($XDG_RUNTIME_DIR/ssh-agent).
+  # macOS: leave disabled — launchd already provides the agent + Keychain.
+  services.ssh-agent.enable = pkgs.stdenv.isLinux;
 
   programs = {
     home-manager.enable = true;
@@ -251,10 +286,10 @@ in
       # Use upstream OpenSSH directive names (matchBlocks/extraOptions are deprecated)
       settings."*" = {
         IgnoreUnknown = "GSSAPIAuthentication,UseKeychain,AddKeysToAgent";
+        AddKeysToAgent = "yes";
       }
       // lib.optionalAttrs pkgs.stdenv.isDarwin {
         UseKeychain = "yes";
-        AddKeysToAgent = "yes";
       };
     };
 

@@ -311,85 +311,98 @@ in
     # ~/src/sw is still the trigger (only wire up work config on work machines),
     # but it no longer gates the symlinking: an existing checkout must get
     # linked even if the clone is skipped or fails.
-    cloneWorkConfig = lib.hm.dag.entryAfter [ "claudeSettingsSetup" ] ''
-      WORK_REPO="$HOME/src/sw"
-      WORK_CONFIG="$HOME/.claude/work-config"
-      WORK_CONFIG_USER="joe.smith"
+    cloneWorkConfig =
+      lib.hm.dag.entryAfter
+        [
+          "claudeSettingsSetup"
+          "maskGpgAgentSsh"
+        ]
+        ''
+          WORK_REPO="$HOME/src/sw"
+          WORK_CONFIG="$HOME/.claude/work-config"
+          WORK_CONFIG_USER="joe.smith"
 
-      if [ ! -d "$WORK_REPO/.git" ]; then
-        echo "NOTE: $WORK_REPO not found — skipping Claude work-config (not a work machine?)." >&2
-      else
-        WORK_REMOTE=$(${pkgs.git}/bin/git -C "$WORK_REPO" remote get-url origin 2>/dev/null)
-        # Host only, from git@HOST:ORG/REPO or https://HOST/ORG/REPO
-        GIT_HOST=$(echo "$WORK_REMOTE" | ${pkgs.gnused}/bin/sed -n 's|.*@\([^:]*\):.*|\1|p; s|https\?://\([^/]*\)/.*|\1|p' | head -1)
+          if [ ! -d "$WORK_REPO/.git" ]; then
+            echo "NOTE: $WORK_REPO not found — skipping Claude work-config (not a work machine?)." >&2
+          else
+            WORK_REMOTE=$(${pkgs.git}/bin/git -C "$WORK_REPO" remote get-url origin 2>/dev/null)
+            # Host only, from git@HOST:ORG/REPO or https://HOST/ORG/REPO
+            GIT_HOST=$(echo "$WORK_REMOTE" | ${pkgs.gnused}/bin/sed -n 's|.*@\([^:]*\):.*|\1|p; s|https\?://\([^/]*\)/.*|\1|p' | head -1)
 
-        if [ -z "$GIT_HOST" ]; then
-          echo "WARNING: could not derive a GitLab host from $WORK_REPO origin ($WORK_REMOTE)." >&2
-        elif [ ! -d "$WORK_CONFIG/.git" ]; then
-          # home-manager activation rewrites PATH to a minimal nix-store set that
-          # does NOT include system ssh (/usr/bin/ssh) or openssh from
-          # home.packages. git then fails with:
-          #   error: cannot run ssh: No such file or directory
-          # Point GIT_SSH_COMMAND at pkgs.openssh so the clone can actually run.
-          #
-          # Also discover a user SSH agent if the invoking shell didn't export
-          # one. The private key is passphrase-protected, so without an unlocked
-          # agent (gcr-ssh-agent / ssh-agent) auth fails even with ssh on PATH.
-          if [ -z "''${SSH_AUTH_SOCK:-}" ] || [ ! -S "$SSH_AUTH_SOCK" ]; then
-            runtimeDir="''${XDG_RUNTIME_DIR:-/run/user/$(${pkgs.coreutils}/bin/id -u)}"
-            for sock in \
-              "$runtimeDir/gcr/ssh" \
-              "$runtimeDir/gcr/.ssh" \
-              "$runtimeDir/ssh-agent" \
-              "$runtimeDir/ssh-agent.socket"; do
-              if [ -S "$sock" ]; then
-                export SSH_AUTH_SOCK="$sock"
-                break
+            if [ -z "$GIT_HOST" ]; then
+              echo "WARNING: could not derive a GitLab host from $WORK_REPO origin ($WORK_REMOTE)." >&2
+            elif [ ! -d "$WORK_CONFIG/.git" ]; then
+              # home-manager activation rewrites PATH to a minimal nix-store set that
+              # does NOT include system ssh (/usr/bin/ssh) or openssh from
+              # home.packages. git then fails with:
+              #   error: cannot run ssh: No such file or directory
+              # Point GIT_SSH_COMMAND at pkgs.openssh so the clone can actually run.
+              #
+              # Also discover a user SSH agent if the invoking shell didn't export
+              # one. The private key is passphrase-protected, so without an unlocked
+              # agent (gcr-ssh-agent / ssh-agent) auth fails even with ssh on PATH.
+              runtimeDir="''${XDG_RUNTIME_DIR:-/run/user/$(${pkgs.coreutils}/bin/id -u)}"
+              # Prefer this machine's agent (gcr / home-manager ssh-agent). Skip
+              # Ubuntu's gpg-agent ssh socket — there are no GPG auth keys.
+              if [ -z "''${SSH_AUTH_SOCK:-}" ] || [ ! -S "$SSH_AUTH_SOCK" ] \
+                || [ "$SSH_AUTH_SOCK" = "$runtimeDir/gnupg/S.gpg-agent.ssh" ]; then
+                for sock in \
+                  "$runtimeDir/gcr/ssh" \
+                  "$runtimeDir/gcr/.ssh" \
+                  "$runtimeDir/ssh-agent" \
+                  "$runtimeDir/ssh-agent.socket"; do
+                  if [ -S "$sock" ]; then
+                    export SSH_AUTH_SOCK="$sock"
+                    break
+                  fi
+                done
               fi
-            done
-          fi
+              if [ -z "''${SSH_AUTH_SOCK:-}" ] || [ ! -S "$SSH_AUTH_SOCK" ] \
+                || [ "$SSH_AUTH_SOCK" = "$runtimeDir/gnupg/S.gpg-agent.ssh" ]; then
+                unset SSH_AUTH_SOCK
+              fi
 
-          # Do NOT swallow git's stderr: "repo not found" vs "permission denied
-          # (publickey)" vs "cannot run ssh" are different problems and the
-          # message is the only clue. BatchMode avoids a hung askpass prompt
-          # during non-interactive activation.
-          echo "Cloning Claude work-config from git@$GIT_HOST:$WORK_CONFIG_USER/work-config.git ..." >&2
-          if ! GIT_SSH_COMMAND="${pkgs.openssh}/bin/ssh -o BatchMode=yes" \
-            ${pkgs.git}/bin/git clone "git@$GIT_HOST:$WORK_CONFIG_USER/work-config.git" "$WORK_CONFIG"; then
-            echo "WARNING: work-config clone failed (see git error above). Agents, harness scripts, and work skills will be unavailable." >&2
-            echo "         If it says 'Permission denied (publickey)', unlock your SSH key (ssh-add) or check https://$GIT_HOST/-/user_settings/ssh_keys" >&2
-            echo "         If it says 'cannot run ssh', PATH during activation is missing openssh — this module should set GIT_SSH_COMMAND." >&2
-          fi
-        fi
+              # Do NOT swallow git's stderr: "repo not found" vs "permission denied
+              # (publickey)" vs "cannot run ssh" are different problems and the
+              # message is the only clue. BatchMode avoids a hung askpass prompt
+              # during non-interactive activation.
+              echo "Cloning Claude work-config from git@$GIT_HOST:$WORK_CONFIG_USER/work-config.git ..." >&2
+              if ! GIT_SSH_COMMAND="${pkgs.openssh}/bin/ssh -o BatchMode=yes" \
+                ${pkgs.git}/bin/git clone "git@$GIT_HOST:$WORK_CONFIG_USER/work-config.git" "$WORK_CONFIG"; then
+                echo "WARNING: work-config clone failed (see git error above). Agents, harness scripts, and work skills will be unavailable." >&2
+                echo "         If it says 'Permission denied (publickey)', unlock your SSH key (ssh-add) or check https://$GIT_HOST/-/user_settings/ssh_keys" >&2
+                echo "         If it says 'cannot run ssh', PATH during activation is missing openssh — this module should set GIT_SSH_COMMAND." >&2
+              fi
+            fi
 
-        # Link whatever is present, regardless of whether we just cloned it.
-        if [ -d "$WORK_CONFIG/agents" ]; then
-          ln -sfn "$WORK_CONFIG/agents" "$HOME/.claude/agents"
-        else
-          echo "WARNING: $WORK_CONFIG/agents not found. Claude agents unavailable." >&2
-        fi
-        if [ -d "$WORK_CONFIG/scripts" ]; then
-          ln -sfn "$WORK_CONFIG/scripts" "$HOME/.claude/scripts"
-        else
-          echo "WARNING: $WORK_CONFIG/scripts not found. Harness script unavailable." >&2
-        fi
-        # Symlink each work-config skill + command individually so public-repo
-        # home.file entries (e.g. commit-push-open-mr) coexist.
-        if [ -d "$WORK_CONFIG/skills" ]; then
-          mkdir -p "$HOME/.claude/skills"
-          for skill in "$WORK_CONFIG/skills"/*/; do
-            [ -d "$skill" ] || continue
-            ln -sfn "$skill" "$HOME/.claude/skills/$(basename "$skill")"
-          done
-        fi
-        if [ -d "$WORK_CONFIG/commands" ]; then
-          mkdir -p "$HOME/.claude/commands"
-          for cmd in "$WORK_CONFIG/commands"/*.md; do
-            [ -f "$cmd" ] || continue
-            ln -sfn "$cmd" "$HOME/.claude/commands/$(basename "$cmd")"
-          done
-        fi
-      fi
-    '';
+            # Link whatever is present, regardless of whether we just cloned it.
+            if [ -d "$WORK_CONFIG/agents" ]; then
+              ln -sfn "$WORK_CONFIG/agents" "$HOME/.claude/agents"
+            else
+              echo "WARNING: $WORK_CONFIG/agents not found. Claude agents unavailable." >&2
+            fi
+            if [ -d "$WORK_CONFIG/scripts" ]; then
+              ln -sfn "$WORK_CONFIG/scripts" "$HOME/.claude/scripts"
+            else
+              echo "WARNING: $WORK_CONFIG/scripts not found. Harness script unavailable." >&2
+            fi
+            # Symlink each work-config skill + command individually so public-repo
+            # home.file entries (e.g. commit-push-open-mr) coexist.
+            if [ -d "$WORK_CONFIG/skills" ]; then
+              mkdir -p "$HOME/.claude/skills"
+              for skill in "$WORK_CONFIG/skills"/*/; do
+                [ -d "$skill" ] || continue
+                ln -sfn "$skill" "$HOME/.claude/skills/$(basename "$skill")"
+              done
+            fi
+            if [ -d "$WORK_CONFIG/commands" ]; then
+              mkdir -p "$HOME/.claude/commands"
+              for cmd in "$WORK_CONFIG/commands"/*.md; do
+                [ -f "$cmd" ] || continue
+                ln -sfn "$cmd" "$HOME/.claude/commands/$(basename "$cmd")"
+              done
+            fi
+          fi
+        '';
   };
 }

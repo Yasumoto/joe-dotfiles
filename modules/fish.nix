@@ -21,16 +21,29 @@
         fish_add_path "$HOME/src/sw/ops/bin/cache"
       end
 
-      # Set SSH_AUTH_SOCK for gcr-ssh-agent (GNOME Keyring) in distrobox
-      if test -z "$SSH_AUTH_SOCK"
-        if test -S "$XDG_RUNTIME_DIR/gcr/.ssh"
-          set -gx SSH_AUTH_SOCK "$XDG_RUNTIME_DIR/gcr/.ssh"
-        else if test -S "$XDG_RUNTIME_DIR/ssh-agent"
-          set -gx SSH_AUTH_SOCK "$XDG_RUNTIME_DIR/ssh-agent"
+      # Pick this machine's SSH agent. Prefer a live local socket so we do
+      # not inherit Ubuntu's empty gpg-agent ssh emulation.
+      #   1. gcr-ssh-agent — Bluefin / GNOME / Distrobox host
+      #   2. home-manager services.ssh-agent — native Linux
+      #   3. keep a live non-gpg sock (macOS launchd)
+      set -l runtime "$XDG_RUNTIME_DIR"
+      if test -z "$runtime"
+        set runtime /run/user/(id -u)
+      end
+      set -l chosen ""
+      for sock in "$runtime/gcr/ssh" "$runtime/gcr/.ssh" "$runtime/ssh-agent" "$runtime/ssh-agent.socket"
+        if test -S "$sock"
+          set chosen "$sock"
+          break
         end
       end
-
-      # macOS: launchd provides ssh-agent automatically (since 10.5 Leopard)
+      if test -n "$chosen"
+        set -gx SSH_AUTH_SOCK "$chosen"
+      else if not test -S "$SSH_AUTH_SOCK"
+        set -e SSH_AUTH_SOCK
+      else if string match -q '*/gnupg/S.gpg-agent.ssh' "$SSH_AUTH_SOCK"
+        set -e SSH_AUTH_SOCK
+      end
     '';
 
     interactiveShellInit = ''
