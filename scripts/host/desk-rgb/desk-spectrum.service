@@ -6,8 +6,11 @@ ConditionPathExists=%h/.local/share/desk-rgb/venv/bin/python
 
 [Service]
 Type=simple
-Environment=SPECTRUM_PERIOD=10
-Environment=SPECTRUM_FPS=8
+Environment=SPECTRUM_PERIOD=48
+Environment=SPECTRUM_FPS=3
+Environment=SPECTRUM_SAT=0.55
+Environment=SPECTRUM_VAL=0.62
+Environment=SPECTRUM_MONITOR_VAL=0.40
 Environment=OPENRGB_HOST=127.0.0.1
 Environment=OPENRGB_PORT=6742
 ExecStart=%h/.local/share/desk-rgb/venv/bin/python %h/.local/share/desk-rgb/sync.py
