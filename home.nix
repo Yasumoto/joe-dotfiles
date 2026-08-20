@@ -72,6 +72,7 @@ in
         stylua
         kubectl
         kubernetes-helm
+        home-assistant-cli # hass-cli — talk to HA (https://home.bjoli.com) from the terminal
         minikube
         stern
         ctop
