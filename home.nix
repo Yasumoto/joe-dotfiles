@@ -14,6 +14,11 @@ let
       "/Users/${username}"
     else
       "/home/${username}";
+  hmConfigName =
+    if pkgs.stdenv.isDarwin then
+      (if username == "joe.smith" then "darwin-joe.smith" else "darwin")
+    else
+      "linux";
 in
 {
   imports = [
@@ -55,7 +60,6 @@ in
         ripgrep
         zoxide
         starship
-        vim
         gnupg
         eksctl
         packer
@@ -65,7 +69,6 @@ in
         tflint
         terraform-ls
         prek # v0.2.30 or later needed for builtin hooks
-        alejandra
         nixfmt
         statix
         taplo
@@ -102,14 +105,15 @@ in
         curl
         go
         pyright
+        ruff
         gopls
         bash-language-server
-        dockerfile-language-server
+        docker-language-server
         typescript-language-server
         typescript
-        nil
-        jdt-language-server
+        nixd
         yaml-language-server
+        buf
         cascadia-code
         tmux
         mosh
@@ -132,13 +136,14 @@ in
 
     file = {
       ".bash_profile".source = ./dotfiles/bash_profile;
-      ".vimrc".source = ./dotfiles/vimrc;
       ".tmux.conf.local".source = ./dotfiles/tmux.conf.local;
       ".tmux.conf".source = ./dotfiles/.tmux.conf;
       ".config/starship.toml".source = ./dotfiles/starship.toml;
       ".config/starship-minimal.toml".source = ./dotfiles/starship-minimal.toml;
       ".config/ghostty/config".text = ''
         shell-integration-features = ssh-terminfo,ssh-env
+        # Left Option is Meta so Neovim <A-…> (barbar) works; right Option still types Unicode.
+        macos-option-as-alt = left
       '';
       ".config/opencode/tui.json".text = builtins.toJSON {
         "$schema" = "https://opencode.ai/tui.json";
@@ -313,21 +318,65 @@ in
     neovim = {
       enable = true;
       defaultEditor = true;
-      # Explicit legacy defaults (HM 26.05 changed defaults to false when stateVersion >= 26.05)
-      withRuby = true;
-      withPython3 = true;
+      vimAlias = true;
+      # Ruby/python providers unused; copilot-lua uses extraPackages nodejs, not the neovim node provider
+      withRuby = false;
+      withPython3 = false;
+      extraPackages = with pkgs; [
+        nodejs # copilot-lua language-server.js (not the neovim node provider)
+        fd
+        ripgrep
+        pyright
+        ruff
+        gopls
+        bash-language-server
+        docker-language-server
+        typescript-language-server
+        terraform
+        terraform-ls
+        tflint
+        nixd
+        nixfmt
+        lua-language-server
+        jdt-language-server
+        yaml-language-server
+        vscode-langservers-extracted # jsonls
+        clang-tools # clangd
+        stylua
+        taplo
+        shfmt
+        helm-ls
+        fish-lsp
+        buf
+        marksman
+        # rustaceanvim looks up rust-analyzer on PATH. Use rustup's toolchain
+        # binary, not pkgs.rust-analyzer (sysroot mismatch with rustup rustc).
+        rustup
+        (writeShellScriptBin "rust-analyzer" ''
+          ra="$(${lib.getExe rustup} which rust-analyzer 2>/dev/null)" || true
+          if [ -n "$ra" ]; then
+            exec "$ra" "$@"
+          fi
+          echo "rust-analyzer: run 'rustup component add rust-analyzer'" >&2
+          exit 127
+        '')
+        (writeShellScriptBin "rustfmt" ''
+          rf="$(${lib.getExe rustup} which rustfmt 2>/dev/null)" || true
+          if [ -n "$rf" ]; then
+            exec "$rf" "$@"
+          fi
+          echo "rustfmt: run 'rustup component add rustfmt'" >&2
+          exit 127
+        '')
+      ];
       plugins = with pkgs.vimPlugins; [
         nvim-lspconfig
-        nvim-cmp
-        cmp-nvim-lsp
-        cmp-nvim-lsp-signature-help
-        cmp-path
-        cmp-buffer
-        cmp-cmdline
+        conform-nvim
+        SchemaStore-nvim
+        blink-cmp
+        blink-copilot
         copilot-lua
-        copilot-cmp
         rustaceanvim
-        popup-nvim
         plenary-nvim
         telescope-nvim
         telescope-fzf-native-nvim
@@ -336,36 +385,43 @@ in
             lua
             rust
             go
+            gomod
+            gosum
             python
             typescript
             javascript
+            tsx
             nix
             terraform
+            hcl
             bash
             fish
             json
             yaml
             toml
             markdown
+            markdown_inline
             vim
+            vimdoc
+            query
             c
             cpp
+            dockerfile
+            proto
+            gitcommit
+            regex
+            helm
+            gotmpl
           ]
         ))
-        nord-vim
+        gbprod-nord
+        vim-helm
         vim-fugitive
-        vim-terraform
-        vim-protobuf
-        vim-mustache-handlebars
-        vim-fish
-        vim-nix
         gitsigns-nvim
         indent-blankline-nvim
-        neo-tree-nvim
+        oil-nvim
         nvim-web-devicons
-        nui-nvim
         lualine-nvim
-        comment-nvim
         diffview-nvim
         harpoon
         barbar-nvim
@@ -373,36 +429,11 @@ in
         trouble-nvim
       ];
 
-      extraConfig = ''
-        silent! autocmd! filetypedetect BufRead,BufNewFile *.tf
-        autocmd BufRead,BufNewFile *.hcl set filetype=hcl
-        autocmd BufRead,BufNewFile .terraformrc,terraform.rc set filetype=hcl
-        autocmd BufRead,BufNewFile *.tf,*.tfvars set filetype=terraform
-        autocmd BufRead,BufNewFile *.tfstate,*.tfstate.backup set filetype=json
-        let g:terraform_fmt_on_save=1
-        let g:terraform_align=1
-
-        " Unique keymaps not defined in Lua on_attach
-        nnoremap <silent> 1gD   <cmd>lua vim.lsp.buf.type_definition()<CR>
-        nnoremap <silent> g0    <cmd>lua vim.lsp.buf.document_symbol()<CR>
-        nnoremap <silent> gW    <cmd>lua vim.lsp.buf.workspace_symbol()<CR>
-        nnoremap <silent> W     <cmd>lua vim.diagnostic.open_float()<CR>
-        nnoremap <silent> ga    <cmd>lua vim.lsp.buf.code_action()<CR>
-
-        set updatetime=500
-
-        colorscheme nord
-        nmap <silent> <C-M> :silent noh<CR> :echo "Highlights Cleared!"<CR>
-        set mouse=
-
-        highlight ExtraWhitespace guibg=#ff0000
-        autocmd BufWinEnter * match ExtraWhitespace /\s\+$/
-        autocmd InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$/
-        autocmd InsertLeave * match ExtraWhitespace /\s\+$/
-        autocmd BufWinLeave * call clearmatches()
-      '';
-
-      initLua = builtins.readFile ./modules/neovim-lua.lua;
+      initLua = ''
+        vim.g.joe_dotfiles_flake = [[${homeDirectory}/workspace/github.com/Yasumoto/joe-dotfiles]]
+        vim.g.joe_hm_config = [[${hmConfigName}]]
+      ''
+      + builtins.readFile ./modules/neovim-lua.lua;
     };
   };
 }

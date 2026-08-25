@@ -111,6 +111,46 @@
         git status
       '';
 
+      # Walk files changed vs a ref (default origin/master), opening each in
+      # nvim with :Gvdiffsplit. Gvdiffsplit is scheduled on VimEnter so it
+      # runs after init (Oil is on-demand via `-` / <leader>n, not auto-opened).
+      # Usage: review_party [ref] [pathspec...]
+      review_party = ''
+        set -l base origin/master
+        if test (count $argv) -gt 0
+          set base $argv[1]
+          set -e argv[1]
+        end
+
+        set -l root (git rev-parse --show-toplevel 2>/dev/null)
+        if test $status -ne 0 -o -z "$root"
+          echo "review_party: not in a git repository" >&2
+          return 1
+        end
+
+        if not git -C $root rev-parse --verify --quiet $base >/dev/null
+          echo "review_party: unknown ref $base" >&2
+          return 1
+        end
+
+        set -l files (git -C $root diff --name-only --diff-filter=d $base -- $argv)
+        if test (count $files) -eq 0
+          echo "review_party: no files changed vs $base"
+          return 0
+        end
+
+        echo "Reviewing "(count $files)" file(s) vs $base"
+        for filepath in $files
+          echo "→ $filepath"
+          set -l fullpath "$root/$filepath"
+          if git -C $root cat-file -e "$base:$filepath" 2>/dev/null
+            nvim -c "autocmd VimEnter * ++once ++nested Gvdiffsplit $base" -- $fullpath
+          else
+            nvim -- $fullpath
+          end
+        end
+      '';
+
       shipped = ''
         set BRANCH (git branch --show-current)
         set DEFAULT_BRANCH (git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
