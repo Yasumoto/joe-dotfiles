@@ -844,7 +844,7 @@
         echo "To use: gog gmail thread --list"
       '';
 
-      # Recover frozen GNOME Wayland display (amdgpu flip_done) via Mutter DPMS cycle.
+      # Recover frozen GNOME Wayland display (amdgpu flip_done) via DPMS + gdctl modeset.
       # Script lives at ~/.local/bin/gui-unstick (see scripts/host/gui-unstick).
       gui-unstick = ''
         if command -q gui-unstick

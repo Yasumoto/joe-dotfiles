@@ -178,7 +178,7 @@ in
         executable = true;
       };
 
-      # Recover frozen GNOME Wayland (amdgpu flip_done) via Mutter DPMS cycle
+      # Recover frozen GNOME Wayland (amdgpu flip_done) via DPMS + gdctl modeset
       ".local/bin/gui-unstick" = {
         source = ./scripts/host/gui-unstick;
         executable = true;

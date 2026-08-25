@@ -10,13 +10,20 @@
 # times out waiting for the method reply. Trust PowerSaveMode reads over the
 # busctl exit code, and always attempt "on" even if "off" appears to fail.
 #
+# PowerSaveMode=on is not enough: a DPMS cycle can leave the kernel connector
+# enabled=disabled dpms=Off (black panel) while Mutter still reports on. In
+# that case re-apply the current layout with gdctl to force a real CRTC
+# modeset.
+#
 # Works from:
 #   - Bluefin/host GNOME session (busctl --user)
 #   - Distrobox / SSH with shared /run/user (via distrobox-host-exec if needed)
 #
 # Usage:
-#   gui-unstick              # DPMS cycle (default)
-#   gui-unstick status       # show PowerSaveMode + sessions + recent drm errors
+#   gui-unstick              # DPMS cycle, then gdctl modeset if CRTC still off
+#   gui-unstick status       # PowerSaveMode + DRM connectors + sessions + drm errors
+#   gui-unstick dpms         # PowerSaveMode off → on only
+#   gui-unstick modeset      # re-apply current monitors via gdctl
 #   gui-unstick diag         # write freeze diagnostics under ~/host-freeze-*/
 #   gui-unstick terminate    # loginctl terminate-session for seat0 graphical session
 #   gui-unstick help
@@ -31,32 +38,52 @@ set -euo pipefail
 TIMEOUT="${GUI_UNSTICK_TIMEOUT:-15}"
 OFF_TIMEOUT="${GUI_UNSTICK_OFF_TIMEOUT:-${TIMEOUT}}"
 ON_TIMEOUT="${GUI_UNSTICK_ON_TIMEOUT:-${TIMEOUT}}"
+MODESET_TIMEOUT="${GUI_UNSTICK_MODESET_TIMEOUT:-${TIMEOUT}}"
 OFF_SLEEP="${GUI_UNSTICK_OFF_SLEEP:-2}"
 POLL_INTERVAL="${GUI_UNSTICK_POLL_INTERVAL:-0.5}"
+
+require_nonneg_num() {
+  local n="$1" name="$2"
+  if [[ ! "$n" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
+    echo "gui-unstick: ${name} must be a non-negative number, got: ${n}" >&2
+    exit 2
+  fi
+}
+require_nonneg_num "$TIMEOUT" GUI_UNSTICK_TIMEOUT
+require_nonneg_num "$OFF_TIMEOUT" GUI_UNSTICK_OFF_TIMEOUT
+require_nonneg_num "$ON_TIMEOUT" GUI_UNSTICK_ON_TIMEOUT
+require_nonneg_num "$MODESET_TIMEOUT" GUI_UNSTICK_MODESET_TIMEOUT
+require_nonneg_num "$OFF_SLEEP" GUI_UNSTICK_OFF_SLEEP
+require_nonneg_num "$POLL_INTERVAL" GUI_UNSTICK_POLL_INTERVAL
 
 usage() {
   cat <<'EOF'
 gui-unstick — recover a frozen GNOME Wayland display (amdgpu flip_done class).
 
-Cycles Mutter DisplayConfig PowerSaveMode (DPMS off → on) to force a re-modeset.
-Works on host or from Distrobox (via distrobox-host-exec).
+Default path: Mutter DPMS off → on, then gdctl re-apply if the kernel CRTC is
+still disabled / DPMS Off. Works on host or from Distrobox (via distrobox-host-exec).
 
 Under a GPU wedge, set-property may apply but time out on the reply. This script
 verifies via PowerSaveMode reads and always attempts to restore "on".
+PowerSaveMode=on can still mean a black panel — check DRM enabled/dpms, then
+modeset.
 
 Usage:
-  gui-unstick              # DPMS cycle (default)
-  gui-unstick status       # PowerSaveMode + sessions + recent drm errors
+  gui-unstick              # DPMS cycle, then gdctl modeset if CRTC still off
+  gui-unstick status       # PowerSaveMode + DRM connectors + sessions + drm errors
+  gui-unstick dpms         # PowerSaveMode off → on only
+  gui-unstick modeset      # re-apply current monitors via gdctl
   gui-unstick diag         # write freeze diagnostics under ~/host-freeze-*/
   gui-unstick terminate    # loginctl terminate-session for seat0 graphical session
   gui-unstick help
 
 Env:
-  GUI_UNSTICK_TIMEOUT        default seconds for busctl set-property (default 15)
-  GUI_UNSTICK_OFF_TIMEOUT    seconds for PowerSaveMode=3 (default: TIMEOUT)
-  GUI_UNSTICK_ON_TIMEOUT     seconds for PowerSaveMode=0 (default: TIMEOUT)
-  GUI_UNSTICK_OFF_SLEEP      seconds between off and on (default 2)
-  GUI_UNSTICK_POLL_INTERVAL  seconds between property polls (default 0.5)
+  GUI_UNSTICK_TIMEOUT          default seconds for busctl/gdctl (default 15)
+  GUI_UNSTICK_OFF_TIMEOUT      seconds for PowerSaveMode=3 (default: TIMEOUT)
+  GUI_UNSTICK_ON_TIMEOUT       seconds for PowerSaveMode=0 (default: TIMEOUT)
+  GUI_UNSTICK_MODESET_TIMEOUT  seconds for gdctl set (default: TIMEOUT)
+  GUI_UNSTICK_OFF_SLEEP        seconds between off and on (default 2)
+  GUI_UNSTICK_POLL_INTERVAL    seconds between property polls (default 0.5)
 
 Prevention tips:
   Settings → Displays → fixed refresh (avoid Variable / VRR if freezes recur)
@@ -89,6 +116,14 @@ bus() {
     busctl --user "$@"
   else
     host_run busctl --user "$@"
+  fi
+}
+
+run_gdctl() {
+  if command -v gdctl >/dev/null 2>&1; then
+    gdctl "$@"
+  else
+    host_run gdctl "$@"
   fi
 }
 
@@ -204,6 +239,211 @@ ensure_powersave() {
   return 1
 }
 
+# Kernel DRM connectors (host sysfs). Writeback omitted.
+# Lines: <name> status=<s> enabled=<e> dpms=<d>
+drm_lines() {
+  # Inner script runs on the host; $d/$name must not expand in this shell.
+  # shellcheck disable=SC2016
+  host_run bash -c 'shopt -s nullglob
+for d in /sys/class/drm/card*-*; do
+  [ -e "$d/status" ] || continue
+  name=${d##*/}
+  case "$name" in
+    *Writeback*) continue ;;
+  esac
+  printf "%s status=%s enabled=%s dpms=%s\n" \
+    "$name" \
+    "$(cat "$d/status" 2>/dev/null || echo ?)" \
+    "$(cat "$d/enabled" 2>/dev/null || echo ?)" \
+    "$(cat "$d/dpms" 2>/dev/null || echo ?)"
+done'
+}
+
+print_drm() {
+  local line connected=0 bad=0
+  echo "=== DRM connectors (kernel; connected is what matters) ==="
+  while IFS= read -r line; do
+    [[ -n "$line" ]] || continue
+    echo "$line"
+    if [[ "$line" == *"status=connected"* ]]; then
+      connected=1
+      if [[ "$line" != *"enabled=enabled"* || "$line" != *"dpms=On"* ]]; then
+        bad=1
+      fi
+    fi
+  done < <(drm_lines)
+  if (( connected == 0 )); then
+    echo "note: no connected DRM connector (or sysfs unavailable)"
+  elif (( bad == 1 )); then
+    echo "note: connected connector is disabled or DPMS Off — Mutter on ≠ panel on; try modeset"
+  fi
+}
+
+# True if we saw a connected connector that is not enabled+On.
+# Unknown/empty sysfs is false — do not skip DPMS on missing data.
+drm_connected_is_disabled() {
+  local line
+  while IFS= read -r line; do
+    [[ "$line" == *"status=connected"* ]] || continue
+    if [[ "$line" != *"enabled=enabled"* || "$line" != *"dpms=On"* ]]; then
+      return 0
+    fi
+  done < <(drm_lines)
+  return 1
+}
+
+# True if at least one connected connector exists and all of them are enabled+On.
+drm_connected_ok() {
+  local line saw=0
+  while IFS= read -r line; do
+    [[ "$line" == *"status=connected"* ]] || continue
+    saw=$((saw + 1))
+    if [[ "$line" != *"enabled=enabled"* || "$line" != *"dpms=On"* ]]; then
+      return 1
+    fi
+  done < <(drm_lines)
+  (( saw >= 1 ))
+}
+
+wait_for_drm_ok() {
+  local tmo="$1"
+  local start now elapsed
+  start="$(date +%s)"
+  while true; do
+    if drm_connected_ok; then
+      return 0
+    fi
+    now="$(date +%s)"
+    elapsed=$((now - start))
+    if (( elapsed >= tmo )); then
+      return 1
+    fi
+    sleep "$POLL_INTERVAL"
+  done
+}
+
+# Print gdctl argv (one arg per line) from Mutter GetCurrentState JSON.
+gdctl_reapply_args() {
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo "gui-unstick: python3 not found (needed to build gdctl args)" >&2
+    return 1
+  fi
+  bus call \
+    org.gnome.Mutter.DisplayConfig \
+    /org/gnome/Mutter/DisplayConfig \
+    org.gnome.Mutter.DisplayConfig \
+    GetCurrentState --json=short 2>/dev/null | python3 -c '
+import json, math, re, sys
+
+TRANSFORMS = {
+    0: "normal",
+    1: "90",
+    2: "180",
+    3: "270",
+    4: "flipped",
+    5: "flipped-90",
+    6: "flipped-180",
+    7: "flipped-270",
+}
+# DRM connector (DP-4, HDMI-A-1, eDP-1) and mutter mode id (3840x2160@59.997[+vrr]).
+CONN_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+MODE_RE = re.compile(r"^[0-9]+x[0-9]+@[0-9]+(?:\.[0-9]+)?(?:\+vrr)?$")
+
+def unwrap(v):
+    if isinstance(v, dict) and "type" in v and "data" in v and not (set(v.keys()) - {"type", "data"}):
+        return unwrap(v["data"])
+    return v
+
+def require_conn(value):
+    s = unwrap(value)
+    if not isinstance(s, str) or not CONN_RE.fullmatch(s):
+        print(f"gui-unstick: refusing connector {s!r}", file=sys.stderr)
+        sys.exit(1)
+    return s
+
+def require_mode(value):
+    s = unwrap(value)
+    if not isinstance(s, str) or not MODE_RE.fullmatch(s):
+        print(f"gui-unstick: refusing mode {s!r}", file=sys.stderr)
+        sys.exit(1)
+    return s
+
+try:
+    payload = json.load(sys.stdin)
+except json.JSONDecodeError as exc:
+    print(f"gui-unstick: GetCurrentState JSON parse failed: {exc}", file=sys.stderr)
+    sys.exit(1)
+
+data = unwrap(payload.get("data", payload) if isinstance(payload, dict) else payload)
+if not isinstance(data, (list, tuple)) or len(data) < 3:
+    print("gui-unstick: unexpected GetCurrentState shape", file=sys.stderr)
+    sys.exit(1)
+
+_serial, monitors, logical = data[0], data[1], data[2]
+current_mode = {}
+for mon in monitors:
+    ident, modes, _mprops = mon
+    raw_conn = unwrap(ident[0])
+    if not isinstance(raw_conn, str) or not CONN_RE.fullmatch(raw_conn):
+        continue
+    connector = raw_conn
+    chosen = preferred = first = None
+    for mode in modes:
+        mid = unwrap(mode[0])
+        if not isinstance(mid, str) or not MODE_RE.fullmatch(mid):
+            continue
+        mp = unwrap(mode[6]) or {}
+        if first is None:
+            first = mid
+        if unwrap(mp.get("is-current")) is True:
+            chosen = mid
+            break
+        if preferred is None and unwrap(mp.get("is-preferred")) is True:
+            preferred = mid
+    picked = chosen or preferred or first
+    if picked is not None:
+        current_mode[connector] = require_mode(picked)
+
+if not logical:
+    print("gui-unstick: no logical monitors in GetCurrentState", file=sys.stderr)
+    sys.exit(1)
+
+args = ["set"]
+for lm in logical:
+    x, y, scale, transform, primary, lm_mons, _lm_props = lm
+    args += ["--logical-monitor"]
+    if unwrap(primary):
+        args += ["--primary"]
+    xi, yi = int(unwrap(x)), int(unwrap(y))
+    if not (-32768 <= xi <= 32767 and -32768 <= yi <= 32767):
+        print(f"gui-unstick: refusing monitor position {(xi, yi)!r}", file=sys.stderr)
+        sys.exit(1)
+    sc = float(unwrap(scale))
+    if not math.isfinite(sc) or not (0 < sc <= 8):
+        print(f"gui-unstick: refusing scale {sc!r}", file=sys.stderr)
+        sys.exit(1)
+    args += ["--x", str(xi), "--y", str(yi)]
+    args += ["--scale", format(sc, ".10g")]
+    t = int(unwrap(transform))
+    if t not in TRANSFORMS:
+        print(f"gui-unstick: refusing transform {t!r}", file=sys.stderr)
+        sys.exit(1)
+    if TRANSFORMS[t] != "normal":
+        args += ["--transform", TRANSFORMS[t]]
+    for m in unwrap(lm_mons):
+        conn = require_conn(m[0])
+        args += ["--monitor", conn]
+        mode = current_mode.get(conn)
+        if mode:
+            args += ["--mode", mode]
+
+if any(("\n" in a or "\0" in a) for a in args):
+    print("gui-unstick: refusing gdctl args with embedded newline/NUL", file=sys.stderr)
+    sys.exit(1)
+print("\n".join(args))
+'
+}
+
 cmd_status() {
   local mode
   mode="$(powersave_mode)"
@@ -213,11 +453,13 @@ cmd_status() {
     echo "note: mode is off while a session may still be active — mid-unstick or stuck off"
   fi
   echo
+  print_drm
+  echo
   echo "=== loginctl sessions ==="
   host_run loginctl list-sessions 2>/dev/null || true
   echo
   echo "=== display (gdctl if present) ==="
-  host_run bash -c 'command -v gdctl >/dev/null && gdctl show || true' 2>/dev/null || true
+  run_gdctl show 2>/dev/null || true
   echo
   echo "=== recent amdgpu/drm errors (this boot, last 30) ==="
   host_run journalctl -b -k --no-pager -g 'flip_done|commit wait|amdgpu.*ERROR' -n 30 2>/dev/null || true
@@ -237,12 +479,14 @@ cmd_diag() {
     >"$out/ps-gnome.txt" 2>&1 || true
   host_run free -h >"$out/mem.txt" 2>&1 || true
   get_powersave >"$out/powersave.txt" 2>&1 || true
+  drm_lines >"$out/drm.txt" 2>&1 || true
+  run_gdctl show -v >"$out/gdctl.txt" 2>&1 || true
   host_run sync 2>/dev/null || true
   echo "Done: $out"
   echo "  ls $out"
 }
 
-cmd_unstick() {
+cmd_dpms() {
   local before after
   before="$(powersave_mode)"
   echo "gui-unstick: PowerSaveMode before: $(get_powersave) ($(powersave_label "${before:-}"))"
@@ -269,20 +513,101 @@ cmd_unstick() {
 
   after="$(powersave_mode)"
   echo "gui-unstick: PowerSaveMode after: $(get_powersave) ($(powersave_label "${after:-}"))"
-  echo
+  [[ "$after" == "0" ]]
+}
 
-  if [[ "$after" == "0" ]]; then
-    echo "gui-unstick: DPMS cycle finished (display reports on)."
-  else
-    echo "gui-unstick: display may still be off or unknown." >&2
+cmd_modeset() {
+  local -a gargs=()
+  local rc=0 line
+
+  echo "gui-unstick: building gdctl set from GetCurrentState…"
+  while IFS= read -r line; do
+    [[ -n "$line" ]] && gargs+=("$line")
+  done < <(gdctl_reapply_args)
+
+  if (( ${#gargs[@]} == 0 )); then
+    echo "gui-unstick: could not build gdctl args" >&2
+    return 1
   fi
+
+  echo "gui-unstick: gdctl ${gargs[*]}  (timeout ${MODESET_TIMEOUT}s)…"
+  rc=0
+  if command -v gdctl >/dev/null 2>&1; then
+    timeout "$MODESET_TIMEOUT" gdctl "${gargs[@]}" || rc=$?
+  else
+    host_run timeout "$MODESET_TIMEOUT" gdctl "${gargs[@]}" || rc=$?
+  fi
+
+  if (( rc == 0 )); then
+    echo "gui-unstick: gdctl set ok"
+  elif (( rc == 124 )); then
+    echo "gui-unstick: gdctl set timed out after ${MODESET_TIMEOUT}s (modeset may still have applied)"
+  else
+    echo "gui-unstick: gdctl set failed (exit ${rc}); checking DRM…" >&2
+  fi
+
+  if wait_for_drm_ok "$MODESET_TIMEOUT"; then
+    echo "gui-unstick: DRM connector enabled + dpms On"
+    print_drm
+    return 0
+  fi
+
+  echo "gui-unstick: DRM connector still disabled or Off after modeset" >&2
+  print_drm
+  return 1
+}
+
+print_next_steps() {
+  local modeset_done="${1:-0}"
   echo "If the panel is still frozen:"
   echo "  1) reseat DP / power-cycle the monitor"
-  echo "  2) gui-unstick diag   # capture logs"
-  echo "  3) gui-unstick terminate   # clean logout of graphical session"
-  echo "  4) reboot (most reliable for hard flip_done)"
+  if [[ "$modeset_done" != "1" ]]; then
+    echo "  2) gui-unstick modeset   # re-apply current layout (fixes black CRTC)"
+    echo "  3) gui-unstick diag      # capture logs"
+    echo "  4) gui-unstick terminate # clean logout of graphical session"
+    echo "  5) reboot (most reliable for hard flip_done)"
+  else
+    echo "  2) gui-unstick diag      # capture logs"
+    echo "  3) gui-unstick terminate # clean logout of graphical session"
+    echo "  4) reboot (most reliable for hard flip_done)"
+  fi
+}
 
-  [[ "$after" == "0" ]]
+cmd_unstick() {
+  local after=""
+  local modeset_done=0
+
+  echo "gui-unstick: PowerSaveMode before: $(get_powersave) ($(powersave_label "$(powersave_mode)"))"
+  print_drm
+  echo
+
+  if drm_connected_is_disabled; then
+    echo "gui-unstick: connected CRTC is disabled/Off — skipping DPMS, applying modeset"
+    cmd_modeset || true
+    modeset_done=1
+  else
+    cmd_dpms || true
+    echo
+    print_drm
+    if ! drm_connected_ok; then
+      echo
+      echo "gui-unstick: DPMS left kernel CRTC disabled/Off (or unknown) — applying modeset"
+      cmd_modeset || true
+      modeset_done=1
+    fi
+  fi
+
+  after="$(powersave_mode)"
+  echo
+  echo "gui-unstick: PowerSaveMode after: $(get_powersave) ($(powersave_label "${after:-}"))"
+  if drm_connected_ok && [[ "$after" == "0" ]]; then
+    echo "gui-unstick: display reports on (Mutter + kernel CRTC)."
+  else
+    echo "gui-unstick: display may still be off, disabled, or unknown." >&2
+  fi
+  print_next_steps "$modeset_done"
+
+  drm_connected_ok && [[ "$after" == "0" ]]
 }
 
 cmd_terminate() {
@@ -306,7 +631,9 @@ cmd_terminate() {
 main() {
   local cmd="${1:-unstick}"
   case "$cmd" in
-    unstick|fix|dpms) cmd_unstick ;;
+    unstick|fix) cmd_unstick ;;
+    dpms) cmd_dpms ;;
+    modeset|gdctl) cmd_modeset ;;
     status|st) cmd_status ;;
     diag|diagnose) cmd_diag ;;
     terminate|logout) cmd_terminate ;;
@@ -319,4 +646,6 @@ main() {
   esac
 }
 
-main "$@"
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  main "$@"
+fi
