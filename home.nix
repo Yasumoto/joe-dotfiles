@@ -236,7 +236,7 @@ in
       '';
       # Stop a previously-started gpg-agent-ssh.socket and point the systemd
       # user environment at OpenSSH ssh-agent when gcr is not present.
-      # (The unit file itself is masked declaratively below.)
+      # (The unit is skipped via ConditionPathExists, not masked — see below.)
       maskGpgAgentSsh = lib.mkIf pkgs.stdenv.isLinux (
         lib.hm.dag.entryAfter [ "reloadSystemd" ] ''
           sys="${pkgs.systemd}/bin/systemctl"
@@ -264,10 +264,30 @@ in
 
   fonts.fontconfig.enable = !pkgs.stdenv.isDarwin;
 
-  # systemd treats a 0-byte unit file as masked, so this wins over Ubuntu's
-  # preset-enabled gpg-agent-ssh.socket without calling systemctl mask.
+  # Ubuntu (and Fedora) preset-enable gpg-agent-ssh.socket, which claims
+  # SSH_AUTH_SOCK with no identities. Override it with a valid unit that
+  # never listens. A 0-byte file is treated as masked, and sd-switch then
+  # fails with UnitMasked when it tries to start the new unit. Do not use
+  # ConditionFalse= — Ubuntu 24.04 is systemd 255, which ignores it.
   xdg.configFile."systemd/user/gpg-agent-ssh.socket" = lib.mkIf pkgs.stdenv.isLinux {
-    source = pkgs.emptyFile;
+    text = ''
+      [Unit]
+      Description=GnuPG cryptographic agent (ssh-agent emulation)
+      Documentation=man:gpg-agent(1)
+      # Always-false: / exists, so "!/" never matches. Portable to systemd
+      # 255 (Ubuntu 24.04); ConditionFalse= was only added in systemd 256.
+      ConditionPathExists=!/
+
+      [Socket]
+      ListenStream=%t/gnupg/S.gpg-agent.ssh
+      FileDescriptorName=ssh
+      Service=gpg-agent.service
+      SocketMode=0600
+      DirectoryMode=0700
+
+      [Install]
+      WantedBy=sockets.target
+    '';
   };
 
   # Linux: OpenSSH ssh-agent via systemd --user ($XDG_RUNTIME_DIR/ssh-agent).
