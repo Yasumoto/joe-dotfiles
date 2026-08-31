@@ -30,6 +30,7 @@ The best prompts are dense with concrete pointers because the picking-up agent c
 - **Exact file paths and line numbers** for every relevant file (`path/to/file.tf:64-99`). Use Grep/Glob/Read now to confirm they're still accurate — a cold handoff with a wrong line number wastes the next agent's time.
 - **Concrete observed facts**: command outputs, resource counts, error messages, API responses, ticket/MR/PR numbers, Slack thread participants. Quote real values, not "the relevant config."
 - **The repo for the task, and the commit SHA(s)** (e.g. `~/src/sw` at a289d569791f9894cde8de6b09b12cfbda714bfb). This will help the incoming agent find your references even if they've been refactored/moved since.
+- **Uncommitted work goes IN the brief — never behind a `stash@{n}` reference.** Embed the diff inline (fenced block or heredoc) or commit/push it to a branch first. Stash indices shift and stashes get dropped during branch cleanup; three 2026-07-22 briefs lost their entire payloads (a 160-line test file among them) this way, discovered at the 2026-08-31 triage.
 - **External references**: doc URLs, service guides, upstream issues/PRs, dashboards.
 - **Access/tooling notes**: how to auth, which kube context, which gateway URL, which tool is correct for this repo (`gh` for github.com, `glab` for the GitLab monorepo).
 
