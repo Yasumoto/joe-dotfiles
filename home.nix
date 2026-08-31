@@ -182,6 +182,10 @@ in
         source = ./scripts/wiki/wiki-harvest-conversations;
         executable = true;
       };
+      ".local/bin/wiki-harvest-grok" = {
+        source = ./scripts/wiki/wiki-harvest-grok;
+        executable = true;
+      };
 
       # Recover frozen GNOME Wayland (amdgpu flip_done) via DPMS + gdctl modeset
       ".local/bin/gui-unstick" = {
