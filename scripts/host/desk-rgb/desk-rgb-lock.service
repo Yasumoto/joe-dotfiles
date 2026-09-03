@@ -1,7 +1,6 @@
 [Unit]
 Description=Desk RGB off while GNOME session is locked
 After=graphical-session.target openrgb.service
-PartOf=graphical-session.target
 Wants=openrgb.service
 ConditionPathExists=%h/.local/share/desk-rgb/venv/bin/python
 
@@ -10,7 +9,7 @@ Type=simple
 Environment=OPENRGB_HOST=127.0.0.1
 Environment=OPENRGB_PORT=6742
 ExecStart=%h/.local/share/desk-rgb/venv/bin/python %h/.local/share/desk-rgb/sync.py lock-watch
-Restart=on-failure
+Restart=always
 RestartSec=2
 
 [Install]
