@@ -8,6 +8,11 @@ OpenRazer owns the Tartarus only. Dygma Raise is left alone.
 The LG 27GN950 is driven over its native HID video-sync protocol, not
 OpenRGB. OpenRGB keeps a stale hidraw handle across USB re-enumerations,
 so the monitor otherwise runs its own firmware effect and looks off-beat.
+
+Commands:
+  sync.py             run the spectrum loop (default)
+  sync.py off         turn desk + monitor lighting off
+  sync.py lock-watch  GNOME lock -> off, unlock -> start desk-spectrum
 """
 
 from __future__ import annotations
@@ -15,6 +20,7 @@ from __future__ import annotations
 import colorsys
 import os
 import socket
+import subprocess
 import sys
 import time
 
@@ -33,17 +39,19 @@ PORT = int(os.environ.get("OPENRGB_PORT", "6742"))
 
 LG_VID_PID = "0000043E:00009A8A"
 LG_VIDEO_SYNC = "a02020308d1"
+LG_TURN_OFF = "f02020200dd"
+SPECTRUM_UNIT = "desk-spectrum.service"
 
 
-def wait_for_port(host: str, port: int, timeout: float = 60.0) -> None:
+def wait_for_port(host: str, port: int, timeout: float = 60.0) -> bool:
     deadline = time.time() + timeout
     while time.time() < deadline:
         try:
             with socket.create_connection((host, port), timeout=1.0):
-                return
+                return True
         except OSError:
             time.sleep(0.4)
-    raise SystemExit(f"OpenRGB SDK not listening on {host}:{port}")
+    return False
 
 
 def hsv_rgb(hue: float, sat: float, val: float) -> tuple[int, int, int]:
@@ -58,8 +66,6 @@ def clamp_component(n: int) -> int:
 
 def tartarus_static(r: int, g: int, b: int) -> None:
     try:
-        import subprocess
-
         subprocess.run(
             [
                 "gdbus",
@@ -83,12 +89,13 @@ def tartarus_static(r: int, g: int, b: int) -> None:
         pass
 
 
-def connect() -> OpenRGBClient:
-    wait_for_port(HOST, PORT)
+def connect(name: str = "desk-spectrum", timeout: float = 60.0) -> OpenRGBClient:
+    if not wait_for_port(HOST, PORT, timeout=timeout):
+        raise SystemExit(f"OpenRGB SDK not listening on {HOST}:{PORT}")
     last_err: Exception | None = None
     for _ in range(20):
         try:
-            return OpenRGBClient(address=HOST, port=PORT, name="desk-spectrum")
+            return OpenRGBClient(address=HOST, port=PORT, name=name)
         except Exception as exc:  # noqa: BLE001
             last_err = exc
             time.sleep(0.5)
@@ -152,7 +159,7 @@ def find_lg_hidraw() -> str | None:
 
 
 class LGSphere:
-    """Native 27GN950 video-sync writer. Re-finds hidraw after USB flaps."""
+    """Native 27GN950 HID writer. Re-finds hidraw after USB flaps."""
 
     def __init__(self) -> None:
         self.path: str | None = None
@@ -183,12 +190,12 @@ class LGSphere:
         padding = "0" * (119 - len(cmd))
         self._send_hex("5343c" + cmd + "4544" + padding)
 
-    def attach(self) -> bool:
+    def open_hid(self) -> bool:
         path = find_lg_hidraw()
         if not path:
             self.close()
             return False
-        if path == self.path and self.fd is not None and self.ready:
+        if path == self.path and self.fd is not None:
             return True
         self.close()
         try:
@@ -197,13 +204,33 @@ class LGSphere:
             return False
         self.path = path
         self.fd = fd
+        self.ready = False
+        return True
+
+    def attach(self) -> bool:
+        if not self.open_hid():
+            return False
+        if self.ready:
+            return True
         try:
             self._send_command(LG_VIDEO_SYNC)
             self.ready = True
-            print(f"lg video-sync on {path}", flush=True)
+            print(f"lg video-sync on {self.path}", flush=True)
             return True
         except OSError as exc:
             print(f"lg attach failed: {exc}", file=sys.stderr, flush=True)
+            self.close()
+            return False
+
+    def turn_off(self) -> bool:
+        if not self.open_hid():
+            return False
+        try:
+            self._send_command(LG_TURN_OFF)
+            self.ready = False
+            return True
+        except OSError as exc:
+            print(f"lg turn_off failed: {exc}", file=sys.stderr, flush=True)
             self.close()
             return False
 
@@ -225,7 +252,84 @@ class LGSphere:
             return False
 
 
-def main() -> int:
+def lights_off() -> int:
+    try:
+        client = connect(name="desk-off", timeout=3.0)
+    except SystemExit as exc:
+        print(f"OpenRGB skip: {exc}", file=sys.stderr, flush=True)
+        client = None
+    if client is not None:
+        for dev in active_devices(client):
+            try:
+                dev.off()
+                print(f"off {dev.name}", flush=True)
+            except Exception as exc:  # noqa: BLE001
+                try:
+                    dev.set_mode("direct")
+                    dev.set_color(RGBColor(0, 0, 0))
+                    print(f"black {dev.name}", flush=True)
+                except Exception as exc2:  # noqa: BLE001
+                    print(f"failed {dev.name}: {exc} / {exc2}", file=sys.stderr, flush=True)
+    tartarus_static(0, 0, 0)
+    lg = LGSphere()
+    ok = lg.turn_off()
+    print(f"lg turn_off={'ok' if ok else 'failed'} path={lg.path}", flush=True)
+    lg.close()
+    return 0
+
+
+def _systemctl(*args: str) -> None:
+    subprocess.run(["systemctl", "--user", *args], check=False)
+
+
+def on_lock() -> None:
+    print("session locked: stopping spectrum + lights off", flush=True)
+    _systemctl("stop", SPECTRUM_UNIT)
+    lights_off()
+
+
+def on_unlock() -> None:
+    print("session unlocked: starting spectrum", flush=True)
+    _systemctl("start", SPECTRUM_UNIT)
+
+
+def lock_watch() -> int:
+    print("watching org.gnome.ScreenSaver ActiveChanged", flush=True)
+    proc = subprocess.Popen(
+        [
+            "gdbus",
+            "monitor",
+            "--session",
+            "--dest",
+            "org.gnome.ScreenSaver",
+            "--object-path",
+            "/org/gnome/ScreenSaver",
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+    assert proc.stdout is not None
+    try:
+        for line in proc.stdout:
+            if "ActiveChanged" not in line:
+                continue
+            if "(true" in line:
+                on_lock()
+            elif "(false" in line:
+                on_unlock()
+    finally:
+        if proc.poll() is None:
+            proc.terminate()
+            try:
+                proc.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+    rc = proc.wait()
+    return rc if rc is not None else 1
+
+
+def run_spectrum() -> int:
     client = connect()
     devices = active_devices(client)
     if not devices:
@@ -275,6 +379,18 @@ def main() -> int:
             tartarus_static(r, g, b)
         last_desk = desk_key
         time.sleep(interval)
+
+
+def main() -> int:
+    cmd = sys.argv[1] if len(sys.argv) > 1 else "spectrum"
+    if cmd in ("spectrum", "run"):
+        return run_spectrum()
+    if cmd in ("off", "lights-off"):
+        return lights_off()
+    if cmd in ("lock-watch", "watch-lock"):
+        return lock_watch()
+    print("usage: sync.py [spectrum|off|lock-watch]", file=sys.stderr)
+    return 2
 
 
 if __name__ == "__main__":
