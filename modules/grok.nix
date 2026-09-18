@@ -5,7 +5,9 @@
   ...
 }:
 
-# Grok AWS Agent Toolkit skills only.
+# Grok AWS Agent Toolkit skills, plus the status-line script.
+# [ui.status_line] is upserted here. Do not home.file the whole config.toml:
+# Grok rewrites the rest of that file (consent, marketplace, UI toggles).
 #
 # Do NOT put Slack back in here. A previous activation wrote
 # mcp_servers.slack into ~/.grok/config.toml, which shadowed Grok's
@@ -27,10 +29,16 @@ let
   ];
 in
 {
+  home.file.".grok/statusline.py" = {
+    source = ../dotfiles/grok/statusline.py;
+    executable = true;
+  };
+
   home.activation.grokAwsToolkit = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    GROK_CONFIG="${homeDir}/.grok/config.toml"
+    GROK_DIR="''${GROK_HOME:-${homeDir}/.grok}"
+    GROK_CONFIG="$GROK_DIR/config.toml"
     TOOLKIT="${toolkitDir}"
-    mkdir -p "${homeDir}/.grok" "$(dirname "$TOOLKIT")"
+    mkdir -p "$GROK_DIR" "$(dirname "$TOOLKIT")"
 
     if [ ! -d "$TOOLKIT/.git" ]; then
       echo "Cloning aws/agent-toolkit-for-aws into $TOOLKIT ..." >&2
@@ -44,13 +52,17 @@ in
     import sys
 
     path = pathlib.Path(sys.argv[1])
+    if path.is_symlink():
+        path = path.resolve()
     skill_paths = ${builtins.toJSON skillPaths}
 
     # Also strip leftover AWS MCP blocks from the earlier experiment.
+    # ui.status_line is replaced below; [ui] itself is left alone.
     sections_to_strip = {
         "mcp_servers.aws-mcp",
         "mcp_servers.aws-mcp.env",
         "skills",
+        "ui.status_line",
     }
 
     text = path.read_text() if path.exists() else ""
@@ -95,9 +107,15 @@ in
     )
     skill_args = ",\n".join(f'  "{p}"' for p in skill_paths)
     section = f"[skills]\npaths = [\n{skill_args},\n]\n"
+    status = (
+        "[ui.status_line]\n"
+        'type = "command"\n'
+        'command = "~/.grok/statusline.py"\n'
+        "refresh_interval = 30\n"
+    )
 
     body = disabled_line + "\n" + "".join(out).lstrip()
-    body = body.rstrip() + "\n\n" + section
+    body = body.rstrip() + "\n\n" + section + "\n" + status
     if not body.endswith("\n"):
         body += "\n"
     path.write_text(body)
