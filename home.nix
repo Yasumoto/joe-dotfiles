@@ -31,6 +31,7 @@ in
     ./modules/grok.nix
     ./modules/gogcli.nix
     ./modules/herdr.nix
+    ./modules/wagent.nix
   ];
 
   programs._1password-shell-plugins = {
