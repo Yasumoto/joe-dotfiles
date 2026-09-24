@@ -2,6 +2,7 @@
   config,
   pkgs,
   lib,
+  username,
   ...
 }:
 
@@ -130,6 +131,18 @@ let
           clientId = "1601185624273.8899143856786";
           callbackPort = 3118;
         };
+      };
+    }
+    # Work laptop only (darwin-joe.smith). --autoConnect attaches to the running
+    # Chrome; enable it once at chrome://inspect/#remote-debugging.
+    // lib.optionalAttrs (username == "joe.smith") {
+      chrome-devtools = {
+        command = "${pkgs.nodejs}/bin/npx";
+        args = [
+          "-y"
+          "chrome-devtools-mcp@latest"
+          "--autoConnect"
+        ];
       };
     };
   };
