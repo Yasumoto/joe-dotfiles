@@ -1,7 +1,7 @@
 ---
 name: agent-inbox
 description: Capture the current session's work into a self-contained "cold handoff" prompt written to ~/agent-inbox/. Produces a single dated markdown brief that a future agent (often an autonomous/overnight run) can execute with zero prior context.
-allowed-tools: Bash(date *), Bash(ls *), Bash(git log *), Bash(git diff *), Bash(git status), Write, Read, Grep, Glob
+allowed-tools: Bash(date *), Bash(ls *), Bash(git log *), Bash(git diff *), Bash(git status), Bash(hostname *), Bash(printenv *), Bash(tmux display-message *), Write, Read, Grep, Glob
 ---
 
 ## Context
@@ -10,6 +10,7 @@ allowed-tools: Bash(date *), Bash(ls *), Bash(git log *), Bash(git diff *), Bash
 - Inbox contents: !`ls -1t ~/agent-inbox/ 2>/dev/null | head -20`
 - Current branch: !`git branch --show-current 2>/dev/null`
 - Repo root: !`git rev-parse --show-toplevel 2>/dev/null`
+- This agent (for **Written by**): host !`hostname -s` · harness !`printenv CLAUDE_CODE_EXECPATH` · session !`printenv CLAUDE_CODE_SESSION_ID` · tmux !`tmux display-message -p -t "$TMUX_PANE" '#S:#I #W' 2>/dev/null`
 
 ## What this skill is for
 
@@ -48,6 +49,8 @@ Use this structure (drop sections that genuinely don't apply — a quick review 
 **Created:** YYYY-MM-DD
 **Status:** <Ready for execution | Open design question | Review/feedback task | Deferred until X>. <One line on what kind of handoff this is>
 **Related discussion / PR / ticket:** <Slack thread + people, MR/PR links, ticket IDs>
+**Written by:** <YYYY-MM-DD HH:MM TZ · host · harness + version · session <id> · tmux <session:window name>, from Context>
+**Claimed by:** (unclaimed)
 
 ## Why this is in the inbox
 
@@ -65,13 +68,21 @@ Use this structure (drop sections that genuinely don't apply — a quick review 
 
 ## What you must do when you pick this up (strict order)
 
-1. **Read everything first (no edits yet).** This file, then <key code files, with paths>.
-2. **Baseline / gather evidence.** <Concrete first commands to run to confirm current reality before changing anything.>
-3. **Ask any questions that will help narrow in on the correct plan and confirm your understanding.** <Leave any open questions the user may have deferred or you consider critical.>
-4. **State your plan in 3-5 bullets and STOP.** Post the bullets and wait for explicit human approval before creating a branch, editing files, or running any destructive command.
-5. **Only after approval:** <execution steps — branch naming, conventions, glab mr create --fill, etc.>
-6. **During execution:** <re-confirm before each material step; how to test safely.>
-7. **After it lands:** <retrospective note back into this inbox file or a follow-up.>
+1. **Claim this brief** so Joe can see which agent owns it. Append the output of this line under **Claimed by** (replace `(unclaimed)`; keep earlier claims), then `git -C ~/agent-inbox commit -m "claim: <this file's slug>" <this file>` and `git -C ~/agent-inbox push` (best-effort). If a live claim from another session is already there, stop and ask Joe.
+   ~~~sh
+   printf -- '- %s · %s · %s · session %s · tmux %s\n' "$(date '+%F %H:%M %Z')" "$(hostname -s)" \
+     "$(if [ -n "$CLAUDECODE" ]; then echo "Claude Code $(basename "${CLAUDE_CODE_EXECPATH:-unknown}")"; else echo "${AGENT_HARNESS:-unknown harness}"; fi)" \
+     "${CLAUDE_CODE_SESSION_ID:-unknown}" \
+     "$(if [ -n "$TMUX_PANE" ]; then tmux display-message -p -t "$TMUX_PANE" '#S:#I #W'; else echo none; fi)"
+   ~~~
+2. **Read everything first (no edits yet).** This file, then <key code files, with paths>.
+3. **Baseline / gather evidence.** <Concrete first commands to run to confirm current reality before changing anything.>
+4. **Ask any questions that will help narrow in on the correct plan and confirm your understanding.** <Leave any open questions the user may have deferred or you consider critical.>
+5. **State your plan in 3-5 bullets and STOP.** Post the bullets and wait for explicit human approval before creating a branch, editing files, or running any destructive command.
+6. **Only after approval:** <execution steps — branch naming, conventions, glab mr create --fill, etc.>
+7. **During execution:** <re-confirm before each material step; how to test safely.>
+8. **After it lands:** <retrospective note back into this inbox file or a follow-up.>
+9. **Release your claim** when you finish or park: append `  - released YYYY-MM-DD HH:MM: <done | parked: why>` under your claim line, and commit it the same way.
 
 ## Gotchas & additional context
 
@@ -102,5 +113,6 @@ Use this structure (drop sections that genuinely don't apply — a quick review 
 - **Evidence over assertion.** Real paths, real line numbers, real command output, real numbers. Verify pointers before writing them.
 - **Safety gated.** Anything touching real state, prod, IAM, or outward-facing surfaces gets an explicit "plan in 3-5 bullets, then STOP for approval" gate. Make dangerous operations loud.
 - **Scoped.** Say what's out of scope as clearly as what's in. Pilots stay pilots.
+- **Claimable.** Every brief carries **Written by** and **Claimed by**, so "which agent is on this?" is answered by the file, not by grepping tmux scrollback. Window numbers shift when windows close; the session id is the stable key.
 - **Honest about status.** "Ready for execution" vs "open design question — do not start until X is merged" are different handoffs; label them correctly.
 - **Right-sized.** A review/feedback task doesn't need state-surgery ceremony. Keep the structure, scale the depth to the work.
