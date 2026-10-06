@@ -26,10 +26,7 @@ Determine the platform from the remote URL:
 
 4. Review recent commit messages on the main branch for the relevant files/directories — match their style.
    - On GitLab repos, this typically means `[subsystem/component]` tags per the project's CLAUDE.md.
-5. Write a commit message:
-   - Clear title explaining the changes at a high level
-   - Body focused on **why** and context — let the code describe the "how"
-   - Include links to relevant documentation, conversations, or references when available
+5. Write the commit message with the `mr-writeup` skill. It becomes the MR title and description, so it should already be succinct, describe what lands, and be helpful + exciting for reviewers.
 6. Attempt `git commit`.
 7. If pre-commit hooks (`prek` or otherwise) report errors:
    - If the fixes are straightforward, fix and re-commit without checking with me.
@@ -52,7 +49,7 @@ Determine the platform from the remote URL:
 - Create: `glab mr create --fill --remove-source-branch`
 - Assign to `joe.smith`
 - Add an agent label — your choices are `agent: claude` or `agent: grok`. Create the label if it doesn't exist, and let me know because that's a fun first!
-- The first commit message populates the MR title and description. Do not manually override them unless the accumulated changes have diverged substantially.
+- The first commit message populates the MR title and description. Do not manually override them unless the accumulated changes have diverged substantially; then refresh both with `mr-writeup`.
 - If updating an existing MR, check for unresolved code review feedback relevant to our changes.
 
 **GitHub:**
