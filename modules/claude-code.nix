@@ -400,7 +400,15 @@ in
               echo "WARNING: $WORK_CONFIG/scripts not found. Harness script unavailable." >&2
             fi
             # Symlink each work-config skill + command individually so public-repo
-            # home.file entries (e.g. commit-push-open-mr) coexist.
+            # home.file entries (e.g. commit-push-open-mr) coexist. First drop
+            # links into work-config whose target is gone (a renamed or deleted
+            # skill), so Claude and Grok don't list a skill that can't load.
+            for link in "$HOME/.claude/skills"/* "$HOME/.claude/commands"/*; do
+              [ -L "$link" ] && [ ! -e "$link" ] || continue
+              case "$(readlink "$link")" in
+                "$WORK_CONFIG"/*) rm -f "$link" ;;
+              esac
+            done
             if [ -d "$WORK_CONFIG/skills" ]; then
               mkdir -p "$HOME/.claude/skills"
               for skill in "$WORK_CONFIG/skills"/*/; do
