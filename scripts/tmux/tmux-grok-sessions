@@ -1,0 +1,497 @@
+#!/usr/bin/env python3
+"""Persist tmux window → Grok session-id mapping, and restore via send-keys.
+
+tmux-continuum restores window names, layout, and cwd. It does not put you
+back inside a Grok conversation. This tool records which session each window
+was in, then after reboot types `grok --resume <id>` into idle shells.
+
+  tmux-grok-sessions save [--resurrect]   # snapshot live panes
+  tmux-grok-sessions show                 # print the map
+  tmux-grok-sessions restore [--dry-run]  # send-keys grok --resume
+  tmux-grok-sessions skip <window>
+  tmux-grok-sessions unskip <window>
+
+Map file: ~/.local/share/tmux/grok-sessions.json
+Override with TMUX_GROK_SESSIONS_MAP.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import subprocess
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+UUID_RE = re.compile(
+    r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+    re.I,
+)
+SHELLS = {"fish", "bash", "zsh", "sh", "dash", "nu"}
+RESURRECT_SAVE = Path.home() / ".tmux/plugins/tmux-resurrect/scripts/save.sh"
+DEFAULT_MAP = Path.home() / ".local/share/tmux/grok-sessions.json"
+
+
+def map_path() -> Path:
+    override = os.environ.get("TMUX_GROK_SESSIONS_MAP")
+    return Path(override) if override else DEFAULT_MAP
+
+
+def run(args: list[str], check: bool = True) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(args, check=check, text=True, capture_output=True)
+
+
+def tmux(*args: str, check: bool = True) -> str:
+    return run(["tmux", *args], check=check).stdout
+
+
+def load_map() -> dict[str, Any]:
+    path = map_path()
+    if not path.is_file():
+        return {"saved_at": None, "tmux_session": None, "windows": []}
+    return json.loads(path.read_text())
+
+
+def write_map(data: dict[str, Any]) -> None:
+    path = map_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2) + "\n")
+
+
+def cmdline(pid: int) -> str:
+    try:
+        raw = Path(f"/proc/{pid}/cmdline").read_bytes()
+    except OSError:
+        return ""
+    return raw.replace(b"\0", b" ").decode("utf-8", "replace").strip()
+
+
+def children(pid: int) -> list[int]:
+    kids: set[int] = set()
+    task = Path(f"/proc/{pid}/task")
+    if not task.is_dir():
+        return []
+    for t in task.iterdir():
+        try:
+            text = (t / "children").read_text()
+        except OSError:
+            continue
+        kids.update(int(x) for x in text.split() if x.isdigit())
+    return list(kids)
+
+
+def descendants(pid: int) -> list[int]:
+    seen: set[int] = set()
+    stack = [pid]
+    out: list[int] = []
+    while stack:
+        p = stack.pop()
+        if p in seen:
+            continue
+        seen.add(p)
+        out.append(p)
+        stack.extend(children(p))
+    return out
+
+
+def find_grok(pane_pid: int) -> tuple[int | None, str]:
+    for pid in descendants(pane_pid):
+        cmd = cmdline(pid)
+        if not cmd:
+            continue
+        argv0 = cmd.split()[0]
+        if os.path.basename(argv0) == "grok":
+            return pid, cmd
+    return None, ""
+
+
+def resume_id_from_cmd(cmd: str) -> str | None:
+    parts = cmd.split()
+    for flag in ("--resume", "-r"):
+        if flag in parts:
+            i = parts.index(flag)
+            if i + 1 < len(parts) and UUID_RE.fullmatch(parts[i + 1]):
+                return parts[i + 1].lower()
+    return None
+
+
+def session_ids_from_fds(pid: int) -> list[tuple[str, float]]:
+    found: dict[str, float] = {}
+    fd_dir = Path(f"/proc/{pid}/fd")
+    if not fd_dir.is_dir():
+        return []
+    for entry in fd_dir.iterdir():
+        try:
+            target = os.readlink(entry)
+        except OSError:
+            continue
+        if "/.grok/sessions/" not in target or "/events.jsonl" not in target:
+            continue
+        m = UUID_RE.search(target)
+        if not m:
+            continue
+        sid = m.group(0).lower()
+        try:
+            mtime = os.path.getmtime(target)
+        except OSError:
+            mtime = 0.0
+        found[sid] = max(mtime, found.get(sid, 0.0))
+    return sorted(found.items(), key=lambda kv: kv[1], reverse=True)
+
+
+def summary_for(session_id: str) -> dict[str, Any]:
+    root = Path.home() / ".grok/sessions"
+    if not root.is_dir():
+        return {}
+    matches = list(root.glob(f"*/{session_id}/summary.json"))
+    if not matches:
+        return {}
+    try:
+        return json.loads(matches[0].read_text())
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def generated_title(summary: dict[str, Any]) -> str:
+    return str(summary.get("generated_title") or "")
+
+
+def clean_pane_title(title: str) -> str:
+    t = title.strip()
+    t = re.sub(r"^[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏⣾⣽⣻⢿⡿⣟⣯⣷⣾]+(?:\s+-\s+)?", "", t)
+    t = re.sub(r"^\s*-\s*Running:.*?(?: - |$)", "", t, flags=re.I)
+    t = re.sub(r"^\s*-\s*Thinking(?:\s+-\s+)?", "", t, flags=re.I)
+    t = re.sub(r"\s+-\s+grok\s*$", "", t, flags=re.I)
+    return t.strip()
+
+
+def pick_session_id(cmd: str, grok_pid: int | None, pane_title: str) -> str | None:
+    from_cmd = resume_id_from_cmd(cmd)
+    if from_cmd:
+        return from_cmd
+    if grok_pid is None:
+        return None
+    fds = session_ids_from_fds(grok_pid)
+    if not fds:
+        return None
+    cleaned = clean_pane_title(pane_title).lower()
+    if cleaned and cleaned != "grok":
+        for sid, _ in fds:
+            title = generated_title(summary_for(sid)).lower()
+            if title and (title in cleaned or cleaned in title):
+                return sid
+    return fds[0][0]
+
+
+def looks_empty(session_id: str | None, pane_title: str) -> bool:
+    cleaned = clean_pane_title(pane_title)
+    if cleaned and cleaned.lower() != "grok":
+        return False
+    if not session_id:
+        return True
+    summary = summary_for(session_id)
+    if generated_title(summary):
+        return False
+    return int(summary.get("num_chat_messages") or 0) <= 2
+
+
+def list_panes() -> list[dict[str, str]]:
+    fmt = "#{session_name}\t#{window_index}\t#{window_name}\t#{pane_index}\t#{pane_pid}\t#{pane_current_command}\t#{pane_current_path}\t#{pane_title}"
+    out = tmux("list-panes", "-a", "-F", fmt)
+    panes = []
+    for line in out.splitlines():
+        if not line:
+            continue
+        sess, widx, wname, pidx, pid, cmd, path, title = line.split("\t", 7)
+        panes.append(
+            {
+                "tmux_session": sess,
+                "index": widx,
+                "name": wname,
+                "pane_index": pidx,
+                "pane_pid": pid,
+                "command": cmd,
+                "cwd": path,
+                "title": title,
+            }
+        )
+    return panes
+
+
+def snapshot_windows(prev: dict[str, Any]) -> list[dict[str, Any]]:
+    prev_by_name = {
+        str(w.get("name")): w
+        for w in prev.get("windows") or []
+        if w.get("name")
+    }
+    seen: set[tuple[str, int]] = set()
+    windows: list[dict[str, Any]] = []
+    for pane in list_panes():
+        key = (pane["tmux_session"], int(pane["index"]))
+        if key in seen:
+            continue
+        seen.add(key)
+        grok_pid, grok_cmd = find_grok(int(pane["pane_pid"]))
+        prev_row = prev_by_name.get(pane["name"]) or {}
+        if grok_pid is None:
+            # Don't wipe IDs if this is run after reboot, before restore.
+            sid = prev_row.get("session_id")
+            skip = bool(prev_row.get("skip"))
+            title = prev_row.get("title") or clean_pane_title(pane["title"])
+            note = prev_row.get("note") or ""
+            command = pane["command"]
+        else:
+            sid = pick_session_id(grok_cmd, grok_pid, pane["title"])
+            empty = looks_empty(sid, pane["title"])
+            skip = empty or bool(prev_row.get("skip"))
+            if not empty and str(prev_row.get("note") or "").startswith("empty Grok"):
+                skip = False
+            title = generated_title(summary_for(sid)) if sid else clean_pane_title(pane["title"])
+            note = "empty Grok; do not auto-resume" if empty else ("" if not skip else (prev_row.get("note") or "manually skipped"))
+            command = grok_cmd
+        windows.append(
+            {
+                "tmux_session": pane["tmux_session"],
+                "index": int(pane["index"]),
+                "name": pane["name"],
+                "cwd": pane["cwd"],
+                "command": command,
+                "session_id": sid,
+                "title": title,
+                "skip": skip,
+                "note": note,
+            }
+        )
+    return windows
+
+
+def print_table(windows: list[dict[str, Any]]) -> None:
+    if not windows:
+        print("(empty map)")
+        return
+    rows = [
+        (
+            str(w.get("index")),
+            str(w.get("name") or ""),
+            "skip" if w.get("skip") else ("resume" if w.get("session_id") else "none"),
+            str(w.get("session_id") or "-"),
+            str(w.get("title") or w.get("note") or ""),
+        )
+        for w in windows
+    ]
+    headers = ("win", "name", "action", "session_id", "title")
+    widths = [len(h) for h in headers]
+    for row in rows:
+        for i, col in enumerate(row):
+            widths[i] = max(widths[i], min(len(col), 48))
+    fmt = "  ".join(f"{{:{w}}}" for w in widths)
+    print(fmt.format(*headers))
+    print(fmt.format(*("-" * w for w in widths)))
+    for row in rows:
+        clipped = [c if len(c) <= 48 else c[:45] + "…" for c in row]
+        print(fmt.format(*clipped))
+
+
+def cmd_save(also_resurrect: bool) -> int:
+    if also_resurrect:
+        if not RESURRECT_SAVE.is_file():
+            print(f"resurrect save.sh not found: {RESURRECT_SAVE}", file=sys.stderr)
+            return 1
+        run([str(RESURRECT_SAVE)])
+        print("tmux-resurrect saved")
+    prev = load_map()
+    windows = snapshot_windows(prev)
+    tmux_session = windows[0]["tmux_session"] if windows else None
+    data = {
+        "saved_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "tmux_session": tmux_session,
+        "windows": windows,
+    }
+    write_map(data)
+    print(f"wrote {map_path()}")
+    print_table(windows)
+    return 0
+
+
+def cmd_show() -> int:
+    data = load_map()
+    path = map_path()
+    if not path.is_file():
+        print(f"no map at {path}", file=sys.stderr)
+        print("run: tmux-grok-sessions save", file=sys.stderr)
+        return 1
+    print(f"{path}  saved_at={data.get('saved_at')}")
+    print_table(data.get("windows") or [])
+    return 0
+
+
+def target_for(window: dict[str, Any]) -> str:
+    sess = window.get("tmux_session") or "0"
+    return f"{sess}:{window['index']}"
+
+
+def pane_state(window: dict[str, Any]) -> tuple[str, str, str]:
+    target = target_for(window)
+    fmt = "#{pane_current_command}\t#{pane_current_path}\t#{window_name}"
+    out = tmux("display-message", "-t", target, "-p", fmt, check=False).strip()
+    if not out:
+        return "", "", ""
+    cmd, path, name = out.split("\t", 2)
+    return cmd, path, name
+
+
+def find_window_now(wanted: dict[str, Any]) -> dict[str, Any] | None:
+    """Prefer matching the saved window *name*; fall back to the saved index."""
+    panes = list_panes()
+    name = wanted.get("name")
+    sess = wanted.get("tmux_session")
+    named = [
+        p
+        for p in panes
+        if p["name"] == name and (not sess or p["tmux_session"] == sess)
+    ]
+    if named:
+        # keep saved session_id/skip; refresh index/cwd from live tmux
+        live = named[0]
+        merged = dict(wanted)
+        merged["index"] = int(live["index"])
+        merged["tmux_session"] = live["tmux_session"]
+        merged["cwd"] = live["cwd"]
+        return merged
+    indexed = [
+        p
+        for p in panes
+        if int(p["index"]) == int(wanted.get("index") or -1)
+        and (not sess or p["tmux_session"] == sess)
+    ]
+    if indexed:
+        live = indexed[0]
+        merged = dict(wanted)
+        merged["index"] = int(live["index"])
+        merged["tmux_session"] = live["tmux_session"]
+        merged["name"] = live["name"]
+        merged["cwd"] = live["cwd"]
+        return merged
+    return None
+
+
+def cmd_restore(dry_run: bool, force: bool) -> int:
+    data = load_map()
+    windows = data.get("windows") or []
+    if not windows:
+        print(f"no map at {map_path()}", file=sys.stderr)
+        print("run: tmux-grok-sessions save", file=sys.stderr)
+        return 1
+
+    rc = 0
+    for saved in windows:
+        live = find_window_now(saved)
+        label = f"{saved.get('index')}:{saved.get('name')}"
+        if live is None:
+            print(f"SKIP  {label}  (window gone)")
+            continue
+        label = f"{live['index']}:{live['name']}"
+        if saved.get("skip"):
+            print(f"SKIP  {label}  (skip=true{': ' + saved['note'] if saved.get('note') else ''})")
+            continue
+        sid = saved.get("session_id")
+        if not sid:
+            print(f"SKIP  {label}  (no session_id)")
+            continue
+        cmd, path, _name = pane_state(live)
+        if cmd == "grok" and not force:
+            print(f"SKIP  {label}  (grok already running)")
+            continue
+        if cmd not in SHELLS and not force:
+            print(f"SKIP  {label}  (pane cmd is {cmd!r}, not a shell; use --force to override)")
+            rc = 1
+            continue
+        expected = saved.get("cwd")
+        if expected and path and os.path.realpath(path) != os.path.realpath(expected) and not force:
+            print(f"SKIP  {label}  (cwd {path} != {expected}; use --force to override)")
+            rc = 1
+            continue
+        line = f"grok --resume {sid}"
+        target = target_for(live)
+        if dry_run:
+            print(f"DRY   {label}  {line}")
+            continue
+        run(["tmux", "send-keys", "-t", target, "-l", line])
+        run(["tmux", "send-keys", "-t", target, "C-m"])
+        print(f"SENT  {label}  {line}")
+    return rc
+
+
+def resolve_named(windows: list[dict[str, Any]], spec: str) -> dict[str, Any] | None:
+    spec_l = spec.lower()
+    for w in windows:
+        if str(w.get("index")) == spec or str(w.get("name")) == spec:
+            return w
+        if spec_l in str(w.get("name") or "").lower():
+            return w
+    return None
+
+
+def cmd_set_skip(spec: str, skip: bool) -> int:
+    data = load_map()
+    windows = data.get("windows") or []
+    w = resolve_named(windows, spec)
+    if w is None:
+        print(f"no window matching {spec!r} in {map_path()}", file=sys.stderr)
+        return 1
+    w["skip"] = skip
+    if skip and not w.get("note"):
+        w["note"] = "manually skipped"
+    if not skip:
+        w["note"] = ""
+    write_map(data)
+    print_table(windows)
+    return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        prog="tmux-grok-sessions",
+        description="Save and restore Grok session IDs for tmux windows.",
+    )
+    sub = parser.add_subparsers(dest="cmd", required=True)
+
+    p_save = sub.add_parser("save", help="snapshot live panes into the map file")
+    p_save.add_argument(
+        "--resurrect",
+        action="store_true",
+        help="also run tmux-resurrect save.sh first",
+    )
+    sub.add_parser("show", help="print the saved map")
+    p_restore = sub.add_parser("restore", help="send-keys grok --resume into idle shells")
+    p_restore.add_argument("--dry-run", action="store_true")
+    p_restore.add_argument(
+        "--force",
+        action="store_true",
+        help="send even if cwd/cmd do not look like an idle shell",
+    )
+    p_skip = sub.add_parser("skip", help="mark a window so restore will not launch Grok")
+    p_skip.add_argument("window")
+    p_unskip = sub.add_parser("unskip", help="clear the skip flag for a window")
+    p_unskip.add_argument("window")
+
+    args = parser.parse_args()
+    if args.cmd == "save":
+        return cmd_save(args.resurrect)
+    if args.cmd == "show":
+        return cmd_show()
+    if args.cmd == "restore":
+        return cmd_restore(args.dry_run, args.force)
+    if args.cmd == "skip":
+        return cmd_set_skip(args.window, True)
+    if args.cmd == "unskip":
+        return cmd_set_skip(args.window, False)
+    parser.print_help()
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())

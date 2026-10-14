@@ -193,6 +193,12 @@ in
         source = ./scripts/host/gui-unstick;
         executable = true;
       };
+
+      # Persist tmux window → Grok session-id map; restore via send-keys after reboot
+      ".local/bin/tmux-grok-sessions" = {
+        source = ./scripts/tmux/tmux-grok-sessions;
+        executable = true;
+      };
     };
 
     sessionPath = [
