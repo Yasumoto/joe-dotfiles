@@ -1,0 +1,13 @@
+[Unit]
+Description=Tartarus Pro keymap indicator follows the mode toggle
+After=openrazer-daemon.service
+Wants=openrazer-daemon.service
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/tartarus-keymap-led
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=default.target
