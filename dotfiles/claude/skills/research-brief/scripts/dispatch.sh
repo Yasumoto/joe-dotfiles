@@ -11,6 +11,9 @@
 #   RESEARCH_BRIEF_MAX_TURNS   headless turn cap (default 80: a 6-10 question brief
 #                              took ~40 tool turns in practice; leave headroom)
 #
+# Runs grok with --no-auto-update: the headless docs recommend it for scripted runs, and
+# ~/.grok/config.toml has auto_update = true, so each dispatch would otherwise check first.
+#
 # Prints the log path and PID on success. Exits 2 when grok is missing so the
 # caller can fall back to "forward this brief by hand".
 set -eu
@@ -67,7 +70,7 @@ set -- --deny "Bash(rm *)" --deny "Bash(git push*)" --deny "Bash(kubectl*)" --de
 unset CLAUDECODE CLAUDE_CODE_SESSION_ID CLAUDE_CODE_ENTRYPOINT CLAUDE_CODE_CHILD_SESSION TMUX_PANE
 
 cd "$workdir"
-nohup "$grok" -p "$prompt" \
+nohup "$grok" --no-auto-update -p "$prompt" \
 	--max-turns "$max_turns" \
 	--output-format json \
 	--disallowed-tools "image_gen,image_edit,image_to_video,reference_to_video,scheduler_create,workflow" \
