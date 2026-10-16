@@ -2,9 +2,9 @@
 # Hand a research brief to a headless Grok Build researcher in the background.
 #
 # Usage: dispatch.sh BRIEF.md [WORKDIR]
-#   WORKDIR  directory grok starts in (default: the current git toplevel, else $PWD).
-#            Some gateway auth helpers resolve paths from the git toplevel, so start
-#            grok inside the checkout whose config it should use.
+#   WORKDIR  directory grok starts in (default: ~/src/sw if it exists, else the
+#            current git toplevel, else $PWD). The gateway auth helper resolves
+#            itself from the git toplevel, so grok gets a 401 outside the checkout.
 #
 # Env:
 #   RESEARCH_BRIEF_GROK        grok binary (default: grok on PATH, else ~/.grok/bin/grok)
@@ -19,7 +19,13 @@ brief=${1:?usage: dispatch.sh BRIEF.md [WORKDIR]}
 [ -f "$brief" ] || { echo "no such brief: $brief" >&2; exit 1; }
 brief=$(cd "$(dirname "$brief")" && pwd)/$(basename "$brief")
 
-workdir=${2:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}
+if [ -n "${2:-}" ]; then
+	workdir=$2
+elif [ -d "$HOME/src/sw" ]; then
+	workdir=$HOME/src/sw
+else
+	workdir=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+fi
 
 grok=${RESEARCH_BRIEF_GROK:-$(command -v grok 2>/dev/null || true)}
 [ -n "$grok" ] || [ ! -x "$HOME/.grok/bin/grok" ] || grok=$HOME/.grok/bin/grok
@@ -53,6 +59,10 @@ case $brief in
 esac
 set -- --deny "Bash(rm *)" --deny "Bash(git push*)" --deny "Bash(kubectl*)" --deny "Bash(terraform*)"
 [ -z "$edit_deny" ] || set -- "$@" --deny "Edit($edit_deny)" --deny "Write($edit_deny)"
+
+# Otherwise the researcher inherits the caller's identity and stamps the caller's
+# session and tmux pane into its claim line.
+unset CLAUDECODE CLAUDE_CODE_SESSION_ID CLAUDE_CODE_ENTRYPOINT CLAUDE_CODE_CHILD_SESSION TMUX_PANE
 
 cd "$workdir"
 nohup "$grok" -p "$prompt" \
