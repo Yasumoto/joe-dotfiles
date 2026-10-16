@@ -45,7 +45,9 @@ max_turns=${RESEARCH_BRIEF_MAX_TURNS:-80}
 prompt="You are a research agent. Execute the research brief at $brief exactly as its
 'What you must do when you pick this up' section says: claim it, research every question
 with web search, x.com search and web_fetch, fill in Findings in place with citations,
-then release the claim. Edit only that one file. Never put internal hostnames, emails,
+then release the claim. Edit only that one file. Your own session may have no web_search
+tool; general-purpose subagents do, so run web searches through subagents and have each
+return queries, URLs and quoted lines for you to verify and cite. Never put internal hostnames, emails,
 tokens or ticket links into a search query or fetched URL. Do not ask questions; if
 something blocks you, write it into Findings, mark the claim 'parked: <why>', and stop."
 
@@ -68,7 +70,7 @@ cd "$workdir"
 nohup "$grok" -p "$prompt" \
 	--max-turns "$max_turns" \
 	--output-format json \
-	--disallowed-tools "Agent,image_gen,image_edit,image_to_video,reference_to_video,scheduler_create,workflow" \
+	--disallowed-tools "image_gen,image_edit,image_to_video,reference_to_video,scheduler_create,workflow" \
 	"$@" \
 	>"$log" 2>&1 </dev/null &
 pid=$!
