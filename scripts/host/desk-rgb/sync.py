@@ -2,12 +2,16 @@
 """Lockstep spectrum across OpenRGB devices + Tartarus via OpenRazer.
 
 This box only (scripts/host/desk-rgb). Not wired into home-manager.
-OpenRGB owns fans / Aura / RAM / GPU / Mamba / Base Station.
-OpenRazer owns the Tartarus only. Dygma Raise is left alone.
+OpenRGB owns Aura / RAM / GPU / Mamba / Base Station, and the Corsair
+hubs once their headers are sized. QL120 fans are 34 LEDs. Each header
+is sized to 204, which is six of those fans, the most a 4000D can hold.
+A solid color does not need the empty slots to line up.
+OpenRazer owns the Tartarus only. The Raise stays out of this loop:
+OpenRGB Direct frames make it strobe.
 
-The LG 27GN950 is driven over its native HID video-sync protocol, not
-OpenRGB. OpenRGB keeps a stale hidraw handle across USB re-enumerations,
-so the monitor otherwise runs its own firmware effect and looks off-beat.
+The LG 27GN950 follows the same slow hue over its native HID video-sync
+protocol, a little dimmer than the desk. OpenRGB does not paint it:
+OpenRGB keeps a stale hidraw handle, and its own effect looks off-beat.
 
 Commands:
   sync.py             run the spectrum loop (default)
@@ -27,7 +31,10 @@ import time
 from openrgb import OpenRGBClient
 from openrgb.utils import RGBColor
 
-SKIP_SUBSTR = ("tartarus", "raise", "commander pro", "lg 27gn", "lg monitor")
+SKIP_SUBSTR = ("tartarus", "raise", "lg 27gn", "lg monitor")
+# 6x QL120. OpenRGB's max for these headers is 204. Short counts leave
+# the rest of a chain on the controller's saved rainbow.
+CORSAIR_HEADER_LEDS = 204
 TARTARUS_SERIAL = os.environ.get("TARTARUS_SERIAL", "PM1948F36502341")
 PERIOD = float(os.environ.get("SPECTRUM_PERIOD", "48"))
 FPS = float(os.environ.get("SPECTRUM_FPS", "3"))
@@ -100,6 +107,28 @@ def connect(name: str = "desk-spectrum", timeout: float = 60.0) -> OpenRGBClient
             last_err = exc
             time.sleep(0.5)
     raise SystemExit(f"failed to connect to OpenRGB: {last_err}")
+
+
+def size_corsair(client: OpenRGBClient) -> None:
+    """Give unsized Corsair headers a real LED count so Direct can paint them."""
+    changed = False
+    for dev in client.devices:
+        name = (dev.name or "").lower()
+        if "lighting node" not in name and "commander pro" not in name:
+            continue
+        for zone in dev.zones:
+            if len(zone.leds) == CORSAIR_HEADER_LEDS:
+                continue
+            zone.resize(CORSAIR_HEADER_LEDS)
+            changed = True
+            print(
+                f"sized {dev.name} / {zone.name} to {CORSAIR_HEADER_LEDS}",
+                flush=True,
+            )
+    if changed:
+        time.sleep(0.6)
+        client.update()
+        time.sleep(0.3)
 
 
 def active_devices(client: OpenRGBClient):
@@ -259,6 +288,7 @@ def lights_off() -> int:
         print(f"OpenRGB skip: {exc}", file=sys.stderr, flush=True)
         client = None
     if client is not None:
+        size_corsair(client)
         for dev in active_devices(client):
             try:
                 dev.off()
@@ -331,6 +361,7 @@ def lock_watch() -> int:
 
 def run_spectrum() -> int:
     client = connect()
+    size_corsair(client)
     devices = active_devices(client)
     if not devices:
         print("no OpenRGB devices to drive", file=sys.stderr)
@@ -369,6 +400,7 @@ def run_spectrum() -> int:
             except Exception:
                 try:
                     client = connect()
+                    size_corsair(client)
                     devices = active_devices(client)
                     set_direct(devices)
                     last_desk = None
