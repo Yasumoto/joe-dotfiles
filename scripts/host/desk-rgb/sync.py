@@ -131,6 +131,19 @@ def size_corsair(client: OpenRGBClient) -> None:
         time.sleep(0.3)
 
 
+def quiesce_openrgb_lg(client: OpenRGBClient) -> None:
+    """OpenRGB re-grabs the monitor on wake. Its Direct mode fights HID video-sync."""
+    for dev in client.devices:
+        name = (dev.name or "").lower()
+        if "lg 27gn" not in name and "lg monitor" not in name:
+            continue
+        try:
+            dev.set_mode("off")
+            print(f"openrgb off {dev.name}", flush=True)
+        except Exception as exc:  # noqa: BLE001
+            print(f"openrgb lg off failed: {exc}", file=sys.stderr, flush=True)
+
+
 def active_devices(client: OpenRGBClient):
     out = []
     for dev in client.devices:
@@ -289,6 +302,7 @@ def lights_off() -> int:
         client = None
     if client is not None:
         size_corsair(client)
+        quiesce_openrgb_lg(client)
         for dev in active_devices(client):
             try:
                 dev.off()
@@ -362,6 +376,7 @@ def lock_watch() -> int:
 def run_spectrum() -> int:
     client = connect()
     size_corsair(client)
+    quiesce_openrgb_lg(client)
     devices = active_devices(client)
     if not devices:
         print("no OpenRGB devices to drive", file=sys.stderr)
@@ -401,6 +416,7 @@ def run_spectrum() -> int:
                 try:
                     client = connect()
                     size_corsair(client)
+                    quiesce_openrgb_lg(client)
                     devices = active_devices(client)
                     set_direct(devices)
                     last_desk = None
