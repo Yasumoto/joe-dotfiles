@@ -1,0 +1,5 @@
+# OpenRGB probes the SMBus once at start. logind's uaccess ACL belongs to
+# the greeter until the desk session takes the seat, so group rw has to
+# work on its own. 60-openrgb.rules is the image file; this name sorts
+# after it and before 73-seat-late.rules.
+KERNEL=="i2c-[0-9]*", GROUP="i2c", MODE="0660"

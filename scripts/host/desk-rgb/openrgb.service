@@ -7,6 +7,8 @@ ConditionPathExists=%h/AppImages/openrgb.appimage
 [Service]
 Type=simple
 Environment=QT_QPA_PLATFORM=offscreen
+# A missing detector key means enabled. Merge the disable before the server reads it.
+ExecStartPre=%h/.local/share/desk-rgb/ensure-lg-detector.py
 ExecStart=%h/AppImages/openrgb.appimage --server --server-host 127.0.0.1 --server-port 6742 --noautoconnect
 Restart=always
 RestartSec=2
