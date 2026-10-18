@@ -10,8 +10,9 @@ OpenRazer owns the Tartarus only. The Raise stays out of this loop:
 OpenRGB Direct frames make it strobe.
 
 The LG 27GN950 follows the same slow hue over its native HID video-sync
-protocol, a little dimmer than the desk. OpenRGB does not paint it:
-OpenRGB keeps a stale hidraw handle, and its own effect looks off-beat.
+protocol, a little dimmer than the desk. The OpenRGB detector
+"LG 27GN950-B Monitor" is disabled, so OpenRGB never opens that hidraw.
+Its Direct keepalive otherwise rewrites the ring on every screen wake.
 
 Commands:
   sync.py             run the spectrum loop (default)
@@ -129,19 +130,6 @@ def size_corsair(client: OpenRGBClient) -> None:
         time.sleep(0.6)
         client.update()
         time.sleep(0.3)
-
-
-def quiesce_openrgb_lg(client: OpenRGBClient) -> None:
-    """OpenRGB re-grabs the monitor on wake. Its Direct mode fights HID video-sync."""
-    for dev in client.devices:
-        name = (dev.name or "").lower()
-        if "lg 27gn" not in name and "lg monitor" not in name:
-            continue
-        try:
-            dev.set_mode("off")
-            print(f"openrgb off {dev.name}", flush=True)
-        except Exception as exc:  # noqa: BLE001
-            print(f"openrgb lg off failed: {exc}", file=sys.stderr, flush=True)
 
 
 def active_devices(client: OpenRGBClient):
@@ -302,7 +290,6 @@ def lights_off() -> int:
         client = None
     if client is not None:
         size_corsair(client)
-        quiesce_openrgb_lg(client)
         for dev in active_devices(client):
             try:
                 dev.off()
@@ -376,7 +363,6 @@ def lock_watch() -> int:
 def run_spectrum() -> int:
     client = connect()
     size_corsair(client)
-    quiesce_openrgb_lg(client)
     devices = active_devices(client)
     if not devices:
         print("no OpenRGB devices to drive", file=sys.stderr)
@@ -397,7 +383,8 @@ def run_spectrum() -> int:
     last_desk = None
     last_monitor = None
     while True:
-        hue = ((time.monotonic() - t0) / max(PERIOD, 0.5)) % 1.0
+        now = time.monotonic()
+        hue = ((now - t0) / max(PERIOD, 0.5)) % 1.0
         r, g, b = hsv_rgb(hue, SAT, VAL)
         mr, mg, mb = hsv_rgb(hue, SAT, MONITOR_VAL)
         color = RGBColor(r, g, b)
@@ -416,7 +403,6 @@ def run_spectrum() -> int:
                 try:
                     client = connect()
                     size_corsair(client)
-                    quiesce_openrgb_lg(client)
                     devices = active_devices(client)
                     set_direct(devices)
                     last_desk = None
