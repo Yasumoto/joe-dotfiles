@@ -63,13 +63,7 @@
 
       core.whitespace = "fix,-indent-with-non-tab,trailing-space,cr-at-eol";
 
-      branch = {
-        autosetupmerge = true;
-        master = {
-          remote = "origin";
-          merge = "refs/heads/master";
-        };
-      };
+      branch.autosetupmerge = true;
 
       push.default = "current";
       pull.ff = "only";
