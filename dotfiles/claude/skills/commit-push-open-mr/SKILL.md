@@ -57,4 +57,4 @@ Determine the platform from the remote URL:
 - The first commit message populates the PR title and description. Do not manually override them.
 
 12. Report the MR/PR URL.
-13. Ask if I'd like you to request a review by commenting `@opus, please thoroughly code review this MR. Thank you!` — and whether we should address any known concerns first.
+13. Ask if I'd like you to request a review by commenting `@Grok m:opus, please review this MR thoroughly. Thank you!` — and whether we should address any known concerns first.
