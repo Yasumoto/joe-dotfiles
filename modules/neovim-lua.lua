@@ -100,10 +100,24 @@ do
 	}
 	local flake = vim.g.joe_dotfiles_flake
 	local hm = vim.g.joe_hm_config
-	if type(flake) == "string" and flake ~= "" and type(hm) == "string" and hm ~= "" then
+	local system = vim.g.joe_hm_system
+	if
+		type(flake) == "string"
+		and flake ~= ""
+		and type(hm) == "string"
+		and hm ~= ""
+		and type(system) == "string"
+		and system ~= ""
+	then
 		nixd.options = {
 			["home-manager"] = {
-				expr = string.format('(builtins.getFlake "path:%s").homeConfigurations["%s"].options', flake, hm),
+				-- flake.nix keeps configs under legacyPackages.<system>
+				expr = string.format(
+					'(builtins.getFlake "path:%s").legacyPackages["%s"].homeConfigurations["%s"].options',
+					flake,
+					system,
+					hm
+				),
 			},
 		}
 	end

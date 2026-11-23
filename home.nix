@@ -3,6 +3,8 @@
   pkgs,
   lib,
   username,
+  isWork,
+  hmConfigName,
   ...
 }:
 
@@ -14,11 +16,6 @@ let
       "/Users/${username}"
     else
       "/home/${username}";
-  hmConfigName =
-    if pkgs.stdenv.isDarwin then
-      (if username == "joe.smith" then "darwin-joe.smith" else "darwin")
-    else
-      "linux";
 in
 {
   imports = [
@@ -229,14 +226,19 @@ in
         fi
       '';
       # Claude settings activation moved to modules/claude-code.nix
-      initWiki = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        WIKI_DIR="${config.home.homeDirectory}/wiki"
-        if [ ! -d "$WIKI_DIR/.git" ]; then
-          echo "Initializing LLM Wiki at $WIKI_DIR..."
-          mkdir -p "$WIKI_DIR/raw" "$WIKI_DIR/wiki"
-          ${pkgs.git}/bin/git init "$WIKI_DIR"
-        fi
-      '';
+      # Non-isWork configs only: isWork configs clone the real ~/wiki in
+      # cloneWorkRepos (modules/claude-code.nix), and an empty repo here
+      # would block that clone.
+      initWiki = lib.mkIf (!isWork) (
+        lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+          WIKI_DIR="${config.home.homeDirectory}/wiki"
+          if [ ! -d "$WIKI_DIR/.git" ]; then
+            echo "Initializing LLM Wiki at $WIKI_DIR..."
+            mkdir -p "$WIKI_DIR/raw" "$WIKI_DIR/wiki"
+            ${pkgs.git}/bin/git init "$WIKI_DIR"
+          fi
+        ''
+      );
       prekSetup = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         REPO_DIR="${config.home.homeDirectory}/workspace/github.com/Yasumoto/joe-dotfiles"
         if [ -d "$REPO_DIR" ] && [ -f "$REPO_DIR/.pre-commit-config.yaml" ]; then
@@ -307,6 +309,14 @@ in
 
   programs = {
     home-manager.enable = true;
+    # macOS's default login shell. Loads the home-manager session, like
+    # dotfiles/bash_profile does for bash; fish stays the interactive shell.
+    zsh = {
+      enable = pkgs.stdenv.isDarwin;
+      envExtra = ''
+        [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
+      '';
+    };
     fzf.enable = true;
     zoxide.enable = true;
     starship.enable = true;
@@ -463,6 +473,7 @@ in
       initLua = ''
         vim.g.joe_dotfiles_flake = [[${homeDirectory}/workspace/github.com/Yasumoto/joe-dotfiles]]
         vim.g.joe_hm_config = [[${hmConfigName}]]
+        vim.g.joe_hm_system = [[${pkgs.stdenv.hostPlatform.system}]]
       ''
       + builtins.readFile ./modules/neovim-lua.lua;
     };

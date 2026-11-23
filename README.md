@@ -14,21 +14,24 @@ cat ~/.ssh/id_ed25519.pub | xclip -sel clip
 
 mkdir -p ~/workspace/github.com/Yasumoto
 cd ~/workspace/github.com/Yasumoto
-git clone git@github.com:Yasumoto/joe-dotfiles.git
+# macOS: Nix's git avoids /usr/bin/git's Xcode tools prompt
+nix shell nixpkgs#git -c git clone git@github.com:Yasumoto/joe-dotfiles.git
 cd joe-dotfiles
 
-# Choose the appropriate configuration for your system:
-# Linux:
-nix run home-manager/release-26.05 -- switch --flake ~/workspace/github.com/Yasumoto/joe-dotfiles#linux
+# Picks this machine's OS and $USER (joe or joe.smith) automatically:
+nix run home-manager/release-26.05 -- switch -b backup --flake ~/workspace/github.com/Yasumoto/joe-dotfiles
 
-# macOS (username `joe` — personal or work mac):
-nix run home-manager/release-26.05 -- switch --flake ~/workspace/github.com/Yasumoto/joe-dotfiles#darwin
-
-# macOS (username `joe.smith` — corp mac with dotted username):
-nix run home-manager/release-26.05 -- switch --flake ~/workspace/github.com/Yasumoto/joe-dotfiles#darwin-joe.smith
+# Personal machines (username `joe`):
+nix run home-manager/release-26.05 -- switch -b backup --flake ~/workspace/github.com/Yasumoto/joe-dotfiles#personal
 
 prek install
 ```
+
+Except with `#personal`, a switch also clones any missing `~/src/sw`, `~/.claude/work-config`, `~/wiki`
+and `~/agent-inbox`. Connect Tailscale and load an SSH key that GitLab and epona accept
+first (on macOS, `ssh-add --apple-use-keychain ~/.ssh/id_ed25519`: Nix's ssh doesn't read
+the Keychain). A failed clone stops the switch; fix it and switch again. Afterwards, run
+`./ops/bin/nlk_sw_setup.sh` in `~/src/sw`.
 
 ### 🍎 macOS Extras
 
@@ -46,6 +49,13 @@ sudo launchctl kickstart -k system/com.openssh.sshd
 sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add $(which mosh-server)
 sudo /usr/libexec/ApplicationFirewall/socketfilterfw --unblockapp $(which mosh-server)
 ```
+
+Not installed by this flake:
+
+- Claude Code (`~/.local/bin/claude`) and the Grok CLI
+- KeePassXC, for `vault_login`
+- `agent-voice-mcp`: `cargo install --path .` in its checkout (Claude Code expects
+  `~/.cargo/bin/agent-voice-mcp`)
 
 ### 🐧 Linux Extras
 
