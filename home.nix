@@ -360,11 +360,10 @@ in
       enable = true;
       defaultEditor = true;
       vimAlias = true;
-      # Ruby/python providers unused; copilot-lua uses extraPackages nodejs, not the neovim node provider
+      # Ruby/python providers unused
       withRuby = false;
       withPython3 = false;
       extraPackages = with pkgs; [
-        nodejs # copilot-lua language-server.js (not the neovim node provider)
         fd
         ripgrep
         pyright
@@ -415,8 +414,6 @@ in
         conform-nvim
         SchemaStore-nvim
         blink-cmp
-        blink-copilot
-        copilot-lua
         rustaceanvim
         plenary-nvim
         telescope-nvim

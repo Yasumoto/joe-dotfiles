@@ -369,14 +369,6 @@ vim.keymap.set("n", "<leader>lq", vim.diagnostic.setloclist, { desc = "Diagnosti
 -- Plugins
 -- ============================================================================
 
-require("copilot").setup({
-	panel = { enabled = false },
-	suggestion = { enabled = false },
-	filetypes = { ["*"] = true },
-	-- extraPackages puts nodejs on the nvim wrapper PATH
-	copilot_node_command = vim.fn.exepath("node"),
-})
-
 require("blink.cmp").setup({
 	keymap = { preset = "enter" },
 	completion = {
@@ -384,15 +376,7 @@ require("blink.cmp").setup({
 	},
 	signature = { enabled = true },
 	sources = {
-		default = { "lsp", "path", "snippets", "buffer", "copilot" },
-		providers = {
-			copilot = {
-				name = "copilot",
-				module = "blink-copilot",
-				score_offset = 100,
-				async = true,
-			},
-		},
+		default = { "lsp", "path", "snippets", "buffer" },
 	},
 	cmdline = { enabled = true },
 })
