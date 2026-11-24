@@ -364,6 +364,9 @@ in
           # non-interactive activation; accept-new trusts a host key on first
           # contact (a fresh machine) but still rejects a changed one.
           export GIT_SSH_COMMAND="${pkgs.openssh}/bin/ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new"
+          # git-lfs installs a post-checkout hook during the ~/src/sw checkout that
+          # runs plain `git-lfs`; without it on PATH the hook fails the clone.
+          export PATH="${pkgs.git-lfs}/bin:$PATH"
 
           # cloneWorkRepo DEST URL [git clone args...]
           # Do NOT swallow git's stderr: "repo not found" vs "permission denied
