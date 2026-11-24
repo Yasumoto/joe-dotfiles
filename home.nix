@@ -186,6 +186,7 @@ in
 
       # Recover frozen GNOME Wayland (amdgpu flip_done) via DPMS + gdctl modeset
       ".local/bin/gui-unstick" = {
+        enable = pkgs.stdenv.isLinux;
         source = ./scripts/host/gui-unstick;
         executable = true;
       };
@@ -203,6 +204,8 @@ in
       "$HOME/.cargo/bin"
       "$HOME/go/bin"
       "$HOME/workspace/bin"
+    ]
+    ++ lib.optionals isWork [
       "$HOME/src/sw/ops/bin/cache"
     ]
     ++ lib.optionals pkgs.stdenv.isDarwin [
@@ -224,10 +227,9 @@ in
           PATH="${pkgs.fnm}/bin:$PATH" FNM_DIR="$FNM_DIR" ${pkgs.fnm}/bin/fnm default lts-latest
         fi
       '';
-      # Claude settings activation moved to modules/claude-code.nix
-      # Non-isWork configs only: isWork configs clone the real ~/wiki in
-      # cloneWorkRepos (modules/claude-code.nix), and an empty repo here
-      # would block that clone.
+      # Non-isWork configs only: on isWork machines clone-work-repos
+      # (pkgs/clone-work-repos.nix) clones the real ~/wiki, and an empty repo
+      # here would block that clone.
       initWiki = lib.mkIf (!isWork) (
         lib.hm.dag.entryAfter [ "writeBoundary" ] ''
           WIKI_DIR="${config.home.homeDirectory}/wiki"
@@ -328,7 +330,7 @@ in
       enable = true;
       enableDefaultConfig = false;
       # Work-specific SSH config (silently ignored if the file doesn't exist)
-      includes = [ "${homeDirectory}/src/sw/ops/nlk_speed_up_git/ssh.config" ];
+      includes = lib.optionals isWork [ "${homeDirectory}/src/sw/ops/nlk_speed_up_git/ssh.config" ];
       # Use upstream OpenSSH directive names (matchBlocks/extraOptions are deprecated)
       settings."*" = {
         IgnoreUnknown = "GSSAPIAuthentication,UseKeychain,AddKeysToAgent";

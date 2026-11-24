@@ -1,8 +1,10 @@
 #!/bin/sh
 #
-#/ Usage: bootstrap_linux.sh
+#/ Usage: bootstrap.sh
 #/
-#/ Setup a development Ubuntu box (should also work with WSL)
+#/ OS-level setup that home-manager doesn't do: apt/dnf packages on Linux
+#/ (should also work with WSL), macOS defaults. See README.md for Nix and
+#/ home-manager.
 #/
 
 usage() {
@@ -20,9 +22,6 @@ do
 done
 
 set -eux
-
-git submodule init
-git submodule update
 
 if grep -q fedora /etc/os-release; then
 	sudo dnf update
@@ -77,29 +76,6 @@ if uname -r | grep -qi wsl; then
     echo "https://github.com/microsoft/cascadia-code/releases/tag/latest"
 fi
 
-if [ "$(which home-manager)" = "" ]; then
-  nix run home-manager/release-26.05 -- init --switch -b gimmeh -f ~/workspace/github.com/Yasumoto/joe-dotfiles/home.nix
-fi
-
-#SCRIPT_DIRECTORY=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
-#
-#if [ "$(which irssi)" = "" ] > /dev/null; then
-#    echo "🗣️ Setting irssi config, "
-#    sudo apt install irssi
-#    mkdir -p "${HOME}/.irssi"
-#    IRSSI_CONFIG_PATH="${HOME}/.irssi/config"
-#
-#    echo "🆓 What's your LiberaChat nickserv password?"
-#    read -r LIBERA_NICKSERV_PASSWORD
-#
-#    sed -e "s/LIBERA_NICKSERV_PASSWORD/${LIBERA_NICKSERV_PASSWORD}/g" "${SCRIPT_DIRECTORY}/irssi_config_template" | \
-#       "${SCRIPT_DIRECTORY}/irssi_config"
-#    rm -rf "${IRSSI_CONFIG_PATH}"
-#    /bin/ln -s "${SCRIPT_DIRECTORY}/irssi_config" "${IRSSI_CONFIG_PATH}"
-#fi
-
-#fish -c "clone https://github.com/arcticicestudio/nord-gnome-terminal.git"
-
 set +x
 echo "************************"
 
@@ -109,7 +85,5 @@ echo
 
 echo "https://wiki.gnome.org/action/show/Projects/GnomeShellIntegration/Installation?action=show&redirect=Projects%2FGnomeShellIntegrationForChrome%2FInstallation#Meson_installation"
 echo "https://extensions.gnome.org/extension/779/clipboard-indicator/"
-
-#echo "home-manager -b gimmehjimmeh switch -f ~/workspace/github.com/Yasumoto/joe-dotfiles/home.nix"
 
 echo "All set!"

@@ -18,20 +18,19 @@ cd ~/workspace/github.com/Yasumoto
 nix shell nixpkgs#git -c git clone git@github.com:Yasumoto/joe-dotfiles.git
 cd joe-dotfiles
 
+# Work machines: clone ~/src/sw, ~/.claude/work-config, ~/wiki and ~/agent-inbox
+# (skips any that exist; needs Tailscale and an SSH key GitLab and epona accept)
+nix run ~/workspace/github.com/Yasumoto/joe-dotfiles#clone-work-repos
+
 # Picks this machine's OS and $USER (joe or joe.smith) automatically:
 nix run home-manager/release-26.05 -- switch -b backup --flake ~/workspace/github.com/Yasumoto/joe-dotfiles
 
 # Personal machines (username `joe`):
 nix run home-manager/release-26.05 -- switch -b backup --flake ~/workspace/github.com/Yasumoto/joe-dotfiles#personal
-
-prek install
 ```
 
-Except with `#personal`, a switch also clones any missing `~/src/sw`, `~/.claude/work-config`, `~/wiki`
-and `~/agent-inbox`. Connect Tailscale and load an SSH key that GitLab and epona accept
-first (on macOS, `ssh-add --apple-use-keychain ~/.ssh/id_ed25519`: Nix's ssh doesn't read
-the Keychain). A failed clone stops the switch; fix it and switch again. Afterwards, run
-`./ops/bin/nlk_sw_setup.sh` in `~/src/sw`.
+On work machines, run `./ops/bin/nlk_sw_setup.sh` in `~/src/sw` afterwards. If you
+clone after the first switch, switch again so it links `~/.claude/work-config`.
 
 ### 🍎 macOS Extras
 

@@ -17,10 +17,6 @@
         fnm env --use-on-cd --shell fish | source
       end
 
-      if test -d "$HOME/src/sw/ops/bin/cache"
-        fish_add_path "$HOME/src/sw/ops/bin/cache"
-      end
-
       # Pick this machine's SSH agent. Prefer a live local socket so we do
       # not inherit Ubuntu's empty gpg-agent ssh emulation.
       #   1. gcr-ssh-agent — Bluefin / GNOME / Distrobox host
@@ -846,55 +842,6 @@
         __tcd_discover --no-cache >/dev/null
         set -l count (count (__tcd_discover))
         echo "tcd: cache refreshed ($count root modules indexed)"
-      '';
-
-      # Google Workspace CLI (gogcli) helpers
-      gog-accounts = ''
-        gog account --list
-      '';
-
-      gog-gmail-list = ''
-        # Quick Gmail list (last 10 threads)
-        gog gmail thread --list --limit 10
-      '';
-
-      gog-send = ''
-        # Send email via gogcli
-        if test (count $argv) -lt 2
-          echo "Usage: gog-send <to@example.com> <subject> [body]"
-          return 1
-        end
-
-        set to $argv[1]
-        set subject $argv[2]
-        set body ""
-        if test (count $argv) -ge 3
-          set body $argv[3]
-        end
-
-        gog gmail send --to "$to" --subject "$subject" --body "$body"
-      '';
-
-      gog-status = ''
-        # Check gogcli auth status
-        echo "=== Google Workspace CLI Status ==="
-        gog account --list
-        echo ""
-        echo "To authenticate: gog account --add <account-name>"
-        echo "To use: gog gmail thread --list"
-      '';
-
-      # Recover frozen GNOME Wayland display (amdgpu flip_done) via DPMS + gdctl modeset.
-      # Script lives at ~/.local/bin/gui-unstick (see scripts/host/gui-unstick).
-      gui-unstick = ''
-        if command -q gui-unstick
-          command gui-unstick $argv
-        else if test -x "$HOME/workspace/github.com/Yasumoto/joe-dotfiles/scripts/host/gui-unstick"
-          "$HOME/workspace/github.com/Yasumoto/joe-dotfiles/scripts/host/gui-unstick" $argv
-        else
-          echo "gui-unstick: binary not found; run home-manager switch or use scripts/host/gui-unstick" >&2
-          return 127
-        end
       '';
     };
   };

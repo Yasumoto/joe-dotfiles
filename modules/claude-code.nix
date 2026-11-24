@@ -309,134 +309,52 @@ in
       find "${homeDir}/.claude/plugins" -name "*.sh" -type f ! -perm -u+x -exec chmod +x {} + 2>/dev/null || true
     '';
 
-    # isWork configs only (flake.nix): clone whichever of these repos are
-    # missing, then link work-config into ~/.claude. An existing checkout is
-    # never touched, so every switch can run this safely. A failed clone
-    # stops the switch; fix the cause and switch again.
-    #
-    # work-config lives in my PERSONAL namespace on the work forge, not the
-    # monorepo's org namespace.
-    #
-    # Runs after linkGeneration so ~/.ssh/config and the git LFS filters exist
-    # before the first clone, and after installPackages so a failed or
-    # interrupted clone still leaves a usable profile. ~/src/sw is large, so
-    # the first switch on a new machine spends a while cloning it.
-    cloneWorkRepos = lib.mkIf isWork (
-      lib.hm.dag.entryAfter
-        [
-          "linkGeneration"
-          "installPackages"
-          "claudeSettingsSetup"
-          "maskGpgAgentSsh"
-        ]
-        ''
-          GIT_HOST="git.int.n7k.io"
-          EPONA="joe@joe-epona.n7k.ts.net"
-          WORK_CONFIG="$HOME/.claude/work-config"
+    # isWork configs only: link ~/.claude/work-config's agents, scripts, skills
+    # and commands into ~/.claude. work-config lives in my PERSONAL namespace on
+    # the work forge; `nix run <this flake>#clone-work-repos` clones it.
+    claudeWorkConfigLinks = lib.mkIf isWork (
+      lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+        WORK_CONFIG="$HOME/.claude/work-config"
+        if [ ! -d "$WORK_CONFIG/.git" ]; then
+          echo "WARNING: $WORK_CONFIG not found. Clone it with: nix run ~/workspace/github.com/Yasumoto/joe-dotfiles#clone-work-repos, then switch again." >&2
+        fi
 
-          # Discover a user SSH agent if the invoking shell didn't export one.
-          # The private key is passphrase-protected, so without an unlocked agent
-          # (gcr-ssh-agent / ssh-agent) auth fails even with ssh available.
-          runtimeDir="''${XDG_RUNTIME_DIR:-/run/user/$(${pkgs.coreutils}/bin/id -u)}"
-          # Prefer this machine's agent (gcr / home-manager ssh-agent). Skip
-          # Ubuntu's gpg-agent ssh socket — there are no GPG auth keys.
-          if [ -z "''${SSH_AUTH_SOCK:-}" ] || [ ! -S "$SSH_AUTH_SOCK" ] \
-            || [ "$SSH_AUTH_SOCK" = "$runtimeDir/gnupg/S.gpg-agent.ssh" ]; then
-            for sock in \
-              "$runtimeDir/gcr/ssh" \
-              "$runtimeDir/gcr/.ssh" \
-              "$runtimeDir/ssh-agent" \
-              "$runtimeDir/ssh-agent.socket"; do
-              if [ -S "$sock" ]; then
-                export SSH_AUTH_SOCK="$sock"
-                break
-              fi
-            done
-          fi
-          if [ -z "''${SSH_AUTH_SOCK:-}" ] || [ ! -S "$SSH_AUTH_SOCK" ] \
-            || [ "$SSH_AUTH_SOCK" = "$runtimeDir/gnupg/S.gpg-agent.ssh" ]; then
-            unset SSH_AUTH_SOCK
-          fi
-
-          # home-manager activation rewrites PATH to a minimal nix-store set
-          # without ssh, so git fails with "cannot run ssh" unless pointed at
-          # pkgs.openssh. BatchMode avoids a hung askpass prompt during
-          # non-interactive activation; accept-new trusts a host key on first
-          # contact (a fresh machine) but still rejects a changed one.
-          export GIT_SSH_COMMAND="${pkgs.openssh}/bin/ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new"
-          # git-lfs installs a post-checkout hook during the ~/src/sw checkout that
-          # runs plain `git-lfs`; without it on PATH the hook fails the clone.
-          export PATH="${pkgs.git-lfs}/bin:$PATH"
-
-          # cloneWorkRepo DEST URL [git clone args...]
-          # Do NOT swallow git's stderr: "repo not found" vs "permission denied
-          # (publickey)" vs "could not resolve hostname" are different problems
-          # and the message is the only clue. A failed clone fails the switch;
-          # fix the cause and switch again.
-          cloneWorkRepo() {
-            local dest="$1" url="$2"
-            shift 2
-            if [ -e "$dest/.git" ]; then
-              return 0
-            elif [ -e "$dest" ]; then
-              echo "ERROR: $dest exists but is not a git checkout; move it aside and switch again." >&2
-              return 1
-            fi
-            echo "Cloning $url into $dest ..." >&2
-            run mkdir -p "$(dirname "$dest")"
-            if ! run ${pkgs.git}/bin/git clone "$@" "$url" "$dest"; then
-              # A clone whose checkout fails (e.g. an LFS download in ~/src/sw)
-              # leaves $dest/.git behind, which the next switch would skip.
-              # $dest did not exist before this clone, so removing it is safe.
-              run rm -rf "$dest"
-              echo "ERROR: cloning $url failed (see git error above)." >&2
-              echo "       'Permission denied (publickey)': ssh-add your key (on macOS: ssh-add --apple-use-keychain) and check it is on https://$GIT_HOST/-/user_settings/ssh_keys or in epona's authorized_keys." >&2
-              echo "       'Could not resolve hostname' or a timeout: connect Tailscale." >&2
-              return 1
-            fi
-          }
-
-          cloneWorkRepo "$HOME/src/sw" "git@$GIT_HOST:neuralink/sw.git"
-          cloneWorkRepo "$WORK_CONFIG" "git@$GIT_HOST:joe.smith/work-config.git"
-          cloneWorkRepo "$HOME/wiki" "$EPONA:wiki/" --origin epona
-          cloneWorkRepo "$HOME/agent-inbox" "$EPONA:agent-inbox/" --origin epona
-
-          # Link whatever is present, regardless of whether we just cloned it.
-          if [ -d "$WORK_CONFIG/agents" ]; then
-            ln -sfn "$WORK_CONFIG/agents" "$HOME/.claude/agents"
-          else
-            echo "WARNING: $WORK_CONFIG/agents not found. Claude agents unavailable." >&2
-          fi
-          if [ -d "$WORK_CONFIG/scripts" ]; then
-            ln -sfn "$WORK_CONFIG/scripts" "$HOME/.claude/scripts"
-          else
-            echo "WARNING: $WORK_CONFIG/scripts not found. Harness script unavailable." >&2
-          fi
-          # Symlink each work-config skill + command individually so public-repo
-          # home.file entries (e.g. commit-push-open-mr) coexist. First drop
-          # links into work-config whose target is gone (a renamed or deleted
-          # skill), so Claude and Grok don't list a skill that can't load.
-          for link in "$HOME/.claude/skills"/* "$HOME/.claude/commands"/*; do
-            [ -L "$link" ] && [ ! -e "$link" ] || continue
-            case "$(readlink "$link")" in
-              "$WORK_CONFIG"/*) rm -f "$link" ;;
-            esac
+        # Link whatever is present.
+        if [ -d "$WORK_CONFIG/agents" ]; then
+          ln -sfn "$WORK_CONFIG/agents" "$HOME/.claude/agents"
+        else
+          echo "WARNING: $WORK_CONFIG/agents not found. Claude agents unavailable." >&2
+        fi
+        if [ -d "$WORK_CONFIG/scripts" ]; then
+          ln -sfn "$WORK_CONFIG/scripts" "$HOME/.claude/scripts"
+        else
+          echo "WARNING: $WORK_CONFIG/scripts not found. Harness script unavailable." >&2
+        fi
+        # Symlink each work-config skill + command individually so public-repo
+        # home.file entries (e.g. commit-push-open-mr) coexist. First drop
+        # links into work-config whose target is gone (a renamed or deleted
+        # skill), so Claude and Grok don't list a skill that can't load.
+        for link in "$HOME/.claude/skills"/* "$HOME/.claude/commands"/*; do
+          [ -L "$link" ] && [ ! -e "$link" ] || continue
+          case "$(readlink "$link")" in
+            "$WORK_CONFIG"/*) rm -f "$link" ;;
+          esac
+        done
+        if [ -d "$WORK_CONFIG/skills" ]; then
+          mkdir -p "$HOME/.claude/skills"
+          for skill in "$WORK_CONFIG/skills"/*/; do
+            [ -d "$skill" ] || continue
+            ln -sfn "$skill" "$HOME/.claude/skills/$(basename "$skill")"
           done
-          if [ -d "$WORK_CONFIG/skills" ]; then
-            mkdir -p "$HOME/.claude/skills"
-            for skill in "$WORK_CONFIG/skills"/*/; do
-              [ -d "$skill" ] || continue
-              ln -sfn "$skill" "$HOME/.claude/skills/$(basename "$skill")"
-            done
-          fi
-          if [ -d "$WORK_CONFIG/commands" ]; then
-            mkdir -p "$HOME/.claude/commands"
-            for cmd in "$WORK_CONFIG/commands"/*.md; do
-              [ -f "$cmd" ] || continue
-              ln -sfn "$cmd" "$HOME/.claude/commands/$(basename "$cmd")"
-            done
-          fi
-        ''
+        fi
+        if [ -d "$WORK_CONFIG/commands" ]; then
+          mkdir -p "$HOME/.claude/commands"
+          for cmd in "$WORK_CONFIG/commands"/*.md; do
+            [ -f "$cmd" ] || continue
+            ln -sfn "$cmd" "$HOME/.claude/commands/$(basename "$cmd")"
+          done
+        fi
+      ''
     );
   };
 }

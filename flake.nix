@@ -29,7 +29,8 @@
         "x86_64-linux"
       ];
 
-      # isWork: clone the repos in cloneWorkRepos (modules/claude-code.nix).
+      # isWork: work-only config (e.g. linking ~/.claude/work-config). The work
+      # repos are cloned separately: `nix run <flake>#clone-work-repos`.
       configs = {
         joe = {
           username = "joe";
@@ -72,6 +73,10 @@
       # names: with no `#name`, home-manager would prefer them over $USER.
       # Not seen by `home-manager repl`, `nix flake check`, or `nix flake show`
       # (without --legacy).
+      packages = nixpkgs.lib.genAttrs systems (system: {
+        clone-work-repos = nixpkgs.legacyPackages.${system}.callPackage ./pkgs/clone-work-repos.nix { };
+      });
+
       legacyPackages = nixpkgs.lib.genAttrs systems (system: {
         homeConfigurations = builtins.mapAttrs (mkHomeConfiguration system) configs;
       });

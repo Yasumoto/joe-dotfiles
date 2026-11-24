@@ -5,6 +5,44 @@
 }:
 
 {
+  programs.fish.functions = {
+    # Google Workspace CLI (gogcli) helpers
+    gog-accounts = ''
+      gog account --list
+    '';
+
+    gog-gmail-list = ''
+      # Quick Gmail list (last 10 threads)
+      gog gmail thread --list --limit 10
+    '';
+
+    gog-send = ''
+      # Send email via gogcli
+      if test (count $argv) -lt 2
+        echo "Usage: gog-send <to@example.com> <subject> [body]"
+        return 1
+      end
+
+      set to $argv[1]
+      set subject $argv[2]
+      set body ""
+      if test (count $argv) -ge 3
+        set body $argv[3]
+      end
+
+      gog gmail send --to "$to" --subject "$subject" --body "$body"
+    '';
+
+    gog-status = ''
+      # Check gogcli auth status
+      echo "=== Google Workspace CLI Status ==="
+      gog account --list
+      echo ""
+      echo "To authenticate: gog account --add <account-name>"
+      echo "To use: gog gmail thread --list"
+    '';
+  };
+
   home.packages = [
     # Stable 26.05 ships Go 1.26.x (gogcli needs go >= 1.25.8)
     (pkgs.buildGoModule rec {
