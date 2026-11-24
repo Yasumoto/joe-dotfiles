@@ -60,7 +60,6 @@ in
         starship
         gnupg
         eksctl
-        packer
         vault
         terraform
         tfsec
