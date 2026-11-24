@@ -117,6 +117,7 @@ in
         taskwarrior3
         nethack
         google-cloud-sdk
+        man-pages-posix # POSIX reference: man 1p sh, man 1p sed, ...
 
         # Voice interaction stack (xAI STT/TTS for CLI agents)
         # Scripts deployed via modules/claude-code.nix, shared library at ~/.local/share/voice-lib.sh
@@ -124,6 +125,7 @@ in
         jq
       ]
       ++ lib.optionals pkgs.stdenv.isLinux [
+        man-pages # Linux syscalls/libc (man 2, 3, 7); macOS has its own
         xclip
         powerline
         git-credential-manager
